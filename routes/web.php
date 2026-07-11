@@ -41,10 +41,10 @@ Route::middleware(AdminAuthenticated::class)->group(function () {
     Route::get('rule-base/info', [RuleBaseController::class, 'info'])->name('rule-base.info');
     Route::resource('rule-base', RuleBaseController::class)->except(['show']);
 
-    // Panduan Penggunaan
-    Route::get('/panduan', function () {
-        return view('panduan');
-    })->name('panduan');
+    // Panduan Penggunaan (disembunyikan sementara — uncomment untuk menampilkan kembali)
+    // Route::get('/panduan', function () {
+    //     return view('panduan');
+    // })->name('panduan');
 
     // Analisis RBS (Rule-Based System) — Satu-satunya mesin analisis
     Route::prefix('rbs')->name('rbs.')->group(function () {
@@ -59,7 +59,6 @@ Route::middleware(AdminAuthenticated::class)->group(function () {
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/', [LaporanController::class, 'index'])->name('index');
         Route::get('/{rekomendasiRbs}/pdf', [LaporanController::class, 'exportPdf'])->name('pdf');
-        Route::get('/{rekomendasiRbs}/ringkasan', [LaporanController::class, 'exportRingkasan'])->name('ringkasan');
         Route::get('/{rekomendasiRbs}', [LaporanController::class, 'show'])->name('show');
     });
 
@@ -68,4 +67,30 @@ Route::middleware(AdminAuthenticated::class)->group(function () {
 
     // API endpoint — Cuaca otomatis dari Open-Meteo
     Route::post('/api/cuaca/fetch', [\App\Http\Controllers\CuacaController::class, 'fetch'])->name('api.cuaca.fetch');
+});
+
+// =================================================================
+// ROUTE SEMENTARA — HAPUS SETELAH SETUP DATABASE SELESAI!
+// Akses: https://rekomendasipupuk.xyz/setup-database
+// =================================================================
+Route::get('/setup-database', function () {
+    $output = [];
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $output[] = '✅ Migration berhasil!';
+
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        $output[] = '✅ Seeding berhasil!';
+
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        $output[] = '✅ Cache cleared!';
+        $output[] = '';
+        $output[] = '🎉 SETUP SELESAI! Hapus route /setup-database dari routes/web.php';
+    } catch (\Exception $e) {
+        $output[] = '❌ Error: ' . $e->getMessage();
+        $output[] = 'File: ' . $e->getFile() . ':' . $e->getLine();
+    }
+    return '<pre>' . implode("\n", $output) . '</pre>';
 });

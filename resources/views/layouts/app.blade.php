@@ -196,6 +196,7 @@
                 Laporan & Rekap
             </a>
 
+            {{-- Menu Panduan (disembunyikan sementara — uncomment untuk menampilkan kembali)
             <a href="{{ route('panduan') }}"
                class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('panduan') ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' : 'text-slate-600 hover:bg-slate-50 hover:text-emerald-700' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -203,6 +204,7 @@
                 </svg>
                 Panduan
             </a>
+            --}}
         </nav>
 
         {{-- Admin Info --}}

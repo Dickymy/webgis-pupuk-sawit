@@ -1141,28 +1141,66 @@ class RbsService
         $umur = now()->year - $blok->tahun_tanam;
         $kategoriUmur = $this->tentukanKategoriUmur($umur);
 
+        // ─────────────────────────────────────────────────────────────────
+        // Base Dosis per Kategori Umur (kg/pokok/tahun)
+        // Referensi: Pahan, I. (2015). Panduan Lengkap Kelapa Sawit:
+        //            Manajemen Agribisnis dari Hulu hingga Hilir.
+        //            Jakarta: Penebar Swadaya.
+        //
+        // Catatan: Angka merupakan nilai tengah dari rentang rekomendasi
+        //          Pahan (2015) untuk tanah mineral umum.
+        //
+        // TBM (0–3 th)   : Urea 0.50–1.00, KCl 0.50–1.00 → tengah 0.75
+        // TM Muda (4–8)  : Urea 1.50–2.00, KCl 1.50–2.00 → tengah 1.75
+        // TM Prime (9–14): Urea 2.00–2.50, KCl 2.00–2.50 → tengah 2.25
+        // TM Tua (15–25) : Urea 2.50–3.00, KCl 2.00–2.50 → tengah 2.75/2.25
+        // Tua Renta (>25): Urea 1.50–2.00, KCl 1.50–2.00 → tengah 1.75
+        // ─────────────────────────────────────────────────────────────────
         $baseDosis = match($kategoriUmur) {
-            'Belum Menghasilkan' => ['urea' => 0.5,  'kcl' => 0.5],
-            'Remaja'             => ['urea' => 1.5,  'kcl' => 1.0],
-            'Menghasilkan Muda'  => ['urea' => 2.25, 'kcl' => 1.75],
+            'Belum Menghasilkan' => ['urea' => 0.75, 'kcl' => 0.75],
+            'Remaja'             => ['urea' => 1.75, 'kcl' => 1.75],
+            'Menghasilkan Muda'  => ['urea' => 2.25, 'kcl' => 2.25],
             'Menghasilkan Tua'   => ['urea' => 2.75, 'kcl' => 2.25],
-            'Tua Renta'          => ['urea' => 1.5,  'kcl' => 1.5],
-            default              => ['urea' => 1.5,  'kcl' => 1.0],
+            'Tua Renta'          => ['urea' => 1.75, 'kcl' => 1.75],
+            default              => ['urea' => 1.75, 'kcl' => 1.75],
         };
 
+        // ─────────────────────────────────────────────────────────────────
+        // Multiplier Koreksi Jenis Tanah
+        // Referensi: Diadaptasi dari prinsip nutrient balance
+        //            Fairhurst, T. & Hardter, R. (2003). Oil Palm:
+        //            Management for Large and Sustainable Yields.
+        //            International Potash Institute (IPI).
+        //
+        // Prinsip:
+        // - Tanah berpasir: leaching tinggi → dosis N & K dinaikkan
+        // - Tanah gambut: denitrifikasi tinggi (N turun), K sangat rendah
+        //   → Urea dikurangi, KCl dinaikkan signifikan
+        // - Tanah liat: retensi hara baik → dosis sedikit dikurangi
+        // - Tanah PMK/Laterit: miskin hara → koreksi naik
+        // ─────────────────────────────────────────────────────────────────
         $multiplierTanah = match($blok->jenis_tanah) {
-            'Tanah Lempung'                     => ['urea' => 1.0, 'kcl' => 1.0],
-            'Tanah Lempung Berpasir'            => ['urea' => 1.1, 'kcl' => 1.1],
-            'Tanah Berpasir'                    => ['urea' => 1.3, 'kcl' => 1.4],
-            'Tanah Liat'                        => ['urea' => 0.9, 'kcl' => 0.9],
-            'Tanah Gambut'                      => ['urea' => 0.6, 'kcl' => 1.5],
-            'Tanah Aluvial'                     => ['urea' => 1.0, 'kcl' => 1.0],
-            'Tanah Podsolik Merah Kuning (PMK)' => ['urea' => 1.1, 'kcl' => 1.2],
-            'Tanah Laterit'                     => ['urea' => 1.1, 'kcl' => 1.2],
-            'Tanah Berbatu'                     => ['urea' => 1.2, 'kcl' => 1.2],
-            default                             => ['urea' => 1.0, 'kcl' => 1.0],
+            'Tanah Lempung'                     => ['urea' => 1.0,  'kcl' => 1.0],
+            'Tanah Lempung Berpasir'            => ['urea' => 1.1,  'kcl' => 1.15],
+            'Tanah Berpasir'                    => ['urea' => 1.25, 'kcl' => 1.35],
+            'Tanah Liat'                        => ['urea' => 0.9,  'kcl' => 0.9],
+            'Tanah Gambut'                      => ['urea' => 0.7,  'kcl' => 1.5],
+            'Tanah Aluvial'                     => ['urea' => 1.0,  'kcl' => 1.0],
+            'Tanah Podsolik Merah Kuning (PMK)' => ['urea' => 1.15, 'kcl' => 1.2],
+            'Tanah Laterit'                     => ['urea' => 1.15, 'kcl' => 1.2],
+            'Tanah Berbatu'                     => ['urea' => 1.2,  'kcl' => 1.2],
+            default                             => ['urea' => 1.0,  'kcl' => 1.0],
         };
 
+        // ─────────────────────────────────────────────────────────────────
+        // Multiplier Koreksi Topografi
+        // Referensi: Fairhurst & Hardter (2003) — prinsip run-off loss
+        //
+        // Prinsip:
+        // - Datar: tidak ada koreksi (baseline)
+        // - Bergelombang: run-off moderat → koreksi +10%
+        // - Curam: run-off tinggi → koreksi +20%
+        // ─────────────────────────────────────────────────────────────────
         $multiplierTopo = match($blok->topografi) {
             'Datar 0-15°'         => ['urea' => 1.0, 'kcl' => 1.0],
             'Bergelombang 15-30°' => ['urea' => 1.1, 'kcl' => 1.1],

@@ -107,39 +107,4 @@ class LaporanController extends Controller
         return $pdf->download($filename);
     }
 
-    /**
-     * Export ringkasan teks (E2) — format WhatsApp-friendly.
-     */
-    public function exportRingkasan(RekomendasiRbs $rekomendasiRbs)
-    {
-        $rekomendasiRbs->load(['blokLahan.anggota', 'admin']);
-
-        $blok = $rekomendasiRbs->blokLahan;
-        $anggota = $blok->anggota;
-        $statusLabel = RekomendasiRbs::labelStatus($rekomendasiRbs->status_kebutuhan_dominan);
-
-        $masalah = $rekomendasiRbs->masalah_teridentifikasi
-            ? implode(', ', $rekomendasiRbs->masalah_teridentifikasi)
-            : 'Tidak ada';
-
-        $teks = "REKOMENDASI PEMUPUKAN — {$anggota->nama}\n";
-        $teks .= "Blok: {$blok->nama_blok} | Luas: {$blok->luas_ha} ha | SPH: {$blok->sph}\n";
-        $teks .= "Status: {$statusLabel}\n";
-
-        if ($rekomendasiRbs->total_urea || $rekomendasiRbs->total_kcl) {
-            $urea = $rekomendasiRbs->total_urea ? number_format($rekomendasiRbs->total_urea, 1) . ' kg' : '-';
-            $kcl = $rekomendasiRbs->total_kcl ? number_format($rekomendasiRbs->total_kcl, 1) . ' kg' : '-';
-            $teks .= "Pupuk: Urea {$urea}, KCl {$kcl}\n";
-            $teks .= "Total: {$rekomendasiRbs->karung_urea} karung Urea, {$rekomendasiRbs->karung_kcl} karung KCl\n";
-        }
-
-        $teks .= "Masalah: {$masalah}\n";
-        $teks .= "Tanggal Analisis: {$rekomendasiRbs->tanggal_analisis->format('d/m/Y')}";
-
-        if (request()->query('format') === 'json') {
-            return response()->json(['teks' => $teks]);
-        }
-
-        return response($teks, 200)->header('Content-Type', 'text/plain');
-    }
 }
