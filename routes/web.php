@@ -14,6 +14,29 @@ use Illuminate\Support\Facades\Route;
 // Root redirect
 Route::get('/', fn() => redirect()->route('dashboard'));
 
+// === ROUTE MAINTENANCE — HAPUS SETELAH FIX ===
+Route::get('/fix-cache', function () {
+    \Illuminate\Support\Facades\Artisan::call('config:clear');
+    \Illuminate\Support\Facades\Artisan::call('cache:clear');
+    \Illuminate\Support\Facades\Artisan::call('route:clear');
+    \Illuminate\Support\Facades\Artisan::call('view:clear');
+    
+    // Hapus semua session files
+    $sessionPath = storage_path('framework/sessions');
+    if (is_dir($sessionPath)) {
+        $files = glob($sessionPath . '/*');
+        foreach ($files as $file) {
+            if (is_file($file)) unlink($file);
+        }
+    }
+    
+    return 'Cache cleared! Session driver: ' . config('session.driver') . 
+           ' | APP_URL: ' . config('app.url') .
+           ' | Session secure: ' . (config('session.secure') ? 'true' : 'false') .
+           ' | Session path: ' . config('session.path') .
+           '<br><br><a href="/login">Klik di sini untuk login</a>';
+});
+
 // Authentication routes (guest only)
 Route::middleware('guest:admin')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -67,30 +90,9 @@ Route::middleware(AdminAuthenticated::class)->group(function () {
 
     // API endpoint — Cuaca otomatis dari Open-Meteo
     Route::post('/api/cuaca/fetch', [\App\Http\Controllers\CuacaController::class, 'fetch'])->name('api.cuaca.fetch');
+
+    // API endpoint — Upload SHP/GeoJSON ke GeoJSON polygon
+    Route::post('/api/geo-upload', [\App\Http\Controllers\GeoUploadController::class, 'upload'])->name('api.geo.upload');
 });
 
-// =================================================================
-// ROUTE SEMENTARA — HAPUS SETELAH SETUP DATABASE SELESAI!
-// Akses: https://rekomendasipupuk.xyz/setup-database
-// =================================================================
-Route::get('/setup-database', function () {
-    $output = [];
-    try {
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-        $output[] = '✅ Migration berhasil!';
 
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-        $output[] = '✅ Seeding berhasil!';
-
-        \Illuminate\Support\Facades\Artisan::call('config:clear');
-        \Illuminate\Support\Facades\Artisan::call('cache:clear');
-        \Illuminate\Support\Facades\Artisan::call('view:clear');
-        $output[] = '✅ Cache cleared!';
-        $output[] = '';
-        $output[] = '🎉 SETUP SELESAI! Hapus route /setup-database dari routes/web.php';
-    } catch (\Exception $e) {
-        $output[] = '❌ Error: ' . $e->getMessage();
-        $output[] = 'File: ' . $e->getFile() . ':' . $e->getLine();
-    }
-    return '<pre>' . implode("\n", $output) . '</pre>';
-});
