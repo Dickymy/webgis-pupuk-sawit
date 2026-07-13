@@ -1,4 +1,12 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    
+    # If the request is for a real file/folder in public/, serve it directly
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
     RewriteRule ^(.*)$ public/$1 [L]
+    
+    # Otherwise, route through public/index.php
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/index.php [L]
 </IfModule>
