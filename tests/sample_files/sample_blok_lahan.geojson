@@ -1,0 +1,23 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "nama": "Blok Uji Coba"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [109.3425, -0.0215],
+            [109.3445, -0.0215],
+            [109.3445, -0.0235],
+            [109.3425, -0.0235],
+            [109.3425, -0.0215]
+          ]
+        ]
+      }
+    }
+  ]
+}

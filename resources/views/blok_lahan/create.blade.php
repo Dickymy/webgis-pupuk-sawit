@@ -317,6 +317,10 @@
                         class="flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all bg-white text-emerald-700 shadow-sm">
                         🗺️ Gambar di Peta
                     </button>
+                    <button type="button" id="tab-upload" onclick="switchTab('upload')"
+                        class="flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all text-slate-600 hover:text-slate-800">
+                        📂 Upload File
+                    </button>
                     <button type="button" id="tab-json" onclick="switchTab('json')"
                         class="flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all text-slate-600 hover:text-slate-800">
                         📝 GeoJSON Manual
@@ -411,13 +415,112 @@
                         placeholder='{"type":"Polygon","coordinates":[[[lng,lat],[lng,lat],...]]}'
                         class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors font-mono text-xs leading-relaxed resize-y">{{ old('koordinat_geojson') }}</textarea>
                     <p class="mt-1.5 text-xs text-slate-500">Paste GeoJSON lalu klik di luar textarea — luas akan otomatis terhitung.</p>
+
+                    {{-- Preview Map untuk GeoJSON Manual --}}
+                    <div id="json-preview-wrapper" class="hidden mt-3">
+                        <div class="border border-emerald-200 rounded-xl overflow-hidden">
+                            <div id="json-preview-map" style="height: 250px; width: 100%;"></div>
+                        </div>
+                        <div class="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" stroke-width="2"/>
+                                </svg>
+                                <div>
+                                    <p class="text-sm font-semibold text-emerald-800">Luas Lahan</p>
+                                    <p class="text-xs text-emerald-600" id="json-preview-info">—</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-bold text-emerald-700" id="json-preview-luas">0.00</p>
+                                <p class="text-xs text-emerald-600">Hektar</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Panel Upload SHP/GeoJSON --}}
+                <div id="panel-upload" class="hidden">
+                    <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-emerald-400 transition-colors" id="upload-dropzone">
+                        <div class="space-y-3">
+                            <div class="mx-auto w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-slate-700">Drag & drop file atau klik untuk memilih</p>
+                                <p class="text-xs text-slate-400 mt-1">Format: <span class="font-semibold">.zip</span> (Shapefile) atau <span class="font-semibold">.geojson</span> — Maks. 10 MB</p>
+                            </div>
+                            <label for="geo_file_input" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg cursor-pointer transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                Pilih File
+                            </label>
+                            <input type="file" id="geo_file_input" accept=".zip,.geojson,.json" class="hidden">
+                        </div>
+                    </div>
+
+                    {{-- Upload Status --}}
+                    <div id="upload-status" class="hidden mt-3">
+                        <div id="upload-loading" class="hidden flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                            <svg class="w-4 h-4 text-blue-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span class="text-sm text-blue-700">Memproses file...</span>
+                        </div>
+                        <div id="upload-success" class="hidden p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                            <p class="text-sm text-emerald-700 font-medium" id="upload-success-msg"></p>
+                            <p class="text-xs text-emerald-600 mt-1">Polygon telah dimuat ke peta. Anda dapat mengedit titik-titiknya di tab "Gambar di Peta".</p>
+                        </div>
+                        <div id="upload-error" class="hidden p-3 bg-red-50 border border-red-200 rounded-xl">
+                            <p class="text-sm text-red-700 font-medium" id="upload-error-msg"></p>
+                        </div>
+                    </div>
+
+                    {{-- Preview Map setelah upload berhasil --}}
+                    <div id="upload-preview-wrapper" class="hidden mt-3">
+                        <div class="border border-emerald-200 rounded-xl overflow-hidden">
+                            <div id="upload-preview-map" style="height: 250px; width: 100%;"></div>
+                        </div>
+                        <div class="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" stroke-width="2"/>
+                                </svg>
+                                <div>
+                                    <p class="text-sm font-semibold text-emerald-800">Luas Hasil Upload</p>
+                                    <p class="text-xs text-emerald-600" id="upload-preview-info">—</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-lg font-bold text-emerald-700" id="upload-preview-luas">0.00</p>
+                                <p class="text-xs text-emerald-600">Hektar</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Info format --}}
+                    <div class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                        <p class="text-xs font-semibold text-slate-700 mb-2">📋 Panduan Format File</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div class="p-2 bg-white rounded-lg border border-slate-100">
+                                <p class="text-[11px] font-semibold text-slate-700">📦 Shapefile (.zip)</p>
+                                <p class="text-[10px] text-slate-400 leading-tight mt-0.5">ZIP berisi minimal 3 file: .shp, .shx, .dbf. File .prj opsional.</p>
+                            </div>
+                            <div class="p-2 bg-white rounded-lg border border-slate-100">
+                                <p class="text-[11px] font-semibold text-slate-700">🌍 GeoJSON (.geojson)</p>
+                                <p class="text-[10px] text-slate-400 leading-tight mt-0.5">File JSON berisi geometri Polygon atau FeatureCollection.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <input type="hidden" name="koordinat_geojson" id="koordinat_geojson" value="{{ old('koordinat_geojson') }}">
                 @error('koordinat_geojson') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
 
-                {{-- Luas Lahan — langsung di bawah peta --}}
-                <div class="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+                {{-- Luas Lahan — langsung di bawah peta (hanya tampil di tab Gambar di Peta) --}}
+                <div id="luas-lahan-wrapper" class="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
                     <div>
                         <p class="text-sm font-semibold text-emerald-800">Luas Lahan</p>
                         <p class="text-xs text-emerald-600" id="luas-info">Gambar polygon untuk menghitung luas otomatis</p>
@@ -465,19 +568,42 @@ function switchTab(tab) {
     currentTab = tab;
     document.getElementById('panel-draw').classList.toggle('hidden', tab !== 'draw');
     document.getElementById('panel-json').classList.toggle('hidden', tab !== 'json');
+    document.getElementById('panel-upload').classList.toggle('hidden', tab !== 'upload');
     var tabDraw = document.getElementById('tab-draw');
     var tabJson = document.getElementById('tab-json');
+    var tabUpload = document.getElementById('tab-upload');
+    var activeClass = 'flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all bg-white text-emerald-700 shadow-sm';
+    var inactiveClass = 'flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all text-slate-600 hover:text-slate-800';
+    tabDraw.className = tab === 'draw' ? activeClass : inactiveClass;
+    tabJson.className = tab === 'json' ? activeClass : inactiveClass;
+    tabUpload.className = tab === 'upload' ? activeClass : inactiveClass;
+    // Luas Lahan bawah hanya tampil di tab draw
+    var luasWrapper = document.getElementById('luas-lahan-wrapper');
+    if (luasWrapper) luasWrapper.classList.toggle('hidden', tab !== 'draw');
     if (tab === 'draw') {
-        tabDraw.className = 'flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all bg-white text-emerald-700 shadow-sm';
-        tabJson.className = 'flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all text-slate-600 hover:text-slate-800';
         setTimeout(function() { drawMap.invalidateSize(); }, 100);
-    } else {
-        tabJson.className = 'flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all bg-white text-emerald-700 shadow-sm';
-        tabDraw.className = 'flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all text-slate-600 hover:text-slate-800';
     }
 }
 
 // ─── FUNGSI HITUNG LUAS POLYGON (Geodesic - Shoelace formula) ────
+function extractPolygonGeometry(geojson) {
+    if (!geojson || !geojson.type) return null;
+    if (geojson.type === 'Polygon') return geojson;
+    if (geojson.type === 'MultiPolygon') {
+        return { type: 'Polygon', coordinates: geojson.coordinates[0] };
+    }
+    if (geojson.type === 'Feature' && geojson.geometry) {
+        return extractPolygonGeometry(geojson.geometry);
+    }
+    if (geojson.type === 'FeatureCollection' && geojson.features && geojson.features.length > 0) {
+        for (var i = 0; i < geojson.features.length; i++) {
+            var result = extractPolygonGeometry(geojson.features[i]);
+            if (result) return result;
+        }
+    }
+    return null;
+}
+
 function calculateAreaHa(geojson) {
     try {
         var coords;
@@ -485,6 +611,10 @@ function calculateAreaHa(geojson) {
             coords = geojson.coordinates[0];
         } else if (geojson.type === 'Feature' && geojson.geometry.type === 'Polygon') {
             coords = geojson.geometry.coordinates[0];
+        } else if (geojson.type === 'FeatureCollection' || geojson.type === 'MultiPolygon') {
+            var extracted = extractPolygonGeometry(geojson);
+            if (extracted) return calculateAreaHa(extracted);
+            return 0;
         } else {
             return 0;
         }
@@ -639,18 +769,54 @@ function syncGeoJson() {
 // ─── TEXTAREA GeoJSON: hitung luas saat blur ─────────────────────
 document.getElementById('textarea_geojson').addEventListener('blur', function() {
     var val = this.value.trim();
-    if (!val) { updateLuas({}); return; }
+    var jsonPreviewWrapper = document.getElementById('json-preview-wrapper');
+    if (!val) {
+        updateLuas({});
+        if (jsonPreviewWrapper) jsonPreviewWrapper.classList.add('hidden');
+        return;
+    }
     try {
         var parsed = JSON.parse(val);
-        document.getElementById('koordinat_geojson').value = val;
-        updateLuas(parsed);
-        // Render di peta juga
-        drawnItems.clearLayers();
-        L.geoJSON(parsed, { style: { color: '#059669', fillColor: '#059669', fillOpacity: 0.3, weight: 2 } })
-            .eachLayer(function(l) { drawnItems.addLayer(l); });
-        drawMap.fitBounds(drawnItems.getBounds().pad(0.2));
+        // Extract polygon geometry dari berbagai format (FeatureCollection, Feature, dll)
+        var polygon = extractPolygonGeometry(parsed);
+        if (polygon) {
+            var geoStr = JSON.stringify(polygon);
+            document.getElementById('koordinat_geojson').value = geoStr;
+            updateLuas(polygon);
+            // Render di peta utama juga
+            drawnItems.clearLayers();
+            L.geoJSON(polygon, { style: { color: '#059669', fillColor: '#059669', fillOpacity: 0.3, weight: 2 } })
+                .eachLayer(function(l) { drawnItems.addLayer(l); });
+            drawMap.fitBounds(drawnItems.getBounds().pad(0.2));
+
+            // ─── Preview Map di panel GeoJSON ───
+            if (jsonPreviewWrapper) {
+                jsonPreviewWrapper.classList.remove('hidden');
+                var ha = calculateAreaHa(polygon);
+                document.getElementById('json-preview-luas').textContent = ha > 0 ? ha.toFixed(2) : '—';
+                document.getElementById('json-preview-info').textContent = ha > 0 ? '✓ Luas terhitung: ' + ha.toFixed(2) + ' Ha' : 'Polygon dimuat';
+
+                var previewMapEl = document.getElementById('json-preview-map');
+                if (window._jsonPreviewMap) { window._jsonPreviewMap.remove(); }
+                window._jsonPreviewMap = L.map(previewMapEl, { zoomControl: true, attributionControl: false, dragging: true, scrollWheelZoom: true });
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(window._jsonPreviewMap);
+                var previewLayer = L.geoJSON(polygon, {
+                    style: { color: '#059669', fillColor: '#059669', fillOpacity: 0.35, weight: 2.5 }
+                }).addTo(window._jsonPreviewMap);
+                window._jsonPreviewMap.fitBounds(previewLayer.getBounds().pad(0.15));
+            }
+        } else {
+            document.getElementById('koordinat_geojson').value = val;
+            updateLuas(parsed);
+            drawnItems.clearLayers();
+            L.geoJSON(parsed, { style: { color: '#059669', fillColor: '#059669', fillOpacity: 0.3, weight: 2 } })
+                .eachLayer(function(l) { drawnItems.addLayer(l); });
+            drawMap.fitBounds(drawnItems.getBounds().pad(0.2));
+            if (jsonPreviewWrapper) jsonPreviewWrapper.classList.add('hidden');
+        }
     } catch(e) {
         updateLuas({});
+        if (jsonPreviewWrapper) jsonPreviewWrapper.classList.add('hidden');
     }
 });
 
@@ -862,6 +1028,154 @@ document.addEventListener('sidebarToggled', function() {
         });
         drawMap.on(L.Draw.Event.EDITED, function() {
             setTimeout(checkOverlapOnChange, 200);
+        });
+    }
+})();
+
+// ─── UPLOAD FILE SHP/GEOJSON ─────────────────────────────────────
+(function() {
+    var fileInput = document.getElementById('geo_file_input');
+    var dropzone = document.getElementById('upload-dropzone');
+    var statusDiv = document.getElementById('upload-status');
+    var loadingDiv = document.getElementById('upload-loading');
+    var successDiv = document.getElementById('upload-success');
+    var errorDiv = document.getElementById('upload-error');
+    var successMsg = document.getElementById('upload-success-msg');
+    var errorMsg = document.getElementById('upload-error-msg');
+
+    if (!fileInput || !dropzone) return;
+
+    // File input change
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            uploadFile(this.files[0]);
+        }
+    });
+
+    // Drag & drop
+    dropzone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.classList.add('border-emerald-400', 'bg-emerald-50');
+    });
+    dropzone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.classList.remove('border-emerald-400', 'bg-emerald-50');
+    });
+    dropzone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.classList.remove('border-emerald-400', 'bg-emerald-50');
+        if (e.dataTransfer.files.length > 0) {
+            uploadFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    function showStatus(type) {
+        statusDiv.classList.remove('hidden');
+        loadingDiv.classList.toggle('hidden', type !== 'loading');
+        successDiv.classList.toggle('hidden', type !== 'success');
+        errorDiv.classList.toggle('hidden', type !== 'error');
+    }
+
+    function uploadFile(file) {
+        // Validate extension
+        var ext = file.name.split('.').pop().toLowerCase();
+        if (!['zip', 'geojson', 'json'].includes(ext)) {
+            showStatus('error');
+            errorMsg.textContent = 'Format file tidak didukung. Gunakan .zip (Shapefile) atau .geojson.';
+            return;
+        }
+
+        // Validate size (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            showStatus('error');
+            errorMsg.textContent = 'Ukuran file terlalu besar. Maksimal 10 MB.';
+            return;
+        }
+
+        showStatus('loading');
+
+        var formData = new FormData();
+        formData.append('geo_file', file);
+        formData.append('_token', document.querySelector('input[name="_token"]').value);
+
+        fetch('{{ route("api.geo.upload") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            }
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                showStatus('success');
+                successMsg.textContent = '✓ ' + data.message;
+
+                // Load polygon to map
+                var geojson = data.geojson;
+                var geoStr = JSON.stringify(geojson);
+                document.getElementById('koordinat_geojson').value = geoStr;
+                document.getElementById('textarea_geojson').value = geoStr;
+
+                // Render on main draw map
+                drawnItems.clearLayers();
+                L.geoJSON(geojson, {
+                    style: { color: '#059669', fillColor: '#059669', fillOpacity: 0.3, weight: 2 }
+                }).eachLayer(function(l) { drawnItems.addLayer(l); });
+
+                drawMap.fitBounds(drawnItems.getBounds().pad(0.2));
+                updateLuas(geojson);
+                syncLuasFullscreen();
+
+                // ─── Preview Map di panel upload ───
+                var previewWrapper = document.getElementById('upload-preview-wrapper');
+                var previewLuas = document.getElementById('upload-preview-luas');
+                var previewInfo = document.getElementById('upload-preview-info');
+                previewWrapper.classList.remove('hidden');
+
+                // Hitung luas
+                var ha = calculateAreaHa(geojson);
+                previewLuas.textContent = ha > 0 ? ha.toFixed(2) : '—';
+                previewInfo.textContent = ha > 0 ? '✓ Polygon berhasil dimuat dari file' : 'Polygon dimuat';
+
+                // Init preview map (destroy old one if exists)
+                var previewMapEl = document.getElementById('upload-preview-map');
+                if (window._uploadPreviewMap) {
+                    window._uploadPreviewMap.remove();
+                }
+                window._uploadPreviewMap = L.map(previewMapEl, { zoomControl: true, attributionControl: false, dragging: true, scrollWheelZoom: true });
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(window._uploadPreviewMap);
+
+                var previewLayer = L.geoJSON(geojson, {
+                    style: { color: '#059669', fillColor: '#059669', fillOpacity: 0.35, weight: 2.5 }
+                }).addTo(window._uploadPreviewMap);
+
+                window._uploadPreviewMap.fitBounds(previewLayer.getBounds().pad(0.15));
+
+                // Trigger overlap check
+                setTimeout(function() {
+                    if (typeof checkOverlapOnChange === 'function') {
+                        checkOverlapOnChange();
+                    }
+                    var evt = new Event('change', { bubbles: true });
+                    document.getElementById('koordinat_geojson').dispatchEvent(evt);
+                }, 300);
+            } else {
+                showStatus('error');
+                errorMsg.textContent = data.message || 'Gagal memproses file.';
+                // Hide preview on error
+                document.getElementById('upload-preview-wrapper').classList.add('hidden');
+            }
+        })
+        .catch(function(err) {
+            showStatus('error');
+            errorMsg.textContent = 'Terjadi kesalahan jaringan. Silakan coba lagi.';
+            document.getElementById('upload-preview-wrapper').classList.add('hidden');
+            console.error('Upload error:', err);
         });
     }
 })();
