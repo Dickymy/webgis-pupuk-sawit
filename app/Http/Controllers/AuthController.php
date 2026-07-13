@@ -27,6 +27,12 @@ class AuthController extends Controller
 
         if (Auth::guard('admin')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+
+            // Set tema cookie agar anti-FOUC script langsung tahu preferensi admin
+            $admin = Auth::guard('admin')->user();
+            $tema = $admin->tema ?? 'system';
+            cookie()->queue(cookie('tema_tampilan', $tema, 60 * 24 * 365, '/', null, false, false));
+
             return redirect()->intended(route('dashboard'));
         }
 

@@ -13,23 +13,23 @@
 
     $statusConfig = match($status ?? null) {
         'Darurat' => [
-            'bg' => 'bg-red-50 text-red-700 ring-1 ring-red-200',
+            'bg' => 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 ring-1 ring-red-200 dark:ring-red-800',
             'label' => 'Defisiensi Berat',
         ],
         'Segera' => [
-            'bg' => 'bg-orange-50 text-orange-700 ring-1 ring-orange-200',
+            'bg' => 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 ring-1 ring-orange-200 dark:ring-orange-800',
             'label' => 'Perlu Pupuk',
         ],
         'Normal' => [
-            'bg' => 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+            'bg' => 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200 dark:ring-emerald-800',
             'label' => 'Sehat',
         ],
         'Tunda' => [
-            'bg' => 'bg-slate-100 text-slate-600 ring-1 ring-slate-200',
+            'bg' => 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-600',
             'label' => 'Tunda Pupuk',
         ],
         default => [
-            'bg' => 'bg-blue-50 text-blue-600 ring-1 ring-blue-200',
+            'bg' => 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 ring-1 ring-blue-200 dark:ring-blue-800',
             'label' => 'Belum Dicek',
         ],
     };

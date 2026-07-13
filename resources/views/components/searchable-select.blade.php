@@ -8,7 +8,7 @@
 @endphp
 
 <div style="position:relative; min-width:0;" id="{{ $uid }}-wrapper">
-    <label class="block text-sm font-medium text-slate-700 mb-2">
+    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
         {{ $label }} @if($required ?? false)<span class="text-red-400">*</span>@endif
     </label>
 
@@ -20,7 +20,7 @@
         <input type="text" id="{{ $uid }}-search"
             placeholder="{{ $placeholder ?? 'Cari...' }}"
             autocomplete="off"
-            style="width:100%; box-sizing:border-box; padding:10px 36px 10px 14px; background:#fff; border:1px solid {{ ($error ?? false) ? '#f87171' : '#cbd5e1' }}; border-radius:12px; font-size:14px; color:#1e293b; outline:none; min-width:0;"
+            style="width:100%; box-sizing:border-box; padding:10px 36px 10px 14px; border:1px solid {{ ($error ?? false) ? '#f87171' : '' }}; border-radius:12px; font-size:14px; outline:none; min-width:0;"
             value="{{ $selected ? ($options->firstWhere('id', $selected)?->{$displayField} ?? '') : '' }}">
         <div style="position:absolute; right:10px; top:50%; transform:translateY(-50%); pointer-events:none; color:#94a3b8;">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="max-width:none!important;">
@@ -33,11 +33,11 @@
     <div id="{{ $uid }}-dropdown"
         data-uid="{{ $uid }}"
         class="ss-panel"
-        style="display:none; position:fixed; background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.16); z-index:4999; overflow:hidden;">
+        style="display:none; position:fixed; border:1px solid transparent; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.16); z-index:4999; overflow:hidden;">
 
         {{-- Scroll indicator (tampil hanya jika opsi banyak) --}}
         @if($options->count() > 4)
-        <div class="ss-arrow-up" style="display:none; align-items:center; justify-content:center; gap:4px; padding:5px 12px; background:linear-gradient(to bottom, #f8fafc, #fff); border-bottom:1px solid #e2e8f0; cursor:pointer; user-select:none; transition:opacity 0.15s;"
+        <div class="ss-arrow-up" style="display:none; align-items:center; justify-content:center; gap:4px; padding:5px 12px; border-bottom:1px solid transparent; cursor:pointer; user-select:none; transition:opacity 0.15s;"
             onclick="document.getElementById('{{ $uid }}-dropdown').querySelector('.ss-options-scroll').scrollBy({top:-80,behavior:'smooth'})">
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="max-width:none!important; flex-shrink:0; color:#64748b;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/>
@@ -51,16 +51,16 @@
             @foreach($options as $opt)
             <div class="ss-option"
                  data-value="{{ $opt->id }}" data-label="{{ $opt->{$displayField} }}"
-                 style="padding:11px 14px; cursor:pointer; font-size:13px; color:#374151; border-bottom:1px solid #f8fafc; word-break:break-word; line-height:1.4;">
+                 style="padding:11px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid transparent; word-break:break-word; line-height:1.4;">
                 {{ $opt->{$displayField} }}
             </div>
             @endforeach
-            <div class="ss-empty" style="display:none; padding:12px 14px; font-size:13px; color:#94a3b8; text-align:center;">Tidak ditemukan</div>
+            <div class="ss-empty" style="display:none; padding:12px 14px; font-size:13px; text-align:center;">Tidak ditemukan</div>
         </div>
 
         {{-- Bottom scroll arrow --}}
         @if($options->count() > 4)
-        <div class="ss-arrow-down" style="display:flex; align-items:center; justify-content:center; gap:4px; padding:5px 12px; background:linear-gradient(to top, #f8fafc, #fff); border-top:1px solid #e2e8f0; cursor:pointer; user-select:none; transition:opacity 0.15s;"
+        <div class="ss-arrow-down" style="display:flex; align-items:center; justify-content:center; gap:4px; padding:5px 12px; border-top:1px solid transparent; cursor:pointer; user-select:none; transition:opacity 0.15s;"
             onclick="document.getElementById('{{ $uid }}-dropdown').querySelector('.ss-options-scroll').scrollBy({top:80,behavior:'smooth'})">
             <span style="font-size:10px; color:#64748b; font-weight:600;">Scroll ke bawah</span>
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="max-width:none!important; flex-shrink:0; color:#64748b;">
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Hover effect
         items.forEach(function(item) {
-            item.addEventListener('mouseenter', function() { this.style.background = '#f0fdf4'; });
+            item.addEventListener('mouseenter', function() { this.style.background = document.documentElement.classList.contains('dark') ? '#334155' : '#f0fdf4'; });
             item.addEventListener('mouseleave', function() { this.style.background = ''; });
             item.addEventListener('click', function() {
                 valueEl.value  = this.dataset.value;

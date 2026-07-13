@@ -14,8 +14,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Share notifikasi blok kritis (E3) ke semua view yang pakai layout app
+        // Share notifikasi blok kritis (E3) dan admin ke semua view yang pakai layout app
         View::composer('layouts.app', function ($view) {
+            $admin = \Illuminate\Support\Facades\Auth::guard('admin')->user();
+
             $blokDarurat = \App\Models\BlokLahan::whereHas('rekomendasiRbsTerbaru', function ($q) {
                 $q->where('status_kebutuhan_dominan', 'Darurat');
             })->with(['anggota', 'kondisiTerbaru', 'rekomendasiRbsTerbaru'])->get();
@@ -33,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('notifBlokDarurat', $blokDaruratLimit);
             $view->with('jumlahNotifDarurat', $jumlahDarurat);
+            $view->with('admin', $admin);
         });
     }
 }

@@ -32,7 +32,7 @@
 
 <div>
     @if($label ?? false)
-    <label class="block text-sm font-medium text-slate-700 mb-1.5" for="{{ $cid }}-btn">
+    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1.5" for="{{ $cid }}-btn">
         {{ $label }} @if($required ?? false)<span class="text-red-400">*</span>@endif
     </label>
     @endif
@@ -46,8 +46,9 @@
         {{-- Trigger button --}}
         <button type="button" id="{{ $cid }}-btn"
             onclick="csToggle('{{ $cid }}')"
-            style="width:100%; min-width:0; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; background:#fff; border:1px solid {{ ($error ?? false) ? '#f87171' : '#cbd5e1' }}; border-radius:12px; font-size:14px; cursor:pointer; text-align:left; color:{{ $selValue ? '#1e293b' : '#9ca3af' }}; transition:border-color 0.15s;">
-            <span id="{{ $cid }}-display" style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14px;">
+            style="width:100%; min-width:0; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border:1px solid {{ ($error ?? false) ? '#f87171' : '' }}; border-radius:12px; font-size:14px; cursor:pointer; text-align:left; transition:border-color 0.15s;"
+            class="cs-btn-trigger">
+            <span id="{{ $cid }}-display" style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:14px; {{ $selValue ? '' : 'opacity:0.6;' }}">
                 {{ $selLabel ?: $ph }}
             </span>
             <svg id="{{ $cid }}-arrow" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -60,11 +61,11 @@
         <div id="{{ $cid }}-panel"
             data-cid="{{ $cid }}"
             class="cs-panel"
-            style="display:none; position:fixed; background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.16); z-index:4999; overflow:hidden;">
+            style="display:none; position:fixed; border:1px solid transparent; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.16); z-index:4999; overflow:hidden;">
 
             @if(count($opts) > 4)
             {{-- Panah atas — muncul saat bisa scroll ke atas --}}
-            <div class="cs-arrow-up" style="display:none; align-items:center; justify-content:center; gap:4px; padding:5px 12px; background:linear-gradient(to bottom, #f8fafc, #fff); border-bottom:1px solid #e2e8f0; cursor:pointer; user-select:none; transition:opacity 0.15s;"
+            <div class="cs-arrow-up" style="display:none; align-items:center; justify-content:center; gap:4px; padding:5px 12px; border-bottom:1px solid transparent; cursor:pointer; user-select:none; transition:opacity 0.15s;"
                 onclick="csScrollBy('{{ $cid }}', -80)">
                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="max-width:none!important; flex-shrink:0; color:#64748b;">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/>
@@ -86,8 +87,7 @@
                      data-label="{{ $optLabel }}"
                      data-cid="{{ $cid }}"
                      onclick="csSelect('{{ $cid }}', this)"
-                     style="padding:11px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid #f8fafc; word-break:break-word; line-height:1.4; display:flex; align-items:center; justify-content:space-between; gap:8px;
-                            background:{{ $isActive ? '#f0fdf4' : '#fff' }}; color:{{ $isActive ? '#065f46' : '#374151' }}; font-weight:{{ $isActive ? '600' : '400' }};">
+                     style="padding:11px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid transparent; word-break:break-word; line-height:1.4; display:flex; align-items:center; justify-content:space-between; gap:8px; font-weight:{{ $isActive ? '600' : '400' }};">
                     <span style="flex:1; min-width:0;">{{ $optLabel }}</span>
                     @if($isActive)
                     <svg class="cs-check" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink:0; max-width:none!important; color:#10b981;">
@@ -100,7 +100,7 @@
 
             @if(count($opts) > 4)
             {{-- Panah bawah — muncul saat masih ada konten di bawah --}}
-            <div class="cs-arrow-down" style="display:flex; align-items:center; justify-content:center; gap:4px; padding:5px 12px; background:linear-gradient(to top, #f8fafc, #fff); border-top:1px solid #e2e8f0; cursor:pointer; user-select:none; transition:opacity 0.15s;"
+            <div class="cs-arrow-down" style="display:flex; align-items:center; justify-content:center; gap:4px; padding:5px 12px; border-top:1px solid transparent; cursor:pointer; user-select:none; transition:opacity 0.15s;"
                 onclick="csScrollBy('{{ $cid }}', 80)">
                 <span style="font-size:10px; color:#64748b; font-weight:600;">Scroll ke bawah</span>
                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="max-width:none!important; flex-shrink:0; color:#64748b;">
@@ -236,15 +236,17 @@
         if (valEl)     valEl.value = val;
         if (displayEl) {
             displayEl.textContent = label;
-            displayEl.style.color = '#1e293b';
+            displayEl.style.color = '';
+            displayEl.style.opacity = '1';
         }
 
         // Update aktif state semua option
+        var dk = document.documentElement.classList.contains('dark');
         if (panel) {
             panel.querySelectorAll('.cs-option').forEach(function(opt) {
                 var isMe = opt.dataset.value === val;
-                opt.style.background  = isMe ? '#f0fdf4' : '#fff';
-                opt.style.color       = isMe ? '#065f46' : '#374151';
+                opt.style.background  = isMe ? (dk ? '#064e3b' : '#f0fdf4') : (dk ? '#1e293b' : '#fff');
+                opt.style.color       = isMe ? (dk ? '#6ee7b7' : '#065f46') : (dk ? '#e2e8f0' : '#374151');
                 opt.style.fontWeight  = isMe ? '600' : '400';
 
                 var existing = opt.querySelector('.cs-check');
@@ -323,14 +325,20 @@
     // ── Hover style untuk option ─────────────────────────────────
     document.addEventListener('mouseover', function(e) {
         var opt = e.target.closest('.cs-option');
-        if (opt && opt.style.background !== 'rgb(240, 253, 244)') {
-            opt.style.background = '#f8fafc';
+        if (!opt) return;
+        var dk = document.documentElement.classList.contains('dark');
+        var activeBg = dk ? 'rgb(6, 78, 59)' : 'rgb(240, 253, 244)';
+        if (opt.style.background !== activeBg) {
+            opt.style.background = dk ? '#334155' : '#f8fafc';
         }
     });
     document.addEventListener('mouseout', function(e) {
         var opt = e.target.closest('.cs-option');
-        if (opt && opt.style.background === 'rgb(248, 250, 252)') {
-            opt.style.background = '#fff';
+        if (!opt) return;
+        var dk = document.documentElement.classList.contains('dark');
+        var hoverBg = dk ? 'rgb(51, 65, 85)' : 'rgb(248, 250, 252)';
+        if (opt.style.background === hoverBg) {
+            opt.style.background = dk ? '#1e293b' : '#fff';
         }
     });
 

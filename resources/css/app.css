@@ -4,6 +4,801 @@
 @source '../views';
 @source '../../app';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL DARK MODE OVERRIDES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Card / Container backgrounds ─────────────────────────────────────── */
+.dark .bg-white {
+    background-color: #1e293b !important;
+}
+.dark .bg-slate-50 {
+    background-color: #0f172a !important;
+}
+.dark .bg-slate-100 {
+    background-color: #1e293b !important;
+}
+.dark .bg-gray-50 {
+    background-color: #0f172a !important;
+}
+.dark .bg-gray-100 {
+    background-color: #1e293b !important;
+}
+
+/* ── Borders ──────────────────────────────────────────────────────────── */
+.dark .border-slate-200 {
+    border-color: #334155 !important;
+}
+.dark .border-slate-100 {
+    border-color: #1e293b !important;
+}
+.dark .border-slate-300 {
+    border-color: #475569 !important;
+}
+.dark .border-gray-200 {
+    border-color: #334155 !important;
+}
+.dark .border-gray-100 {
+    border-color: #1e293b !important;
+}
+.dark .border-gray-300 {
+    border-color: #475569 !important;
+}
+.dark .border-emerald-200 {
+    border-color: rgba(16, 185, 129, 0.4) !important;
+}
+.dark .border-emerald-300 {
+    border-color: rgba(16, 185, 129, 0.5) !important;
+}
+.dark .border-cyan-100,
+.dark .border-cyan-200 {
+    border-color: rgba(6, 182, 212, 0.4) !important;
+}
+.dark .border-amber-100 {
+    border-color: rgba(217, 119, 6, 0.3) !important;
+}
+.dark .border-amber-200 {
+    border-color: rgba(217, 119, 6, 0.4) !important;
+}
+.dark .border-amber-300 {
+    border-color: rgba(217, 119, 6, 0.5) !important;
+}
+.dark .border-blue-100,
+.dark .border-blue-200 {
+    border-color: rgba(59, 130, 246, 0.4) !important;
+}
+.dark .border-green-200 {
+    border-color: rgba(16, 185, 129, 0.4) !important;
+}
+.dark .border-red-100,
+.dark .border-red-200 {
+    border-color: rgba(239, 68, 68, 0.4) !important;
+}
+.dark .border-red-400,
+.dark .border-red-500 {
+    border-color: #f87171 !important;
+}
+.dark .border-orange-100,
+.dark .border-orange-200 {
+    border-color: rgba(249, 115, 22, 0.4) !important;
+}
+.dark .border-purple-200 {
+    border-color: rgba(147, 51, 234, 0.4) !important;
+}
+
+/* ── Text colors ──────────────────────────────────────────────────────── */
+.dark .text-slate-900 {
+    color: #f1f5f9 !important;
+}
+.dark .text-slate-800 {
+    color: #e2e8f0 !important;
+}
+.dark .text-slate-700 {
+    color: #cbd5e1 !important;
+}
+.dark .text-slate-600 {
+    color: #94a3b8 !important;
+}
+.dark .text-slate-500 {
+    color: #64748b !important;
+}
+.dark .text-slate-400 {
+    color: #94a3b8 !important;
+}
+.dark .text-gray-900 {
+    color: #f1f5f9 !important;
+}
+.dark .text-gray-800 {
+    color: #e2e8f0 !important;
+}
+.dark .text-gray-700 {
+    color: #cbd5e1 !important;
+}
+.dark .text-gray-600 {
+    color: #94a3b8 !important;
+}
+.dark .text-gray-500 {
+    color: #64748b !important;
+}
+
+/* Colored text — lighten for dark backgrounds */
+.dark .text-amber-700,
+.dark .text-amber-800,
+.dark .text-amber-900 {
+    color: #fbbf24 !important;
+}
+.dark .text-amber-600 {
+    color: #fcd34d !important;
+}
+.dark .text-emerald-700,
+.dark .text-emerald-800,
+.dark .text-emerald-900,
+.dark .text-emerald-950 {
+    color: #6ee7b7 !important;
+}
+.dark .text-green-700,
+.dark .text-green-800 {
+    color: #6ee7b7 !important;
+}
+.dark .text-red-700,
+.dark .text-red-800,
+.dark .text-red-900,
+.dark .text-red-950 {
+    color: #fca5a5 !important;
+}
+.dark .text-orange-700,
+.dark .text-orange-800,
+.dark .text-orange-950 {
+    color: #fdba74 !important;
+}
+.dark .text-blue-700,
+.dark .text-blue-800,
+.dark .text-blue-900 {
+    color: #93c5fd !important;
+}
+.dark .text-cyan-700,
+.dark .text-cyan-800 {
+    color: #67e8f9 !important;
+}
+.dark .text-purple-800 {
+    color: #c4b5fd !important;
+}
+
+/* ── Table ────────────────────────────────────────────────────────────── */
+.dark table thead {
+    background-color: #0f172a !important;
+}
+.dark table thead th {
+    color: #94a3b8 !important;
+    border-color: #334155 !important;
+}
+.dark table tbody tr {
+    border-color: #1e293b !important;
+}
+.dark table tbody td {
+    color: #e2e8f0 !important;
+    border-color: #1e293b !important;
+}
+.dark table tbody tr:hover {
+    background-color: #334155 !important;
+}
+
+/* ── Inputs / Forms ───────────────────────────────────────────────────── */
+.dark input[type="text"],
+.dark input[type="number"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="search"],
+.dark input[type="tel"],
+.dark input[type="url"],
+.dark input[type="date"],
+.dark input[type="datetime-local"],
+.dark input[type="month"],
+.dark input[type="week"],
+.dark input[type="time"],
+.dark textarea,
+.dark select {
+    background-color: #0f172a !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: #64748b !important;
+}
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 1px #10b981 !important;
+}
+/* Checkbox and radio */
+.dark input[type="checkbox"],
+.dark input[type="radio"] {
+    background-color: #0f172a !important;
+    border-color: #475569 !important;
+}
+.dark input[type="checkbox"]:checked,
+.dark input[type="radio"]:checked {
+    background-color: #10b981 !important;
+    border-color: #10b981 !important;
+}
+/* Select arrow - override the SVG color */
+.dark select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+}
+
+/* ── Alert / Info banners ─────────────────────────────────────────────── */
+.dark .bg-amber-50,
+.dark .bg-amber-100 {
+    background-color: rgba(217, 119, 6, 0.15) !important;
+}
+.dark .bg-blue-50,
+.dark .bg-blue-100 {
+    background-color: rgba(59, 130, 246, 0.15) !important;
+}
+.dark .bg-green-50,
+.dark .bg-green-100 {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+}
+.dark .bg-red-50,
+.dark .bg-red-100 {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+}
+.dark .bg-orange-50,
+.dark .bg-orange-100 {
+    background-color: rgba(249, 115, 22, 0.15) !important;
+}
+.dark .bg-emerald-50,
+.dark .bg-emerald-100 {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+}
+.dark .bg-yellow-50 {
+    background-color: rgba(234, 179, 8, 0.15) !important;
+}
+.dark .bg-cyan-50,
+.dark .bg-cyan-100 {
+    background-color: rgba(6, 182, 212, 0.15) !important;
+}
+.dark .bg-purple-50 {
+    background-color: rgba(147, 51, 234, 0.15) !important;
+}
+.dark .bg-sky-100 {
+    background-color: rgba(14, 165, 233, 0.15) !important;
+}
+
+/* ── Shadow adjustments ───────────────────────────────────────────────── */
+.dark .shadow-sm,
+.dark .shadow {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ── Stat cards - left border colors should remain vibrant ────────────── */
+.dark .border-l-red-500 {
+    border-left-color: #ef4444 !important;
+}
+.dark .border-l-orange-400 {
+    border-left-color: #fb923c !important;
+}
+.dark .border-l-amber-400 {
+    border-left-color: #fbbf24 !important;
+}
+.dark .border-l-emerald-400,
+.dark .border-l-emerald-500 {
+    border-left-color: #10b981 !important;
+}
+.dark .border-l-blue-400 {
+    border-left-color: #60a5fa !important;
+}
+.dark .border-l-slate-400 {
+    border-left-color: #64748b !important;
+}
+
+/* ── Dashboard map / legend ───────────────────────────────────────────── */
+.dark .map-legend {
+    background: rgba(30, 41, 59, 0.95) !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+.dark .map-legend * {
+    color: #e2e8f0 !important;
+}
+.dark .zoom-slider-container {
+    background: rgba(30, 41, 59, 0.96) !important;
+    border-color: #334155 !important;
+}
+.dark .zoom-slider-container button {
+    color: #e2e8f0 !important;
+}
+.dark .zoom-slider-container button:hover {
+    background: rgba(16, 185, 129, 0.2) !important;
+}
+/* Leaflet label in dark mode */
+.dark .leaflet-tooltip-label {
+    color: #f1f5f9 !important;
+    text-shadow: 0 0 4px #000, 0 0 4px #000, 0 0 4px #000 !important;
+}
+
+/* ── Leaflet popup (dark) ─────────────────────────────────────────────── */
+.dark .leaflet-popup-content-wrapper {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+.dark .leaflet-popup-tip {
+    background: #1e293b !important;
+}
+.dark .leaflet-popup-content {
+    color: #e2e8f0 !important;
+}
+.dark .leaflet-popup-content * {
+    color: inherit !important;
+}
+
+/* ── Gradient backgrounds ─────────────────────────────────────────────── */
+.dark .bg-gradient-to-r {
+    --tw-gradient-from: #1e293b !important;
+    --tw-gradient-to: #0f172a !important;
+}
+.dark .from-emerald-50 {
+    --tw-gradient-from: rgba(16, 185, 129, 0.15) !important;
+}
+.dark .from-orange-50 {
+    --tw-gradient-from: rgba(249, 115, 22, 0.15) !important;
+}
+.dark .from-red-50 {
+    --tw-gradient-from: rgba(239, 68, 68, 0.15) !important;
+}
+.dark .from-slate-50 {
+    --tw-gradient-from: #0f172a !important;
+}
+
+/* ── Partial opacity backgrounds ──────────────────────────────────────── */
+.dark .bg-slate-50\/50,
+.dark .bg-slate-50\/80 {
+    background-color: rgba(15, 23, 42, 0.5) !important;
+}
+.dark .bg-emerald-50\/50,
+.dark .bg-emerald-50\/20,
+.dark .bg-emerald-100\/40 {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+}
+.dark .bg-amber-50\/60,
+.dark .bg-amber-50\/70,
+.dark .bg-amber-50\/20 {
+    background-color: rgba(217, 119, 6, 0.12) !important;
+}
+.dark .bg-red-50\/30 {
+    background-color: rgba(239, 68, 68, 0.12) !important;
+}
+.dark .bg-orange-50\/30 {
+    background-color: rgba(249, 115, 22, 0.12) !important;
+}
+.dark .bg-cyan-50\/60,
+.dark .bg-cyan-50\/20 {
+    background-color: rgba(6, 182, 212, 0.12) !important;
+}
+.dark .bg-green-100\/40 {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+/* ── Pagination ───────────────────────────────────────────────────────── */
+.dark nav[role="navigation"] span,
+.dark nav[role="navigation"] a {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+}
+.dark nav[role="navigation"] span[aria-current="page"] {
+    background-color: #059669 !important;
+    color: #fff !important;
+}
+
+/* ── Dividers ─────────────────────────────────────────────────────────── */
+.dark .divide-slate-50 > :not([hidden]) ~ :not([hidden]) {
+    border-color: #1e293b !important;
+}
+.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+    border-color: #1e293b !important;
+}
+.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+    border-color: #334155 !important;
+}
+
+/* ── Toast (keep visible in dark) ─────────────────────────────────────── */
+.dark .toast-success { background: #064e3b !important; border-color: #065f46 !important; color: #a7f3d0 !important; }
+.dark .toast-error { background: #4c0519 !important; border-color: #881337 !important; color: #fecdd3 !important; }
+.dark .toast-warning { background: #451a03 !important; border-color: #78350f !important; color: #fde68a !important; }
+.dark .toast-info { background: #1e3a5f !important; border-color: #1e40af !important; color: #bfdbfe !important; }
+
+/* ── Hover states ─────────────────────────────────────────────────────── */
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-100:hover {
+    background-color: #334155 !important;
+}
+.dark .hover\:bg-emerald-50:hover {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+}
+.dark .hover\:bg-amber-100:hover,
+.dark .hover\:bg-amber-50:hover {
+    background-color: rgba(217, 119, 6, 0.2) !important;
+}
+.dark .hover\:bg-red-50:hover,
+.dark .hover\:bg-red-100:hover {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+}
+.dark .hover\:bg-blue-50:hover,
+.dark .hover\:bg-blue-100:hover {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* ── Ring colors (status badges) ──────────────────────────────────────── */
+.dark .ring-red-200 {
+    --tw-ring-color: rgba(239, 68, 68, 0.4) !important;
+}
+.dark .ring-orange-200 {
+    --tw-ring-color: rgba(249, 115, 22, 0.4) !important;
+}
+.dark .ring-emerald-200 {
+    --tw-ring-color: rgba(16, 185, 129, 0.4) !important;
+}
+.dark .ring-blue-200 {
+    --tw-ring-color: rgba(59, 130, 246, 0.4) !important;
+}
+.dark .ring-slate-200 {
+    --tw-ring-color: #475569 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INLINE-STYLED CUSTOM COMPONENTS (custom-select, searchable-select)
+   These use inline styles in JavaScript, so we need !important overrides
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Light mode base styles (since we removed inline styles from templates) */
+.cs-panel {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+}
+.cs-panel .cs-option {
+    color: #374151;
+    background: #fff;
+    border-bottom-color: #f8fafc;
+}
+.cs-panel .cs-option:hover {
+    background: #f8fafc;
+}
+.cs-panel .cs-arrow-up,
+.cs-panel .cs-arrow-down {
+    background: linear-gradient(to bottom, #f8fafc, #fff);
+    border-color: #e2e8f0;
+    color: #64748b;
+}
+.cs-panel .cs-arrow-down {
+    background: linear-gradient(to top, #f8fafc, #fff);
+}
+.cs-wrapper button[id$="-btn"],
+.cs-btn-trigger {
+    background: #fff;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+.ss-panel {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+}
+.ss-panel .ss-option {
+    color: #374151;
+    background: #fff;
+    border-bottom-color: #f8fafc;
+}
+.ss-panel .ss-option:hover {
+    background: #f0fdf4;
+}
+.ss-panel .ss-empty {
+    color: #94a3b8;
+}
+.ss-panel .ss-arrow-up,
+.ss-panel .ss-arrow-down {
+    background: linear-gradient(to bottom, #f8fafc, #fff);
+    border-color: #e2e8f0;
+    color: #64748b;
+}
+.ss-panel .ss-arrow-down {
+    background: linear-gradient(to top, #f8fafc, #fff);
+}
+input[id$="-search"] {
+    background: #fff;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+/* Custom-select trigger button — DARK */
+.dark .cs-wrapper button[id$="-btn"],
+.dark .cs-btn-trigger {
+    background: #0f172a !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+.dark .cs-wrapper button[id$="-btn"] span {
+    color: #e2e8f0 !important;
+}
+
+/* Custom-select dropdown panel */
+.dark .cs-panel {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+.dark .cs-panel .cs-option {
+    color: #e2e8f0 !important;
+    background: #1e293b !important;
+    border-bottom-color: #334155 !important;
+}
+.dark .cs-panel .cs-option:hover {
+    background: #334155 !important;
+}
+.dark .cs-panel .cs-arrow-up,
+.dark .cs-panel .cs-arrow-down {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+}
+.dark .cs-panel .cs-arrow-up span,
+.dark .cs-panel .cs-arrow-down span {
+    color: #94a3b8 !important;
+}
+
+/* Searchable-select panel */
+.dark .ss-panel {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+.dark .ss-panel .ss-option {
+    color: #e2e8f0 !important;
+    background: #1e293b !important;
+    border-bottom-color: #334155 !important;
+}
+.dark .ss-panel .ss-option:hover {
+    background: #334155 !important;
+}
+.dark .ss-panel .ss-empty {
+    color: #64748b !important;
+}
+.dark .ss-panel .ss-arrow-up,
+.dark .ss-panel .ss-arrow-down {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+}
+.dark .ss-panel .ss-arrow-up span,
+.dark .ss-panel .ss-arrow-down span {
+    color: #94a3b8 !important;
+}
+
+/* Searchable-select input */
+.dark input[id$="-search"] {
+    background: #0f172a !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+
+/* ── Labels and other text elements ───────────────────────────────────── */
+.dark label {
+    color: #e2e8f0 !important;
+}
+.dark label .text-red-400,
+.dark label .text-red-500 {
+    color: #f87171 !important;
+}
+.dark p {
+    color: inherit;
+}
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    color: inherit;
+}
+
+/* ── Back-to-top button ───────────────────────────────────────────────── */
+.dark #btn-back-top {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+/* ── Luas Lahan per Status (dashboard inline styles) ──────────────────── */
+.dark .luas-status-item {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+.dark .luas-status-item .luas-label {
+    color: #94a3b8 !important;
+}
+.dark .luas-status-item .luas-value {
+    color: #e2e8f0 !important;
+}
+
+/* ── Cuaca section (kondisi_lahan/create) ─────────────────────────────── */
+.dark #cuaca-auto-section {
+    background: rgba(6, 182, 212, 0.1) !important;
+    border-color: #0e7490 !important;
+}
+.dark #cuaca-auto-section p,
+.dark #cuaca-auto-section span {
+    color: #e2e8f0 !important;
+}
+.dark #cuaca-btn-placeholder {
+    background: #0f172a !important;
+    border-color: #475569 !important;
+}
+.dark #cuaca-btn-placeholder p {
+    color: #94a3b8 !important;
+}
+.dark #cuaca-result {
+    background: rgba(16, 185, 129, 0.1) !important;
+    border-color: #065f46 !important;
+}
+.dark #cuaca-result div[style*="background:#fff"],
+.dark #cuaca-result div[style*="background: #fff"] {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+}
+.dark #cuaca-result p[style*="color:#1e293b"] {
+    color: #e2e8f0 !important;
+}
+.dark #cuaca-result p[style*="color:#047857"] {
+    color: #6ee7b7 !important;
+}
+.dark #cuaca-result p[style*="color:#0369a1"] {
+    color: #67e8f9 !important;
+}
+.dark #cuaca-error {
+    background: rgba(239, 68, 68, 0.1) !important;
+    border-color: #7f1d1d !important;
+}
+.dark #cuaca-error p {
+    color: #fca5a5 !important;
+}
+
+/* ── Calendar/Date picker ─────────────────────────────────────────────── */
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.7) brightness(1.5) !important;
+    opacity: 0.8;
+}
+.dark ::-webkit-datetime-edit,
+.dark ::-webkit-datetime-edit-fields-wrapper,
+.dark ::-webkit-datetime-edit-text,
+.dark ::-webkit-datetime-edit-month-field,
+.dark ::-webkit-datetime-edit-day-field,
+.dark ::-webkit-datetime-edit-year-field {
+    color: #e2e8f0 !important;
+}
+
+/* ── Native select option list (browser popup) ────────────────────────── */
+.dark select option {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+html.dark {
+    color-scheme: dark;
+}
+html:not(.dark) {
+    color-scheme: light;
+}
+
+/* ── Inline style overrides for cuaca stat boxes ──────────────────────── */
+.dark div[style*="background:#fff"][style*="border-radius:8px"] {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+}
+.dark div[style*="background:#fff"][style*="border-radius:8px"] p {
+    color: #e2e8f0 !important;
+}
+.dark div[style*="background:#fff"][style*="border-radius:8px"] p[style*="color:#94a3b8"] {
+    color: #64748b !important;
+}
+.dark div[style*="background:#fff"][style*="border-radius:8px"] p[style*="color:#1e293b"] {
+    color: #e2e8f0 !important;
+}
+.dark div[style*="background:#fff"][style*="border-radius:8px"] p[style*="color:#0369a1"] {
+    color: #67e8f9 !important;
+}
+
+/* ── Generic inline-style overrides for common patterns ───────────────── */
+.dark [style*="background:#e0f2fe"] {
+    background: rgba(6, 182, 212, 0.1) !important;
+}
+.dark [style*="background:#ecfdf5"] {
+    background: rgba(16, 185, 129, 0.1) !important;
+}
+.dark [style*="background:#fef2f2"] {
+    background: rgba(239, 68, 68, 0.1) !important;
+}
+.dark [style*="background:#f1f5f9"] {
+    background: #0f172a !important;
+}
+.dark [style*="background:#f8fafc"] {
+    background: #1e293b !important;
+}
+.dark [style*="background:#fff"] {
+    background: #1e293b !important;
+}
+.dark [style*="color:#1e293b"] {
+    color: #e2e8f0 !important;
+}
+.dark [style*="color:#374151"] {
+    color: #e2e8f0 !important;
+}
+.dark [style*="color:#075985"] {
+    color: #7dd3fc !important;
+}
+.dark [style*="color:#0369a1"] {
+    color: #67e8f9 !important;
+}
+.dark [style*="color:#047857"] {
+    color: #6ee7b7 !important;
+}
+.dark [style*="color:#b91c1c"] {
+    color: #fca5a5 !important;
+}
+.dark [style*="color:#dc2626"] {
+    color: #fca5a5 !important;
+}
+.dark [style*="color:#64748b"] {
+    color: #94a3b8 !important;
+}
+.dark [style*="border:2px solid #7dd3fc"] {
+    border-color: #0e7490 !important;
+}
+.dark [style*="border:1px solid #6ee7b7"] {
+    border-color: #065f46 !important;
+}
+.dark [style*="border:1px solid #d1fae5"] {
+    border-color: #334155 !important;
+}
+.dark [style*="border:1px solid #fca5a5"] {
+    border-color: #7f1d1d !important;
+}
+.dark [style*="border:2px dashed #94a3b8"] {
+    border-color: #475569 !important;
+}
+.dark [style*="border:1px solid #e2e8f0"] {
+    border-color: #334155 !important;
+}
+
+/* ── Curah Hujan custom-select (kondisi_lahan/create — manual implementation) ── */
+.dark #select-curah-hujan-btn {
+    background: #0f172a !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+.dark #select-curah-hujan-btn span {
+    color: #e2e8f0 !important;
+}
+.dark #select-curah-hujan-cs-panel {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+.dark #select-curah-hujan-cs-panel .curah-opt {
+    background: #1e293b !important;
+    color: #e2e8f0 !important;
+    border-bottom-color: #334155 !important;
+}
+.dark #select-curah-hujan-cs-panel .curah-opt:hover {
+    background: #334155 !important;
+}
+.dark #curah-arrow-up,
+.dark #curah-arrow-down {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+}
+.dark #curah-arrow-up span,
+.dark #curah-arrow-down span {
+    color: #94a3b8 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME VARIABLES
+   ═══════════════════════════════════════════════════════════════════════════ */
 @theme {
     --font-family-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
 

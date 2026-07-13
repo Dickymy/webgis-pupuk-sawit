@@ -8,6 +8,7 @@ use App\Http\Controllers\KondisiLahanController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\RbsController;
 use App\Http\Controllers\RuleBaseController;
+use App\Http\Controllers\SettingController;
 use App\Http\Middleware\AdminAuthenticated;
 use Illuminate\Support\Facades\Route;
 
@@ -93,6 +94,13 @@ Route::middleware(AdminAuthenticated::class)->group(function () {
 
     // API endpoint — Upload SHP/GeoJSON ke GeoJSON polygon
     Route::post('/api/geo-upload', [\App\Http\Controllers\GeoUploadController::class, 'upload'])->name('api.geo.upload');
+
+    // Pengaturan (Ganti Password & Mode Tampilan)
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('/', [SettingController::class, 'index'])->name('index');
+        Route::put('/password', [SettingController::class, 'updatePassword'])->name('password.update');
+        Route::put('/theme', [SettingController::class, 'updateTheme'])->name('theme.update');
+    });
 });
 
 

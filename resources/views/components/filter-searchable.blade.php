@@ -17,16 +17,16 @@
         autocomplete="off"
         placeholder="{{ $placeholder ?? 'Cari...' }}"
         value="{{ $selected ? ($options->firstWhere('id', $selected)?->{$displayField} ?? '') : '' }}"
-        class="w-full pl-3 pr-8 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 cursor-text">
+        class="w-full pl-3 pr-8 py-1.5 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-200 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 cursor-text">
     <div class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
     </div>
-    <div id="{{ $fid }}-drop" class="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden hidden max-h-44 overflow-y-auto">
-        <div class="fs-opt px-3 py-2 hover:bg-emerald-50 cursor-pointer text-xs text-slate-500 border-b border-slate-50" data-value="" data-label="">
+    <div id="{{ $fid }}-drop" class="absolute z-50 top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg shadow-lg overflow-hidden hidden max-h-44 overflow-y-auto">
+        <div class="fs-opt px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer text-xs text-slate-500 dark:text-slate-400 border-b border-slate-50 dark:border-slate-700" data-value="" data-label="">
             {{ $placeholder ?? 'Semua' }}
         </div>
         @foreach($options as $opt)
-        <div class="fs-opt px-3 py-2 hover:bg-emerald-50 cursor-pointer text-xs text-slate-700 border-b border-slate-50 last:border-0" data-value="{{ $opt->id }}" data-label="{{ $opt->{$displayField} }}">
+        <div class="fs-opt px-3 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer text-xs text-slate-700 dark:text-slate-200 border-b border-slate-50 dark:border-slate-700 last:border-0" data-value="{{ $opt->id }}" data-label="{{ $opt->{$displayField} }}">
             {{ $opt->{$displayField} }}
         </div>
         @endforeach

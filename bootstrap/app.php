@@ -17,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo('/login');
         // Trust ngrok proxy agar HTTPS/redirect berjalan benar
         $middleware->trustProxies(at: '*');
+        // Exclude tema cookie dari enkripsi agar JS bisa baca langsung
+        $middleware->encryptCookies(except: ['tema_tampilan']);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

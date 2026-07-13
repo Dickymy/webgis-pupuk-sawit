@@ -226,17 +226,19 @@
                         <input type="hidden" name="curah_hujan_kategori" id="select-curah-hujan-val" value="{{ old('curah_hujan_kategori') }}">
                         <button type="button" id="select-curah-hujan-btn"
                             onclick="cuahToggle()"
-                            style="width:100%; min-width:0; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; background:#fff; border:1px solid #cbd5e1; border-radius:12px; font-size:14px; cursor:pointer; text-align:left; color:#9ca3af;">
-                            <span id="select-curah-hujan-display" style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">— Pilih —</span>
+                            style="width:100%; min-width:0; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; border:1px solid transparent; border-radius:12px; font-size:14px; cursor:pointer; text-align:left;"
+                            class="cs-btn-trigger">
+                            <span id="select-curah-hujan-display" style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:0.6;">— Pilih —</span>
                             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="select-curah-hujan-cs-arrow" style="flex-shrink:0; max-width:none!important; color:#94a3b8; transition:transform 0.2s;">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
                         {{-- Panel dipindahkan ke body via JS (portal pattern) --}}
                         <div id="select-curah-hujan-cs-panel"
-                            style="display:none; position:fixed; background:#fff; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.16); z-index:99999; overflow:hidden;">
+                            class="cs-panel"
+                            style="display:none; position:fixed; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.16); z-index:99999; overflow:hidden;">
                             {{-- Panah atas — muncul saat bisa scroll ke atas --}}
-                            <div id="curah-arrow-up" style="display:none; align-items:center; justify-content:center; gap:4px; padding:5px 12px; background:linear-gradient(to bottom, #f8fafc, #fff); border-bottom:1px solid #e2e8f0; cursor:pointer; user-select:none;"
+                            <div id="curah-arrow-up" class="cs-arrow-up" style="display:none; align-items:center; justify-content:center; gap:4px; padding:5px 12px; cursor:pointer; user-select:none;"
                                 onclick="document.getElementById('curah-options-scroll').scrollBy({top:-80,behavior:'smooth'})">
                                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="max-width:none!important; flex-shrink:0; color:#64748b;">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/>
@@ -246,7 +248,7 @@
                             {{-- Scrollable options --}}
                             <div id="curah-options-scroll" style="max-height:220px; overflow-y:auto; overscroll-behavior:contain;"></div>
                             {{-- Panah bawah — muncul saat masih ada konten di bawah --}}
-                            <div id="curah-arrow-down" style="display:none; align-items:center; justify-content:center; gap:4px; padding:5px 12px; background:linear-gradient(to top, #f8fafc, #fff); border-top:1px solid #e2e8f0; cursor:pointer; user-select:none;"
+                            <div id="curah-arrow-down" class="cs-arrow-down" style="display:none; align-items:center; justify-content:center; gap:4px; padding:5px 12px; cursor:pointer; user-select:none;"
                                 onclick="document.getElementById('curah-options-scroll').scrollBy({top:80,behavior:'smooth'})">
                                 <span style="font-size:10px; color:#64748b; font-weight:600;">Scroll ke bawah</span>
                                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="max-width:none!important; flex-shrink:0; color:#64748b;">
@@ -475,7 +477,7 @@ function updateCurahOptions(musimVal, autoSelectVal) {
     scrollEl.innerHTML = '';
 
     if (!musimVal || !curahOptions[musimVal]) {
-        if (display) { display.textContent = '— Pilih —'; display.style.color = '#9ca3af'; }
+        if (display) { display.textContent = '— Pilih —'; display.style.color = ''; display.style.opacity = '0.6'; }
         if (valEl) valEl.value = '';
         if (infoEl) { infoEl.textContent = 'Pilih musim terlebih dahulu'; infoEl.className = 'mt-1 text-xs text-slate-400'; }
         return;
@@ -484,24 +486,27 @@ function updateCurahOptions(musimVal, autoSelectVal) {
     var opts = curahOptions[musimVal];
 
     opts.forEach(function(opt) {
+        var dk = document.documentElement.classList.contains('dark');
         var div = document.createElement('div');
         div.className = 'cs-option';
         div.setAttribute('data-value', opt);
         div.setAttribute('data-label', opt);
-        div.style.cssText = 'padding:11px 14px; cursor:pointer; font-size:13px; color:#374151; border-bottom:1px solid #f8fafc; word-break:break-word; line-height:1.4;';
+        div.style.cssText = 'padding:11px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid transparent; word-break:break-word; line-height:1.4;';
         div.textContent = opt;
         div.addEventListener('click', function() {
+            var dk = document.documentElement.classList.contains('dark');
             if (valEl) valEl.value = opt;
-            if (display) { display.textContent = opt; display.style.color = '#1e293b'; }
+            if (display) { display.textContent = opt; display.style.color = ''; display.style.opacity = '1'; }
             scrollEl.querySelectorAll('.cs-option').forEach(function(o) {
-                o.style.background = o.getAttribute('data-value') === opt ? '#f0fdf4' : '#fff';
-                o.style.color      = o.getAttribute('data-value') === opt ? '#065f46' : '#374151';
-                o.style.fontWeight = o.getAttribute('data-value') === opt ? '600' : '400';
+                var isMe = o.getAttribute('data-value') === opt;
+                o.style.background = isMe ? (dk ? '#064e3b' : '#f0fdf4') : '';
+                o.style.color      = isMe ? (dk ? '#6ee7b7' : '#065f46') : '';
+                o.style.fontWeight = isMe ? '600' : '400';
             });
             cuahClose();
         });
-        div.addEventListener('mouseenter', function() { if (this.style.background !== 'rgb(240, 253, 244)') this.style.background = '#f8fafc'; });
-        div.addEventListener('mouseleave', function() { if (this.style.background === 'rgb(248, 250, 252)') this.style.background = '#fff'; });
+        div.addEventListener('mouseenter', function() { var dk = document.documentElement.classList.contains('dark'); if (!this.style.background || this.style.background === '') this.style.background = dk ? '#334155' : '#f8fafc'; });
+        div.addEventListener('mouseleave', function() { var dk = document.documentElement.classList.contains('dark'); var hoverBg = dk ? 'rgb(51, 65, 85)' : 'rgb(248, 250, 252)'; if (this.style.background === hoverBg) this.style.background = ''; });
         scrollEl.appendChild(div);
     });
 
@@ -510,7 +515,7 @@ function updateCurahOptions(musimVal, autoSelectVal) {
     // Auto-select jika ada nilai sebelumnya
     var toSelect = autoSelectVal || (valEl && valEl.value);
     if (toSelect && opts.includes(toSelect)) {
-        if (display) { display.textContent = toSelect; display.style.color = '#1e293b'; }
+        if (display) { display.textContent = toSelect; display.style.color = ''; display.style.opacity = '1'; }
         if (valEl) valEl.value = toSelect;
     }
 }
