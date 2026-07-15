@@ -575,9 +575,9 @@ function switchTab(tab) {
 }
 
 var drawMap = L.map('draw-map', { center: [-1.5, 110.0], zoom: 10, zoomControl: false, zoomSnap: 0, zoomDelta: 0.25, wheelDebounceTime: 40, wheelPxPerZoomLevel: 120 });
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(drawMap);
+var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OSM' }).addTo(drawMap);
 var satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: 17 });
-L.control.layers({'Peta': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}), 'Satelit': satLayer}).addTo(drawMap);
+L.control.layers({'🗺️ Peta': osmLayer, '🛰️ Satelit': satLayer}, null, {position: 'topright'}).addTo(drawMap);
 
 // ─── ZOOM SLIDER (smooth continuous zoom on hold) ────────────────
 (function(){

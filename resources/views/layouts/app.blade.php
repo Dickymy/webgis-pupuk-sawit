@@ -42,9 +42,68 @@
         /* Fix: Leaflet z-index harus di bawah sidebar mobile */
         .leaflet-pane, .leaflet-control, .leaflet-top, .leaflet-bottom { z-index: 40 !important; }
         .leaflet-control { z-index: 41 !important; }
+        /* Dark mode: Leaflet layer control (Peta/Satelit switcher) */
+        .dark .leaflet-control-layers {
+            background: #1e293b !important;
+            border: 1px solid #475569 !important;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+            color: #e2e8f0 !important;
+        }
+        .dark .leaflet-control-layers-toggle {
+            background-color: #1e293b !important;
+            border-radius: 10px !important;
+        }
+        .dark .leaflet-control-layers label {
+            color: #e2e8f0 !important;
+        }
+        .dark .leaflet-control-layers label span {
+            color: #e2e8f0 !important;
+        }
+        .dark .leaflet-control-layers-separator {
+            border-top-color: #475569 !important;
+        }
+        .dark .leaflet-control-layers input[type="radio"] {
+            accent-color: #10b981;
+        }
+        /* Layer control: lebih jelas & mudah ditemukan */
+        .leaflet-control-layers {
+            border-radius: 10px !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.12) !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        .leaflet-control-layers-toggle {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 10px !important;
+        }
+        .leaflet-control-layers-expanded {
+            padding: 8px 12px !important;
+        }
+        .leaflet-control-layers label {
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            padding: 3px 0 !important;
+        }
         /* Responsive: popup tidak overflow di mobile */
         .leaflet-popup-content-wrapper { max-width: 90vw !important; }
         .leaflet-popup-content { max-width: 100% !important; overflow-x: hidden; }
+        /* Dark mode: Leaflet popup — tema gelap */
+        .dark .leaflet-popup-content-wrapper {
+            background: #1e293b !important;
+            color: #e2e8f0 !important;
+            border: 1px solid #334155 !important;
+        }
+        .dark .leaflet-popup-content {
+            color: #e2e8f0 !important;
+            background: #1e293b !important;
+        }
+        .dark .leaflet-popup-tip {
+            background: #1e293b !important;
+        }
+        .dark .leaflet-popup-close-button {
+            color: #94a3b8 !important;
+        }
         /* KRITIS: Prevent horizontal scroll */
         html { overflow-x: hidden; scroll-behavior: smooth; }
         body { overflow-x: hidden; min-width: 0; word-wrap: break-word; overflow-wrap: break-word; }
