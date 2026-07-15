@@ -14,14 +14,16 @@ function applyTheme(tema) {
         document.documentElement.style.colorScheme = 'light';
     }
 
-    // Simpan di cookie supaya script anti-FOUC di <head> baca nilai terbaru
+    // Simpan di localStorage (instant, tidak terpengaruh server cache)
+    try { localStorage.setItem('tema_tampilan', tema); } catch(e) {}
+    // Simpan juga di cookie sebagai fallback
     document.cookie = `tema_tampilan=${tema}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
 }
 
-// Jalankan sekali saat JS dimuat — pastikan state <html> konsisten dengan cookie
+// Jalankan sekali saat JS dimuat — pastikan state <html> konsisten
 (function () {
-    const cookieTema = document.cookie.split('; ').find(row => row.startsWith('tema_tampilan='));
-    const tema = cookieTema ? cookieTema.split('=')[1] : 'system';
+    var tema = 'system';
+    try { tema = localStorage.getItem('tema_tampilan') || 'system'; } catch(e) {}
     applyTheme(tema);
 })();
 

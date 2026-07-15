@@ -9,10 +9,8 @@
     {{-- ANTI-FOUC: set class 'dark' ke <html> SEBELUM CSS/konten dirender --}}
     <script>
         (function () {
-            // Prioritas: cookie lokal (diset langsung saat user ganti tema) > database server
-            var cookieTema = document.cookie.split('; ').find(function(row) { return row.startsWith('tema_tampilan='); });
-            var serverTema = '{{ auth("admin")->check() ? auth("admin")->user()->tema ?? "system" : "" }}';
-            var tema = (cookieTema ? cookieTema.split('=')[1] : '') || serverTema || 'system';
+            // Baca tema dari localStorage (paling real-time, diset langsung saat user ganti)
+            var tema = localStorage.getItem('tema_tampilan') || 'system';
 
             var isDark = tema === 'dark' || (tema === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
             if (isDark) {
