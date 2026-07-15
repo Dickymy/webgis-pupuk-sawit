@@ -2,7 +2,7 @@
 
 @section('title', 'Laporan Pemupukan')
 @section('page-title', 'Laporan & Rekap Pemupukan')
-@section('page-subtitle', 'Rekapitulasi kebutuhan pupuk per anggota kelompok tani')
+@section('page-subtitle', 'Rekapitulasi kebutuhan pupuk per anggota Kelompok Tani Suluh Tani')
 
 @section('content')
 <div class="space-y-4 sm:space-y-5">
