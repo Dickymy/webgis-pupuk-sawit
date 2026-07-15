@@ -308,11 +308,15 @@
     {{-- ═══ 1. KOP SURAT RESMI ═══ --}}
     <table style="width: 100%; border-collapse: collapse; border: none; margin-bottom: 5px;">
         <tr>
-            <td style="width: 100%; text-align: center; border: none; padding: 0; font-family: 'Times-Roman', 'DejaVu Serif', serif;">
-                <div style="font-size: 15px; font-weight: bold; text-transform: uppercase; color: #0f172a; letter-spacing: 0.5px;">KELOMPOK TANI</div>
+            <td style="width: 80px; text-align: center; vertical-align: middle; border: none; padding: 0;">
+                <img src="{{ public_path('img/logo-150.png') }}" style="width: 70px; height: 70px; object-fit: contain;" alt="Logo Suluh Tani">
+            </td>
+            <td style="text-align: center; vertical-align: middle; border: none; padding: 0; font-family: 'Times-Roman', 'DejaVu Serif', serif;">
+                <div style="font-size: 15px; font-weight: bold; text-transform: uppercase; color: #0f172a; letter-spacing: 0.5px;">KELOMPOK TANI SULUH TANI</div>
                 <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #1e293b; margin-top: 2px;">DESA RESAK, KECAMATAN BONGAN</div>
                 <div style="font-size: 10px; font-weight: 500; color: #334155; margin-top: 2px;">Kabupaten Kutai Barat - Provinsi Kalimantan Timur</div>
             </td>
+            <td style="width: 80px; border: none; padding: 0;"></td>
         </tr>
     </table>
     <div style="border-top: 2px solid #0f172a; border-bottom: 0.5px solid #0f172a; height: 3px; margin-bottom: 12px; margin-top: 4px;"></div>
@@ -599,7 +603,7 @@
 
     {{-- ═══ FOOTER ═══ --}}
     <div class="footer">
-        Sistem Pendukung Keputusan Pemupukan Kelapa Sawit (webgis-pupuk-sawit)<br>
+        Sistem Pendukung Keputusan Pemupukan Kelapa Sawit (SawitGIS)<br>
         Dicetak: {{ now()->translatedFormat('d F Y, H:i') }} WITA
     </div>
 </body>

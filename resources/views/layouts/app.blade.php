@@ -4,13 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="description" content="Sistem Pendukung Keputusan Pemupukan Kelapa Sawit - Kelompok Tani">
+    <meta name="description" content="SawitGIS - Sistem Pendukung Keputusan Pemupukan Kelapa Sawit - Kelompok Tani Suluh Tani">
 
     {{-- ANTI-FOUC: set class 'dark' ke <html> SEBELUM CSS/konten dirender --}}
     <script>
         (function () {
+            // Prioritas: nilai dari database (server) > cookie lokal
+            var serverTema = '{{ auth("admin")->check() ? auth("admin")->user()->tema ?? "system" : "" }}';
             var cookieTema = document.cookie.split('; ').find(function(row) { return row.startsWith('tema_tampilan='); });
-            var tema = cookieTema ? cookieTema.split('=')[1] : 'system';
+            var tema = serverTema || (cookieTema ? cookieTema.split('=')[1] : 'system');
+
+            // Sinkronkan cookie dengan nilai server agar lintas-device konsisten
+            if (serverTema && (!cookieTema || cookieTema.split('=')[1] !== serverTema)) {
+                document.cookie = 'tema_tampilan=' + serverTema + '; path=/; max-age=31536000; SameSite=Lax';
+            }
+
             var isDark = tema === 'dark' || (tema === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
             if (isDark) {
                 document.documentElement.classList.add('dark');
@@ -22,8 +30,9 @@
         })();
     </script>
 
-    <title>@yield('title', 'Dashboard') — webgis-pupuk-sawit</title>
+    <title>@yield('title', 'Dashboard') — SawitGIS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preload" href="{{ asset('img/logo-96.png') }}" as="image" type="image/png">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -139,9 +148,12 @@
 
         {{-- Nama Aplikasi --}}
         <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-700">
-            <div>
-                <p class="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">webgis-pupuk-sawit</p>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Kelompok Tani</p>
+            <div class="flex items-center gap-3">
+                <img src="{{ asset('img/logo-96.png') }}" alt="Logo Suluh Tani" class="w-14 h-14 object-contain flex-shrink-0" width="56" height="56">
+                <div>
+                    <p class="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">SawitGIS</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Kelompok Tani Suluh Tani</p>
+                </div>
             </div>
             {{-- Tombol collapse sidebar (desktop) --}}
             <button onclick="collapseSidebar()" class="hidden lg:block p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Tutup Sidebar">
