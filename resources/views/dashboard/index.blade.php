@@ -466,8 +466,8 @@ var activeStatuses = ['Darurat', 'Segera', 'Normal', 'Tunda', 'Belum Dianalisis'
 
 var map = L.map('map', { center: [-2.5489, 118.0149], zoom: 5, zoomControl: false, zoomSnap: 0, zoomDelta: 0.25, wheelDebounceTime: 40, wheelPxPerZoomLevel: 120 });
 var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
-osm.addTo(map);
 var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; Esri', maxZoom: 19, maxNativeZoom: 17 });
+satellite.addTo(map);
 L.control.layers({'🗺️ Peta': osm, '🛰️ Satelit': satellite}, null, {position: 'topright'}).addTo(map);
 
 // ─── ZOOM SLIDER (smooth continuous zoom on hold) ────────────────
