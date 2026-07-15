@@ -9,15 +9,10 @@
     {{-- ANTI-FOUC: set class 'dark' ke <html> SEBELUM CSS/konten dirender --}}
     <script>
         (function () {
-            // Prioritas: nilai dari database (server) > cookie lokal
-            var serverTema = '{{ auth("admin")->check() ? auth("admin")->user()->tema ?? "system" : "" }}';
+            // Prioritas: cookie lokal (diset langsung saat user ganti tema) > database server
             var cookieTema = document.cookie.split('; ').find(function(row) { return row.startsWith('tema_tampilan='); });
-            var tema = serverTema || (cookieTema ? cookieTema.split('=')[1] : 'system');
-
-            // Sinkronkan cookie dengan nilai server agar lintas-device konsisten
-            if (serverTema && (!cookieTema || cookieTema.split('=')[1] !== serverTema)) {
-                document.cookie = 'tema_tampilan=' + serverTema + '; path=/; max-age=31536000; SameSite=Lax';
-            }
+            var serverTema = '{{ auth("admin")->check() ? auth("admin")->user()->tema ?? "system" : "" }}';
+            var tema = (cookieTema ? cookieTema.split('=')[1] : '') || serverTema || 'system';
 
             var isDark = tema === 'dark' || (tema === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
             if (isDark) {
