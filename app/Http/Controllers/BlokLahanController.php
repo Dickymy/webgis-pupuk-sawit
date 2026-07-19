@@ -139,9 +139,16 @@ class BlokLahanController extends Controller
             'fase_tanaman'      => ['nullable', 'in:TBM,TM'],
         ]);
 
-        json_decode($validated['koordinat_geojson']);
+        json_decode($validated['koordinat_geojson'], true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             return back()->withErrors(['koordinat_geojson' => 'Format GeoJSON tidak valid.'])->withInput();
+        }
+
+        // Validasi struktur GeoJSON polygon
+        $geojson = json_decode($validated['koordinat_geojson'], true);
+        $type = $geojson['type'] ?? null;
+        if (!in_array($type, ['Polygon', 'MultiPolygon', 'Feature', 'FeatureCollection'])) {
+            return back()->withErrors(['koordinat_geojson' => 'GeoJSON harus berupa Polygon, MultiPolygon, Feature, atau FeatureCollection.'])->withInput();
         }
 
         $blokLahan->update($validated);
