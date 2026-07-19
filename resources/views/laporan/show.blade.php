@@ -50,7 +50,7 @@
                 };
             @endphp
             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $validitasColor }}">{{ $rekomendasiRbs->validitas_rekomendasi }}</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $confColor }}">Keyakinan: {{ $rekomendasiRbs->confidence_label }} ({{ $rekomendasiRbs->confidence_score }}%)</span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $confColor }}">Keandalan: {{ $rekomendasiRbs->confidence_label }} ({{ $rekomendasiRbs->confidence_score }}%)</span>
             @if(!$rekomendasiRbs->data_cukup)
             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-800">⚠ Data Belum Cukup</span>
             @endif

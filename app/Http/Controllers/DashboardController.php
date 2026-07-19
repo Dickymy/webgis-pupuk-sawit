@@ -27,6 +27,7 @@ class DashboardController extends Controller
                 'luas_ha'          => $blok->luas_ha,
                 'sph'              => $blok->sph,
                 'umur_tanaman'     => $blok->umur_tanaman,
+                'fase_tanaman'     => $blok->fase_tanaman,
                 'geojson'          => json_decode($blok->koordinat_geojson, true),
                 'status_rbs'       => $statusDb,
                 'status_label'     => \App\Models\RekomendasiRbs::labelStatus($statusDb),
@@ -39,6 +40,18 @@ class DashboardController extends Controller
                 'dosis_kcl'        => $rbs?->dosis_kcl,
                 'total_urea'       => $rbs?->total_urea,
                 'total_kcl'        => $rbs?->total_kcl,
+                // Pahan-v2 indicators
+                'urea_estimasi'    => $rbs?->urea_estimasi_kg_per_pokok_tahun,
+                'kcl_estimasi'     => $rbs?->kcl_estimasi_kg_per_pokok_tahun,
+                'skor_keandalan'   => $rbs?->kelengkapan_data_score,
+                'kategori_keandalan' => $rbs?->kategori_keandalan,
+                'status_kondisi'   => $rbs?->status_kondisi_tanaman,
+                'status_kelayakan' => $rbs?->status_kelayakan_aplikasi,
+                'versi_mesin'      => $rbs?->versi_mesin_rekomendasi,
+                // Flags
+                'perlu_verifikasi_fase' => ($blok->fase_tanaman === null && $blok->umur_tanaman === 3),
+                'analisis_kedaluwarsa'  => $rbs?->tanggal_analisis?->diffInDays(now()) > 90,
+                'belum_ada_kondisi'     => !$blok->kondisiTerbaru,
             ];
         });
 

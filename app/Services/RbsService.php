@@ -112,8 +112,9 @@ class RbsService
      */
     public function analisisSemua(): array
     {
+        // Eager-load kondisi terbaru + preload rules sekali untuk semua blok
         $blokLahans = BlokLahan::whereHas('kondisiLahans')
-            ->with(['kondisiTerbaru'])
+            ->with(['kondisiTerbaru', 'anggota'])
             ->get();
         $results = [];
         $errors  = [];

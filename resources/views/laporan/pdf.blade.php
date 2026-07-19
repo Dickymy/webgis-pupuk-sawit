@@ -377,6 +377,23 @@
     @if($rekomendasiRbs->total_urea || $rekomendasiRbs->total_kcl)
     <div class="section">
         <div class="section-title">Kebutuhan Pupuk</div>
+
+        {{-- Rentang Referensi Pahan --}}
+        @if($rekomendasiRbs->urea_min_kg_per_pokok_tahun)
+        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 9px;">
+            <p style="font-weight: 700; color: #1e40af; margin-bottom: 4px;">📖 Rentang Referensi Pahan (2013) — Tabel 9.13 & 9.14</p>
+            <p style="color: #1e3a5f;">
+                Urea: {{ number_format($rekomendasiRbs->urea_min_kg_per_pokok_tahun, 2) }}–{{ number_format($rekomendasiRbs->urea_max_kg_per_pokok_tahun, 2) }} kg/pokok/tahun
+                &nbsp;|&nbsp;
+                KCl: {{ number_format($rekomendasiRbs->kcl_min_kg_per_pokok_tahun, 2) }}–{{ number_format($rekomendasiRbs->kcl_max_kg_per_pokok_tahun, 2) }} kg/pokok/tahun
+            </p>
+            <p style="color: #64748b; font-size: 8px; margin-top: 2px;">
+                Fase: {{ $rekomendasiRbs->fase_tanaman_snapshot ?? '-' }} · Umur: {{ $rekomendasiRbs->umur_tanaman_snapshot ?? '-' }} thn · Strategi: {{ $rekomendasiRbs->strategi_estimasi_dosis ?? 'midpoint' }}
+            </p>
+        </div>
+        @endif
+
+        <p style="font-size: 8.5px; color: #6b7280; font-weight: 600; margin-bottom: 4px;">ESTIMASI DOSIS KERJA SISTEM:</p>
         <table class="logistik-table">
             <thead>
                 <tr>
@@ -598,6 +615,11 @@
     {{-- ═══ 12. DISCLAIMER ═══ --}}
     <div class="disclaimer">
         <strong>Catatan:</strong> Rekomendasi ini dihasilkan oleh sistem berbasis aturan (Rule-Based System) berdasarkan data observasi lapangan. Hasil ini bersifat rekomendasi dan bukan pengganti analisis laboratorium tanah/daun. Untuk keputusan yang lebih akurat, disarankan melengkapi dengan hasil uji lab.
+    </div>
+
+    {{-- ═══ DISCLAIMER ═══ --}}
+    <div style="margin-top: 12px; padding: 8px 10px; background: #fefce8; border: 1px solid #fde047; border-radius: 6px; font-size: 8.5px; color: #713f12; line-height: 1.5;">
+        <strong>⚠️ Disclaimer:</strong> Rekomendasi ini merupakan estimasi awal berbasis data blok, observasi visual, dan basis aturan (Rule-Based System). Hasil ini bukan pengganti analisis laboratorium tanah/daun atau keputusan ahli agronomi. Perhitungan kuantitatif dibatasi pada Urea dan MOP/KCl. Unsur P, Mg, B, dan unsur lain tetap dapat diperlukan sesuai kondisi tanaman dan hasil evaluasi ahli.
     </div>
 
 

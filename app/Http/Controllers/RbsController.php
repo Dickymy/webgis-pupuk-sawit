@@ -143,13 +143,22 @@ class RbsController extends Controller
         }
 
         return response()->json([
-            'status'       => $rbs->status_kebutuhan_dominan,
-            'warna_badge'  => $rbs->warna_badge,
-            'tanggal'      => $rbs->tanggal_analisis->format('d/m/Y'),
-            'masalah'      => $rbs->masalah_teridentifikasi,
-            'pupuk'        => $rbs->rekomendasi_pupuk,
-            'saran'        => $rbs->saran_tindakan_utama,
-            'jumlah_rule'  => $rbs->jumlah_rule_terpicu,
+            'status'            => $rbs->status_kebutuhan_dominan,
+            'warna_badge'       => $rbs->warna_badge,
+            'tanggal'           => $rbs->tanggal_analisis->format('d/m/Y'),
+            'masalah'           => $rbs->masalah_teridentifikasi,
+            'pupuk'             => $rbs->rekomendasi_pupuk,
+            'saran'             => $rbs->saran_tindakan_utama,
+            'jumlah_rule'       => $rbs->jumlah_rule_terpicu,
+            // Pahan-v2
+            'fase'              => $rbs->fase_tanaman_snapshot,
+            'umur'              => $rbs->umur_tanaman_snapshot,
+            'urea_estimasi'     => $rbs->urea_estimasi_kg_per_pokok_tahun,
+            'kcl_estimasi'      => $rbs->kcl_estimasi_kg_per_pokok_tahun,
+            'skor_keandalan'    => $rbs->kelengkapan_data_score,
+            'kategori_keandalan' => $rbs->kategori_keandalan,
+            'status_kondisi'    => $rbs->status_kondisi_tanaman,
+            'status_kelayakan'  => $rbs->status_kelayakan_aplikasi,
         ]);
     }
 
