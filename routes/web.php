@@ -15,50 +15,6 @@ use Illuminate\Support\Facades\Route;
 // Root redirect
 Route::get('/', fn() => redirect()->route('dashboard'));
 
-// === ROUTE MAINTENANCE — HAPUS SETELAH FIX ===
-Route::get('/setup-database', function () {
-    try {
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-        $output = \Illuminate\Support\Facades\Artisan::output();
-        return '<pre>Migration berhasil!<br><br>' . $output . '</pre><br><a href="/fix-cache">Clear Cache</a>';
-    } catch (\Exception $e) {
-        return '<pre>Error: ' . $e->getMessage() . '</pre>';
-    }
-});
-
-Route::get('/seed-tester', function () {
-    \App\Models\Admin::firstOrCreate(
-        ['username' => 'test'],
-        [
-            'password'     => 'test',
-            'nama_lengkap' => 'Akun Tester Kuesioner',
-        ]
-    );
-    return 'Akun tester berhasil dibuat! Username: test | Password: test<br><br><a href="/login">Login</a>';
-});
-
-Route::get('/fix-cache', function () {
-    \Illuminate\Support\Facades\Artisan::call('config:clear');
-    \Illuminate\Support\Facades\Artisan::call('cache:clear');
-    \Illuminate\Support\Facades\Artisan::call('route:clear');
-    \Illuminate\Support\Facades\Artisan::call('view:clear');
-    
-    // Hapus semua session files
-    $sessionPath = storage_path('framework/sessions');
-    if (is_dir($sessionPath)) {
-        $files = glob($sessionPath . '/*');
-        foreach ($files as $file) {
-            if (is_file($file)) unlink($file);
-        }
-    }
-    
-    return 'Cache cleared! Session driver: ' . config('session.driver') . 
-           ' | APP_URL: ' . config('app.url') .
-           ' | Session secure: ' . (config('session.secure') ? 'true' : 'false') .
-           ' | Session path: ' . config('session.path') .
-           '<br><br><a href="/login">Klik di sini untuk login</a>';
-});
-
 // Authentication routes (guest only)
 Route::middleware('guest:admin')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');

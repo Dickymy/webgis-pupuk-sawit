@@ -61,6 +61,71 @@ $warna = match($rbs->status_kebutuhan_dominan) {
         </div>
     </div>
 
+    {{-- Status Dual: Kondisi Tanaman & Kelayakan Aplikasi (Pahan-v2) --}}
+    @if($rbs->status_kondisi_tanaman || $rbs->status_kelayakan_aplikasi)
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {{-- Kondisi Tanaman --}}
+        <div class="flex items-center gap-2.5 px-3 py-2 rounded-xl border
+            @switch($rbs->status_kondisi_tanaman)
+                @case('GEJALA_BERAT') bg-red-50 border-red-200 @break
+                @case('TERINDIKASI_DEFISIENSI') bg-orange-50 border-orange-200 @break
+                @case('NORMAL_VISUAL') bg-emerald-50 border-emerald-200 @break
+                @case('PERLU_VERIFIKASI') bg-yellow-50 border-yellow-200 @break
+                @default bg-slate-50 border-slate-200
+            @endswitch
+        ">
+            <span class="text-base">
+                @switch($rbs->status_kondisi_tanaman)
+                    @case('GEJALA_BERAT') 🔴 @break
+                    @case('TERINDIKASI_DEFISIENSI') 🟠 @break
+                    @case('NORMAL_VISUAL') 🟢 @break
+                    @case('PERLU_VERIFIKASI') 🟡 @break
+                    @default ⚪
+                @endswitch
+            </span>
+            <div>
+                <p class="text-[9px] text-slate-500 uppercase font-bold">Kondisi Tanaman</p>
+                <p class="text-xs font-semibold text-slate-800">
+                    @switch($rbs->status_kondisi_tanaman)
+                        @case('GEJALA_BERAT') Gejala Berat @break
+                        @case('TERINDIKASI_DEFISIENSI') Terindikasi Defisiensi @break
+                        @case('NORMAL_VISUAL') Kondisi Visual Normal @break
+                        @case('PERLU_VERIFIKASI') Perlu Verifikasi @break
+                        @case('BELUM_DIOBSERVASI') Belum Diobservasi @break
+                        @default Belum Dicek
+                    @endswitch
+                </p>
+            </div>
+        </div>
+        {{-- Kelayakan Aplikasi --}}
+        <div class="flex items-center gap-2.5 px-3 py-2 rounded-xl border
+            @if(in_array($rbs->status_kelayakan_aplikasi, ['LAYAK_DIJADWALKAN', 'TERLAMBAT_PERLU_DIJADWALKAN'])) bg-emerald-50 border-emerald-200
+            @elseif($rbs->status_kelayakan_aplikasi === 'PERLU_VERIFIKASI_DATA') bg-blue-50 border-blue-200
+            @else bg-amber-50 border-amber-200
+            @endif
+        ">
+            <span class="text-base">
+                @switch($rbs->status_kelayakan_aplikasi)
+                    @case('LAYAK_DIJADWALKAN') ✅ @break
+                    @case('TERLAMBAT_PERLU_DIJADWALKAN') ⏰ @break
+                    @case('TUNDA_HUJAN_RENDAH') ☀️ @break
+                    @case('TUNDA_HUJAN_TINGGI') 🌧️ @break
+                    @case('TUNDA_INTERVAL') ⏳ @break
+                    @case('PERLU_PERBAIKAN_DRAINASE') 💧 @break
+                    @case('PERLU_VERIFIKASI_DATA') ❓ @break
+                    @default ❓
+                @endswitch
+            </span>
+            <div>
+                <p class="text-[9px] text-slate-500 uppercase font-bold">Kelayakan Pemupukan</p>
+                <p class="text-xs font-semibold text-slate-800">
+                    {{ \App\Services\FertilizationWindowService::labelStatus($rbs->status_kelayakan_aplikasi ?? 'PERLU_VERIFIKASI_DATA') }}
+                </p>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Masalah Teridentifikasi --}}
     @if($rbs->masalah_teridentifikasi && count($rbs->masalah_teridentifikasi) > 0)
     <div>

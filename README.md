@@ -1,66 +1,277 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SawitGIS — WebGIS Sistem Pemupukan Kelapa Sawit
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> **Skripsi:** Rancang Bangun WebGIS Sistem Pemupukan Kelapa Sawit Menggunakan Metode Rule-Based System
 
-## About Laravel
+## Ringkasan
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+SawitGIS adalah aplikasi berbasis web yang menggabungkan Geographic Information System (GIS) dengan Rule-Based System (RBS) untuk memberikan rekomendasi pemupukan kelapa sawit secara spesifik per blok lahan. Sistem menggunakan pendekatan Forward Chaining untuk mengevaluasi kondisi tanaman dan lingkungan, kemudian menentukan kebutuhan pupuk berdasarkan tabel referensi Iyung Pahan (2013).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Fitur Utama
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **WebGIS Interaktif** — Peta blok lahan dengan polygon GeoJSON, visualisasi status per blok
+- **Analisis Rule-Based System** — Forward Chaining dengan 25 rule berbasis gejala visual, pH, iklim, dan umur
+- **Referensi Dosis Pahan (2013)** — Rentang dosis Urea & KCl dari Tabel 9.13 & 9.14
+- **Kelayakan Waktu Aplikasi** — Evaluasi curah hujan, interval, dan drainase
+- **Dual Status** — Kondisi Tanaman (gejala) dan Kelayakan Pemupukan (waktu) dipisahkan
+- **Skor Kelengkapan & Keandalan Data** — Transparansi kualitas data input
+- **Jadwal Pemupukan** — Split aplikasi 2x/tahun dengan estimasi bulan
+- **Histori Analisis** — Fingerprint SHA-256, tidak duplikat jika hasil sama
+- **Laporan PDF** — Export rekomendasi dengan snapshot data saat analisis
+- **Data Cuaca Otomatis** — Integrasi Open-Meteo API (estimasi berbasis koordinat)
+- **Multi-format Upload** — GeoJSON dan Shapefile (ZIP)
 
-## Learning Laravel
+## Arsitektur Sistem
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```
+Laravel 11 + Blade + Tailwind CSS 4 + Leaflet.js
+├── Services/
+│   ├── RbsService.php              — Orchestrator analisis utama
+│   ├── PahanDoseReferenceService   — Rentang dosis dari tabel Pahan
+│   ├── FertilizationWindowService  — Evaluasi kelayakan waktu
+│   ├── FertilizationCalculationService — Hitung total per blok
+│   ├── RecommendationReliabilityService — Skor keandalan
+│   └── PlantPhaseResolver          — Resolusi fase TBM/TM
+├── Models/
+│   ├── BlokLahan, KondisiLahan, RekomendasiRbs
+│   └── RuleBaseLanjutan (dengan provenance metadata)
+└── Controllers/
+    ├── DashboardController  — WebGIS + statistik
+    ├── RbsController        — Analisis & detail
+    ├── LaporanController    — PDF export
+    └── CuacaController      — Open-Meteo integration
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Alur Forward Chaining
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+1. Ambil kondisi lahan terbaru (observasi visual + lingkungan)
+2. Cek kecukupan data minimum
+3. Evaluasi setiap rule aktif (AND logic, semua kondisi di rule harus cocok)
+4. Rule Chaining: rule dapat mengaktifkan intermediate flag untuk rule berikutnya
+5. Tentukan status kondisi tanaman dari rule terpicu
+6. Evaluasi kelayakan waktu (curah hujan, interval, drainase)
+7. Hitung dosis dari tabel Pahan (tanpa multiplier)
+8. Hitung skor keandalan data
+9. Simpan dengan fingerprint histori
 
-## Laravel Sponsors
+## Penjelasan Pahan-v2
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Versi mesin rekomendasi `pahan-v2` menggunakan **rentang dosis** dari buku Iyung Pahan (2013), Tabel 9.13 & 9.14:
 
-### Premium Partners
+| Fase | Umur | Urea (kg/pokok/tahun) | KCl (kg/pokok/tahun) |
+|------|------|-----------------------|----------------------|
+| TBM | 1 tahun | 0.50–0.70 | 0.75–1.25 |
+| TBM | 2 tahun | 0.70–0.85 | 1.00–1.75 |
+| TBM | 3 tahun | 0.90–1.25 | 1.20–2.25 |
+| TM | 3–5 tahun | 0.90–1.75 | 1.20–2.50 |
+| TM | 6–15 tahun | 1.00–3.00 | 1.50–3.50 |
+| TM | >15 tahun | 1.50–2.50 | 1.50–2.25 |
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+**Penting:**
+- Multiplier jenis tanah, topografi, dan waktu **TIDAK aktif** di pahan-v2
+- Dosis kuantitatif Urea/KCl **hanya** berasal dari `PahanDoseReferenceService`
+- Rule menentukan diagnosis dan tindakan, bukan angka dosis Urea/KCl
+- Strategi estimasi default: `midpoint` (titik tengah rentang)
 
-## Contributing
+## Instalasi Lokal
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+# Clone repository
+git clone https://github.com/Dickymy/webgis-pupuk-sawit.git
+cd webgis-pupuk-sawit
 
-## Code of Conduct
+# Install dependencies
+composer install
+npm install
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Konfigurasi
+cp .env.example .env
+php artisan key:generate
 
-## Security Vulnerabilities
+# Edit .env: set database, admin credentials
+# DB_DATABASE=sawit_spk
+# INITIAL_ADMIN_USERNAME=admin
+# INITIAL_ADMIN_PASSWORD=minimal8karakter
+# INITIAL_ADMIN_NAME=Administrator
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Database
+php artisan migrate
+php artisan db:seed
 
-## License
+# Migrasi data lama ke Pahan-v2 (opsional, jika ada data lama)
+php artisan sawit:migrate-pahan-v2 --dry-run
+php artisan sawit:migrate-pahan-v2
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Build frontend
+npm run build
+
+# Jalankan
+php artisan serve
+```
+
+## Konfigurasi .env
+
+```env
+# Akun Admin Awal (wajib untuk db:seed)
+INITIAL_ADMIN_USERNAME=admin
+INITIAL_ADMIN_PASSWORD=password_min_8_karakter
+INITIAL_ADMIN_NAME=Administrator
+
+# Akun Tester (hanya development, diabaikan di production)
+CREATE_TESTER_ACCOUNT=false
+TESTER_USERNAME=
+TESTER_PASSWORD=
+
+# Strategi estimasi dosis: minimum, midpoint, maximum
+DOSE_STRATEGY=midpoint
+```
+
+## Command Artisan
+
+| Command | Fungsi |
+|---------|--------|
+| `php artisan db:seed` | Seed admin + rule base + provenance |
+| `php artisan sawit:migrate-pahan-v2` | Migrasi data lama ke format v2 |
+| `php artisan sawit:migrate-pahan-v2 --dry-run` | Preview tanpa eksekusi |
+| `php artisan sawit:audit-pahan-v2` | Audit konsistensi data |
+| `php artisan sawit:clear-cache` | Bersihkan semua cache |
+| `php artisan test` | Jalankan test suite |
+
+## Menjalankan Test
+
+```bash
+php artisan test
+```
+
+Test mencakup:
+- **Unit**: PlantPhaseResolver, PahanDoseReference, FertilizationWindow, RecommendationReliability
+- **Feature**: Security (route publik dihapus, auth), login
+
+## Build Frontend
+
+```bash
+npm run build    # Production
+npm run dev      # Development (hot reload)
+```
+
+## Keamanan Production
+
+- Tidak ada route maintenance publik (`/setup-database`, `/seed-tester`, `/fix-cache` telah dihapus)
+- Kredensial admin hanya dari environment variable
+- Password minimal 8 karakter
+- Akun tester tidak dibuat di production
+- Session dan CSRF protection aktif
+
+## Disclaimer Akademik
+
+Rekomendasi yang dihasilkan sistem ini merupakan **estimasi awal** berbasis data blok, observasi visual, kondisi lingkungan, dan basis aturan. Hasil ini **tidak menggantikan** analisis laboratorium tanah/daun maupun keputusan ahli agronomi profesional.
+
+## Lisensi
+
+Proyek ini dibuat untuk keperluan akademik (skripsi). Hak cipta © 2026.
+
+
+## Penjelasan Pahan-v2
+
+Versi mesin rekomendasi `pahan-v2` menggunakan **rentang dosis** dari buku Iyung Pahan (2013), Tabel 9.13 & 9.14:
+
+| Fase | Umur | Urea (kg/pokok/tahun) | KCl (kg/pokok/tahun) |
+|------|------|-----------------------|----------------------|
+| TBM | 1 tahun | 0.50–0.70 | 0.75–1.25 |
+| TBM | 2 tahun | 0.70–0.85 | 1.00–1.75 |
+| TBM | 3 tahun | 0.90–1.25 | 1.20–2.25 |
+| TM | 3–5 tahun | 0.90–1.75 | 1.20–2.50 |
+| TM | 6–15 tahun | 1.00–3.00 | 1.50–3.50 |
+| TM | >15 tahun | 1.50–2.50 | 1.50–2.25 |
+
+**Penting:**
+- Multiplier jenis tanah, topografi, dan waktu **TIDAK aktif** di pahan-v2
+- Dosis kuantitatif Urea/KCl **hanya** berasal dari `PahanDoseReferenceService`
+- Rule menentukan diagnosis dan tindakan, bukan angka dosis Urea/KCl
+- Strategi estimasi default: `midpoint` (titik tengah rentang)
+
+## Instalasi Lokal
+
+```bash
+# Clone repository
+git clone https://github.com/Dickymy/webgis-pupuk-sawit.git
+cd webgis-pupuk-sawit
+
+# Install dependencies
+composer install
+npm install
+
+# Konfigurasi
+cp .env.example .env
+php artisan key:generate
+
+# Edit .env: set database + admin credentials
+
+# Database
+php artisan migrate
+php artisan db:seed
+
+# Migrasi data lama ke Pahan-v2 (opsional)
+php artisan sawit:migrate-pahan-v2 --dry-run
+php artisan sawit:migrate-pahan-v2
+
+# Build frontend
+npm run build
+
+# Jalankan
+php artisan serve
+```
+
+## Konfigurasi .env
+
+```env
+# Akun Admin Awal (wajib untuk db:seed)
+INITIAL_ADMIN_USERNAME=admin
+INITIAL_ADMIN_PASSWORD=password_min_8_karakter
+INITIAL_ADMIN_NAME=Administrator
+
+# Akun Tester (development only, diabaikan di production)
+CREATE_TESTER_ACCOUNT=false
+TESTER_USERNAME=
+TESTER_PASSWORD=
+
+# Strategi estimasi dosis: minimum, midpoint, maximum
+DOSE_STRATEGY=midpoint
+```
+
+## Command Artisan
+
+| Command | Fungsi |
+|---------|--------|
+| `php artisan db:seed` | Seed admin + rule base + provenance |
+| `php artisan sawit:migrate-pahan-v2` | Migrasi data lama ke format v2 |
+| `php artisan sawit:migrate-pahan-v2 --dry-run` | Preview tanpa eksekusi |
+| `php artisan sawit:audit-pahan-v2` | Audit konsistensi data |
+| `php artisan sawit:clear-cache` | Bersihkan semua cache |
+| `php artisan test` | Jalankan test suite |
+
+## Menjalankan Test
+
+```bash
+php artisan test
+```
+
+## Build Frontend
+
+```bash
+npm run build
+```
+
+## Keamanan Production
+
+- Route maintenance publik telah dihapus
+- Kredensial admin hanya dari environment variable
+- Password minimal 8 karakter
+- Akun tester tidak dibuat di production
+
+## Disclaimer Akademik
+
+Rekomendasi yang dihasilkan sistem ini merupakan **estimasi awal** berbasis data blok, observasi visual, kondisi lingkungan, dan basis aturan. Hasil ini **tidak menggantikan** analisis laboratorium tanah/daun maupun keputusan ahli agronomi profesional.
+
+## Lisensi
+
+Proyek ini dibuat untuk keperluan akademik (skripsi). Hak cipta © 2026.

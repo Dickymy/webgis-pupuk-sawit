@@ -42,8 +42,9 @@ class PahanRuleBaseV2Seeder extends Seeder
             $indikasi = $rule['match_indikasi'];
             unset($rule['match_indikasi']);
 
-            // Cari rule berdasarkan indikasi_masalah
-            $existing = RuleBaseLanjutan::where('indikasi_masalah', $indikasi)->first();
+            // Prioritas: cari berdasarkan kode_rule dulu, lalu indikasi_masalah
+            $existing = RuleBaseLanjutan::where('kode_rule', $kodeRule)->first()
+                ?? RuleBaseLanjutan::where('indikasi_masalah', $indikasi)->first();
 
             if ($existing) {
                 $existing->update($rule);
@@ -54,13 +55,76 @@ class PahanRuleBaseV2Seeder extends Seeder
         $this->command->info("Metadata provenance diupdate untuk {$updated} rule.");
 
         // ═══════════════════════════════════════════════════════════════
-        // LANGKAH 3: Statistik
+        // LANGKAH 3: Bersihkan teks dosis legacy yang bertentangan
+        //            dengan PahanDoseReferenceService pada rule Urea/KCl
+        // ═══════════════════════════════════════════════════════════════
+        $this->cleanLegacyDoseText();
+
+        // ═══════════════════════════════════════════════════════════════
+        // LANGKAH 4: Statistik
         // ═══════════════════════════════════════════════════════════════
         $total = RuleBaseLanjutan::count();
         $terverifikasi = RuleBaseLanjutan::where('status_validasi', 'TERVERIFIKASI_SUMBER')->count();
         $perluValidasi = RuleBaseLanjutan::where('status_validasi', 'PERLU_VALIDASI_AHLI')->count();
 
         $this->command->info("Total rule: {$total} | Terverifikasi: {$terverifikasi} | Perlu validasi: {$perluValidasi}");
+    }
+
+    /**
+     * Bersihkan teks dosis legacy pada rule yang berkaitan dengan Urea/KCl.
+     * Dosis kuantitatif Urea/KCl sekarang HANYA berasal dari PahanDoseReferenceService.
+     * Rule hanya menentukan diagnosis, tindakan, dan prioritas.
+     */
+    private function cleanLegacyDoseText(): void
+    {
+        $cleaned = 0;
+
+        // Rule yang pupuk utamanya Urea — dosis_anjuran harus non-kuantitatif
+        $ureaRules = RuleBaseLanjutan::where('jenis_pupuk_utama', 'LIKE', '%Urea%')
+            ->where(function ($q) {
+                $q->where('dosis_anjuran', 'LIKE', '%kg%')
+                  ->orWhere('dosis_anjuran', 'LIKE', '%kurangi dosis%')
+                  ->orWhere('dosis_anjuran', 'LIKE', '%Kurangi dosis%')
+                  ->orWhere('dosis_anjuran', 'LIKE', '%dosis penuh%')
+                  ->orWhere('dosis_anjuran', 'LIKE', '%70%%');
+            })->get();
+
+        foreach ($ureaRules as $rule) {
+            $rule->update([
+                'dosis_anjuran' => 'Besaran dosis Urea dihitung otomatis oleh sistem menggunakan tabel referensi Pahan (2013, Tabel 9.13 & 9.14) berdasarkan fase dan umur tanaman.',
+            ]);
+            $cleaned++;
+        }
+
+        // Rule yang pupuk utamanya KCl — dosis_anjuran harus non-kuantitatif
+        $kclRules = RuleBaseLanjutan::where('jenis_pupuk_utama', 'LIKE', '%KCl%')
+            ->where(function ($q) {
+                $q->where('dosis_anjuran', 'LIKE', '%kg%')
+                  ->orWhere('dosis_anjuran', 'LIKE', '%kurangi dosis%')
+                  ->orWhere('dosis_anjuran', 'LIKE', '%Kurangi dosis%')
+                  ->orWhere('dosis_anjuran', 'LIKE', '%dosis penuh%');
+            })->get();
+
+        foreach ($kclRules as $rule) {
+            $rule->update([
+                'dosis_anjuran' => 'Besaran dosis KCl dihitung otomatis oleh sistem menggunakan tabel referensi Pahan (2013, Tabel 9.13 & 9.14) berdasarkan fase dan umur tanaman.',
+            ]);
+            $cleaned++;
+        }
+
+        // Rule musim hujan yang menyebut "dosis penuh"
+        $dosisLegacy = RuleBaseLanjutan::where('dosis_anjuran', 'LIKE', '%Dosis penuh%')
+            ->orWhere('dosis_anjuran', 'LIKE', '%dosis penuh%')
+            ->get();
+
+        foreach ($dosisLegacy as $rule) {
+            $rule->update([
+                'dosis_anjuran' => 'Gunakan dosis tahunan sesuai rentang referensi Pahan berdasarkan fase dan umur tanaman.',
+            ]);
+            $cleaned++;
+        }
+
+        $this->command->info("Teks dosis legacy dibersihkan: {$cleaned} rule diupdate.");
     }
 
     /**

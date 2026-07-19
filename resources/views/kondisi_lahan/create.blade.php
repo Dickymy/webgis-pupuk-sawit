@@ -205,6 +205,11 @@
                     </div>
                     <p style="font-size:10px; color:#dc2626; margin-top:6px;">Anda tetap bisa mengisi data musim dan curah hujan secara manual di bawah.</p>
                 </div>
+
+                {{-- Disclaimer cuaca otomatis --}}
+                <p style="font-size:10px; color:#64748b; margin-top:8px; padding:6px 8px; background:#f8fafc; border-radius:6px; border:1px solid #e2e8f0;">
+                    ℹ️ Data cuaca otomatis merupakan estimasi berbasis koordinat dari Open-Meteo API dan bukan pengganti alat ukur hujan di kebun. Anda dapat mengubah nilai secara manual jika memiliki data lapangan yang lebih akurat.
+                </p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

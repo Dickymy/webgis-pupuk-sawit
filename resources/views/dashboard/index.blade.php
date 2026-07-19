@@ -438,13 +438,13 @@
         </div>
         {{-- Legend --}}
         <div class="map-legend">
-            <p class="text-[9px] sm:text-[10px] font-semibold text-slate-600 mb-1">Status Lahan</p>
+            <p class="text-[9px] sm:text-[10px] font-semibold text-slate-600 mb-1">Kondisi Tanaman</p>
             <div class="legend-items">
-                <div class="legend-item"><div class="legend-dot" style="background:#dc2626;"></div>Def. Berat</div>
-                <div class="legend-item"><div class="legend-dot" style="background:#f97316;"></div>Perlu Pupuk</div>
-                <div class="legend-item"><div class="legend-dot" style="background:#22c55e;"></div>Sehat</div>
-                <div class="legend-item"><div class="legend-dot" style="background:#94a3b8;"></div>Tunda Pupuk</div>
-                <div class="legend-item"><div class="legend-dot" style="background:#475569;"></div>Belum Dicek</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#dc2626;"></div>Gejala Berat</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#f97316;"></div>Terindikasi Defisiensi</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#22c55e;"></div>Normal</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#eab308;"></div>Perlu Verifikasi</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#6b7280;"></div>Belum Diobservasi</div>
             </div>
         </div>
     </div>
@@ -533,9 +533,23 @@ L.control.layers({'🗺️ Peta': osm, '🛰️ Satelit': satellite}, null, {pos
 })();
 
 function getColorRbs(s){return{'Darurat':'#dc2626','Segera':'#f97316','Normal':'#22c55e','Tunda':'#94a3b8','Belum Dianalisis':'#475569'}[s]||'#475569';}
+// Warna polygon berdasarkan status_kondisi tanaman (Prioritas 4)
+function getColorByKondisi(k){return{'GEJALA_BERAT':'#dc2626','TERINDIKASI_DEFISIENSI':'#f97316','NORMAL_VISUAL':'#22c55e','PERLU_VERIFIKASI':'#eab308','BELUM_DIOBSERVASI':'#6b7280'}[k]||'#475569';}
+// Pilih warna: gunakan status_kondisi jika tersedia, fallback ke status_rbs lama
+function getPolygonColor(blok){if(blok.status_kondisi)return getColorByKondisi(blok.status_kondisi);return getColorRbs(blok.status_rbs||'Belum Dianalisis');}
+
 function getBadgeStyleRbs(s){return{'Darurat':'background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;','Segera':'background:#ffedd5;color:#9a3412;border:1px solid #fdba74;','Normal':'background:#dcfce7;color:#166534;border:1px solid #86efac;','Tunda':'background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;','Belum Dianalisis':'background:#eff6ff;color:#1e40af;border:1px solid #93c5fd;'}[s]||'background:#eff6ff;color:#1e40af;border:1px solid #93c5fd;';}
 
-// Mapping status DB ke label tampilan
+// Label status kondisi tanaman
+function getLabelKondisi(k){return{'GEJALA_BERAT':'Gejala Berat','TERINDIKASI_DEFISIENSI':'Terindikasi Defisiensi','NORMAL_VISUAL':'Kondisi Visual Normal','PERLU_VERIFIKASI':'Perlu Verifikasi','BELUM_DIOBSERVASI':'Belum Diobservasi'}[k]||'Belum Dicek';}
+// Label status kelayakan aplikasi
+function getLabelKelayakan(k){return{'LAYAK_DIJADWALKAN':'Layak Dijadwalkan','TERLAMBAT_PERLU_DIJADWALKAN':'Terlambat — Perlu Dijadwalkan','TUNDA_HUJAN_RENDAH':'Tunda — Hujan Rendah','TUNDA_HUJAN_TINGGI':'Tunda — Hujan Tinggi','TUNDA_INTERVAL':'Tunda — Interval Terlalu Pendek','PERLU_PERBAIKAN_DRAINASE':'Tunda — Drainase Perlu Diperbaiki','PERLU_VERIFIKASI_DATA':'Perlu Verifikasi Data'}[k]||'-';}
+// Badge style kondisi tanaman
+function getBadgeKondisi(k){return{'GEJALA_BERAT':'background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;','TERINDIKASI_DEFISIENSI':'background:#ffedd5;color:#9a3412;border:1px solid #fdba74;','NORMAL_VISUAL':'background:#dcfce7;color:#166534;border:1px solid #86efac;','PERLU_VERIFIKASI':'background:#fef9c3;color:#854d0e;border:1px solid #fde047;','BELUM_DIOBSERVASI':'background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;'}[k]||'background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;';}
+// Ikon kelayakan
+function getIkonKelayakan(k){return{'LAYAK_DIJADWALKAN':'✓','TERLAMBAT_PERLU_DIJADWALKAN':'⏰','TUNDA_HUJAN_RENDAH':'☀️','TUNDA_HUJAN_TINGGI':'🌧️','PERLU_PERBAIKAN_DRAINASE':'💧','TUNDA_INTERVAL':'⏳','PERLU_VERIFIKASI_DATA':'❓'}[k]||'';}
+
+// Mapping status DB ke label tampilan (kompatibilitas lama)
 function getStatusLabel(s){return{'Darurat':'Defisiensi Berat','Segera':'Perlu Pupuk','Normal':'Sehat','Tunda':'Tunda Pupuk','Belum Dianalisis':'Belum Dicek'}[s]||'Belum Dicek';}
 
 // Populate filters
@@ -576,12 +590,19 @@ function updateLuasPerStatus(data){
 
 function buildPopupContent(blok){
     var statusRbs=blok.status_rbs||'Belum Dianalisis',masalahRbs=blok.masalah_rbs||[],pupukRbs=blok.pupuk_rbs||[],saranRbs=blok.saran_rbs||'',tglRbs=blok.tgl_analisis_rbs||'-',jumlahRule=blok.jumlah_rule||0;
-    var statusLabel=getStatusLabel(statusRbs);
-    var bs=getBadgeStyleRbs(statusRbs);
+    var statusKondisi=blok.status_kondisi||null;
+    var statusKelayakan=blok.status_kelayakan||null;
+    // Gunakan status baru jika tersedia, fallback ke lama
+    var kondisiLabel=statusKondisi?getLabelKondisi(statusKondisi):getStatusLabel(statusRbs);
+    var kondisiBadge=statusKondisi?getBadgeKondisi(statusKondisi):getBadgeStyleRbs(statusRbs);
+    var kelayakanLabel=statusKelayakan?getLabelKelayakan(statusKelayakan):'';
+    var kelayakanIkon=statusKelayakan?getIkonKelayakan(statusKelayakan):'';
     var mh=masalahRbs.length?masalahRbs.slice(0,3).map(function(m){return'<span style="font-size:10px;color:#374151;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:1px 5px;display:inline-block;margin:1px 2px 1px 0;">'+m+'</span>';}).join('')+(masalahRbs.length>3?'<span style="font-size:9px;color:#9ca3af;"> +'+(masalahRbs.length-3)+'</span>':''):'<span style="font-size:10px;color:#9ca3af;">Tidak ada masalah</span>';
     var ph=pupukRbs.length?pupukRbs.slice(0,2).map(function(p){return'<div style="font-size:10px;color:#15803d;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:5px;padding:2px 5px;margin-top:2px;">'+p.jenis_utama+(p.dosis?' — '+p.dosis:'')+'</div>';}).join(''):'';
     var sh=saranRbs?'<div style="font-size:9px;color:#78350f;background:#fffbeb;border:1px solid #fde68a;border-radius:5px;padding:2px 5px;margin-top:3px;line-height:1.3;">'+saranRbs.substring(0,70)+(saranRbs.length>70?'...':'')+'</div>':'';
-    return'<div style="min-width:170px;max-width:230px;font-family:system-ui,sans-serif;"><div style="font-weight:700;font-size:12px;color:#0f172a;padding-bottom:4px;border-bottom:1px solid #f1f5f9;margin-bottom:4px;">'+blok.nama_blok+'</div><div style="font-size:10px;color:#64748b;margin-bottom:3px;">'+(blok.nama_pemilik||'-')+' \u00B7 '+blok.luas_ha+' Ha'+(blok.umur_tanaman!==null?' \u00B7 '+blok.umur_tanaman+' thn':'')+'</div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;"><span style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;">Status</span><span style="'+bs+'font-size:10px;font-weight:700;padding:1px 6px;border-radius:9999px;">'+statusLabel+'</span></div><div style="margin-bottom:3px;">'+mh+'</div>'+ph+sh+'<div style="display:flex;gap:6px;align-items:center;padding-top:4px;margin-top:3px;border-top:1px solid #f1f5f9;flex-wrap:wrap;"><a href="/rbs/detail/'+blok.id+'" style="font-size:10px;color:#059669;font-weight:700;text-decoration:none;">Detail \u2192</a><a href="/blok-lahan/'+blok.id+'/edit#koordinat" style="font-size:10px;color:#2563eb;font-weight:600;text-decoration:none;">✏️ Edit Poligon</a><span style="font-size:9px;color:#9ca3af;margin-left:auto;">'+tglRbs+'</span></div></div>';
+    // Kelayakan badge
+    var kelayakanHtml=kelayakanLabel?'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;"><span style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;">Kelayakan</span><span style="font-size:10px;font-weight:600;color:#475569;">'+kelayakanIkon+' '+kelayakanLabel+'</span></div>':'';
+    return'<div style="min-width:170px;max-width:230px;font-family:system-ui,sans-serif;"><div style="font-weight:700;font-size:12px;color:#0f172a;padding-bottom:4px;border-bottom:1px solid #f1f5f9;margin-bottom:4px;">'+blok.nama_blok+'</div><div style="font-size:10px;color:#64748b;margin-bottom:3px;">'+(blok.nama_pemilik||'-')+' \u00B7 '+blok.luas_ha+' Ha'+(blok.umur_tanaman!==null?' \u00B7 '+blok.umur_tanaman+' thn':'')+(blok.fase_tanaman?' \u00B7 '+blok.fase_tanaman:'')+'</div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;"><span style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;">Kondisi</span><span style="'+kondisiBadge+'font-size:10px;font-weight:700;padding:1px 6px;border-radius:9999px;">'+kondisiLabel+'</span></div>'+kelayakanHtml+'<div style="margin-bottom:3px;">'+mh+'</div>'+ph+sh+'<div style="display:flex;gap:6px;align-items:center;padding-top:4px;margin-top:3px;border-top:1px solid #f1f5f9;flex-wrap:wrap;"><a href="/rbs/detail/'+blok.id+'" style="font-size:10px;color:#059669;font-weight:700;text-decoration:none;">Detail \u2192</a><a href="/blok-lahan/'+blok.id+'/edit#koordinat" style="font-size:10px;color:#2563eb;font-weight:600;text-decoration:none;">✏️ Edit Poligon</a><span style="font-size:9px;color:#9ca3af;margin-left:auto;">'+tglRbs+'</span></div></div>';
 }
 
 function getSelectedPemilik(){return window.innerWidth<640?selectElMobile.value:selectEl.value;}
@@ -608,7 +629,7 @@ function renderMapLayers(){
     var activeLayers=[];
     filteredData.forEach(function(blok){
         if(!blok.geojson)return;
-        var color=getColorRbs(blok.status_rbs||'Belum Dianalisis');
+        var color=getPolygonColor(blok);
         var layer=L.geoJSON(blok.geojson,{style:{fillColor:color,fillOpacity:0.45,color:color,weight:2,opacity:0.9}});
         layer.bindPopup(buildPopupContent(blok),{maxWidth:230,autoPanPaddingTopLeft:[10,10],autoPanPaddingBottomRight:[10,50]});
         layer.bindTooltip(blok.nama_blok,{permanent:true,direction:'center',className:'leaflet-tooltip-label'});
