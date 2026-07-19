@@ -260,6 +260,36 @@
                     <p class="mt-1 text-xs text-slate-400" id="curah-hujan-info">Pilih musim terlebih dahulu</p>
                 </div>
             </div>
+
+            {{-- Input Curah Hujan Numerik (mm/bulan) --}}
+            <div class="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Curah Hujan (mm/bulan)</label>
+                        <input type="number" name="curah_hujan_mm_bulanan" id="curah_hujan_mm_bulanan"
+                            value="{{ old('curah_hujan_mm_bulanan') }}"
+                            step="0.1" min="0" max="1000" placeholder="Contoh: 185.5"
+                            class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                        <p class="mt-1 text-xs text-slate-400">Layak pupuk: 100–250 mm/bulan (Pahan, 2013)</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Periode Data</label>
+                        <input type="text" name="periode_curah_hujan"
+                            value="{{ old('periode_curah_hujan') }}"
+                            placeholder="Misal: Juli 2026"
+                            class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                    </div>
+                    <div>
+                        @include('components.custom-select', [
+                            'name'    => 'sumber_curah_hujan',
+                            'label'   => 'Sumber Data',
+                            'options' => ['manual' => 'Input Manual', 'open-meteo' => 'Open-Meteo API', 'alat_ukur' => 'Alat Ukur Lapangan', 'lainnya' => 'Lainnya'],
+                            'selected'=> old('sumber_curah_hujan'),
+                            'placeholder' => '— Pilih —',
+                        ])
+                    </div>
+                </div>
+            </div>
         </div>
 
         {{-- SEKSI 4: Gejala Visual Tanaman --}}

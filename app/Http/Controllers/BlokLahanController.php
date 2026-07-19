@@ -67,6 +67,7 @@ class BlokLahanController extends Controller
             'tahun_tanam'       => ['required', 'integer', 'min:1990', 'max:' . now()->year],
             'jenis_tanah'       => ['required', 'in:Tanah Lempung,Tanah Lempung Berpasir,Tanah Berpasir,Tanah Liat,Tanah Gambut,Tanah Aluvial,Tanah Podsolik Merah Kuning (PMK),Tanah Laterit,Tanah Berbatu,Lainnya'],
             'topografi'         => ['required', 'in:Datar 0-15°,Bergelombang 15-30°,Curam >30°'],
+            'fase_tanaman'      => ['nullable', 'in:TBM,TM'],
         ], [
             'anggota_id.required'        => 'Pemilik lahan wajib dipilih.',
             'nama_blok.required'         => 'Nama blok wajib diisi.',
@@ -123,6 +124,7 @@ class BlokLahanController extends Controller
             'tahun_tanam'       => ['required', 'integer', 'min:1990', 'max:' . now()->year],
             'jenis_tanah'       => ['required', 'in:Tanah Lempung,Tanah Lempung Berpasir,Tanah Berpasir,Tanah Liat,Tanah Gambut,Tanah Aluvial,Tanah Podsolik Merah Kuning (PMK),Tanah Laterit,Tanah Berbatu,Lainnya'],
             'topografi'         => ['required', 'in:Datar 0-15°,Bergelombang 15-30°,Curam >30°'],
+            'fase_tanaman'      => ['nullable', 'in:TBM,TM'],
         ]);
 
         json_decode($validated['koordinat_geojson']);
