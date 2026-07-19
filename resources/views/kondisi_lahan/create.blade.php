@@ -262,28 +262,34 @@
             </div>
 
             {{-- Input Curah Hujan Numerik (mm/bulan) --}}
-            <div class="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+            <div class="mt-3 p-3 bg-emerald-50/50 border border-emerald-100 rounded-xl">
+                <p class="text-[10px] text-emerald-700 uppercase font-bold mb-2.5">📐 Data Presisi Curah Hujan (Opsional — meningkatkan akurasi rekomendasi)</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Curah Hujan (mm/bulan)</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Curah Hujan (mm/bulan)</label>
                         <input type="number" name="curah_hujan_mm_bulanan" id="curah_hujan_mm_bulanan"
                             value="{{ old('curah_hujan_mm_bulanan') }}"
-                            step="0.1" min="0" max="1000" placeholder="Contoh: 185.5"
-                            class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
-                        <p class="mt-1 text-xs text-slate-400">Layak pupuk: 100–250 mm/bulan (Pahan, 2013)</p>
+                            step="0.1" min="0" max="1000" placeholder="Contoh: 87.7"
+                            class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                        <p class="mt-0.5 text-[10px] text-slate-400">Layak pupuk: 100–250 mm/bln</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Periode Data</label>
-                        <input type="text" name="periode_curah_hujan"
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Periode Data</label>
+                        <input type="text" name="periode_curah_hujan" id="periode_curah_hujan"
                             value="{{ old('periode_curah_hujan') }}"
-                            placeholder="Misal: Juli 2026"
-                            class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                            placeholder="Juli 2026"
+                            class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
                     </div>
                     <div>
                         @include('components.custom-select', [
                             'name'    => 'sumber_curah_hujan',
                             'label'   => 'Sumber Data',
-                            'options' => ['manual' => 'Input Manual', 'open-meteo' => 'Open-Meteo API', 'alat_ukur' => 'Alat Ukur Lapangan', 'lainnya' => 'Lainnya'],
+                            'options' => [
+                                ['value' => 'manual', 'label' => 'Input Manual'],
+                                ['value' => 'open-meteo', 'label' => 'Open-Meteo API'],
+                                ['value' => 'alat_ukur', 'label' => 'Alat Ukur Lapangan'],
+                                ['value' => 'lainnya', 'label' => 'Lainnya'],
+                            ],
                             'selected'=> old('sumber_curah_hujan'),
                             'placeholder' => '— Pilih —',
                         ])
@@ -935,6 +941,36 @@ function fetchCuacaOtomatis() {
                 if (infoEl) {
                     infoEl.textContent = '✓ Terisi otomatis dari data cuaca — Anda tetap bisa mengubahnya';
                     infoEl.className = 'mt-1 text-xs text-emerald-600 font-medium';
+                }
+
+                // Auto-fill field curah hujan mm/bulan (Pahan-v2)
+                var mmField = document.getElementById('curah_hujan_mm_bulanan');
+                if (mmField && data.detail && data.detail.total_curah_hujan_mm) {
+                    mmField.value = parseFloat(data.detail.total_curah_hujan_mm).toFixed(1);
+                }
+
+                // Auto-fill periode
+                var periodeField = document.getElementById('periode_curah_hujan');
+                if (periodeField) {
+                    var now = new Date();
+                    var bulanNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                    periodeField.value = bulanNames[now.getMonth()] + ' ' + now.getFullYear() + ' (30 hari terakhir)';
+                }
+
+                // Auto-fill sumber data curah hujan → open-meteo
+                var sumberInput = document.querySelector('input[name="sumber_curah_hujan"]');
+                if (sumberInput) {
+                    sumberInput.value = 'open-meteo';
+                    // Update the display text of the custom-select
+                    var sumberWrapper = sumberInput.closest('.cs-wrapper') || sumberInput.parentElement;
+                    if (sumberWrapper) {
+                        var displayEl = sumberWrapper.querySelector('[id$="-display"]');
+                        if (displayEl) {
+                            displayEl.textContent = 'Open-Meteo API';
+                            displayEl.style.color = '#1e293b';
+                            displayEl.style.opacity = '1';
+                        }
+                    }
                 }
             }, 100);
         } else {

@@ -101,6 +101,17 @@ class KondisiLahanController extends Controller
         $validated['ada_serangan_hama'] = $request->boolean('ada_serangan_hama');
         $validated['gejala_defisiensi'] = $validated['gejala_defisiensi'] ?? [];
 
+        // Sanitize: empty strings → null for nullable enum fields
+        foreach (['sumber_curah_hujan', 'metode_pengukuran_ph', 'periode_curah_hujan'] as $field) {
+            if (isset($validated[$field]) && $validated[$field] === '') {
+                $validated[$field] = null;
+            }
+        }
+        // Ensure curah_hujan_mm_bulanan empty string → null
+        if (isset($validated['curah_hujan_mm_bulanan']) && $validated['curah_hujan_mm_bulanan'] === '') {
+            $validated['curah_hujan_mm_bulanan'] = null;
+        }
+
         // Validasi konsistensi logis lintas-field (A4)
         $warnings = $this->validasiKonsistensi($validated);
 
@@ -174,6 +185,16 @@ class KondisiLahanController extends Controller
         $validated['ada_gulma_dominan'] = $request->boolean('ada_gulma_dominan');
         $validated['ada_serangan_hama'] = $request->boolean('ada_serangan_hama');
         $validated['gejala_defisiensi'] = $validated['gejala_defisiensi'] ?? [];
+
+        // Sanitize: empty strings → null for nullable enum fields
+        foreach (['sumber_curah_hujan', 'metode_pengukuran_ph', 'periode_curah_hujan'] as $field) {
+            if (isset($validated[$field]) && $validated[$field] === '') {
+                $validated[$field] = null;
+            }
+        }
+        if (isset($validated['curah_hujan_mm_bulanan']) && $validated['curah_hujan_mm_bulanan'] === '') {
+            $validated['curah_hujan_mm_bulanan'] = null;
+        }
 
         // Validasi konsistensi logis lintas-field (A4)
         $warnings = $this->validasiKonsistensi($validated);
