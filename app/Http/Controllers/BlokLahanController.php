@@ -79,9 +79,21 @@ class BlokLahanController extends Controller
             'topografi.required'         => 'Topografi wajib dipilih.',
         ]);
 
-        json_decode($validated['koordinat_geojson']);
+        $geojson = json_decode($validated['koordinat_geojson'], true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             return back()->withErrors(['koordinat_geojson' => 'Format GeoJSON tidak valid.'])->withInput();
+        }
+
+        // Validasi struktur GeoJSON polygon
+        $type = $geojson['type'] ?? null;
+        $isValidGeometry = in_array($type, ['Polygon', 'MultiPolygon', 'Feature', 'FeatureCollection']);
+        if (!$isValidGeometry) {
+            return back()->withErrors(['koordinat_geojson' => 'GeoJSON harus berupa Polygon, MultiPolygon, Feature, atau FeatureCollection.'])->withInput();
+        }
+
+        // Validasi minimal: coordinates tidak kosong
+        if ($type === 'Polygon' && (empty($geojson['coordinates']) || empty($geojson['coordinates'][0]) || count($geojson['coordinates'][0]) < 4)) {
+            return back()->withErrors(['koordinat_geojson' => 'Polygon harus memiliki minimal 4 titik koordinat.'])->withInput();
         }
 
         BlokLahan::create($validated);

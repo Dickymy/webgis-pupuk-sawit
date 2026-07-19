@@ -177,21 +177,23 @@ class GeoUploadController extends Controller
     }
 
     /**
-     * Extract first Polygon from various GeoJSON structures
+     * Extract first Polygon from various GeoJSON structures.
+     * Validates: min 4 points, ring closed, coordinates valid.
      */
     private function extractPolygon(array $geojson): ?array
     {
         $type = $geojson['type'] ?? null;
 
         if ($type === 'Polygon') {
-            return $geojson;
+            return $this->validatePolygon($geojson);
         }
 
         if ($type === 'MultiPolygon') {
-            return [
+            $polygon = [
                 'type'        => 'Polygon',
                 'coordinates' => $geojson['coordinates'][0],
             ];
+            return $this->validatePolygon($polygon);
         }
 
         if ($type === 'Feature' && isset($geojson['geometry'])) {
@@ -206,6 +208,59 @@ class GeoUploadController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Validate polygon structure:
+     * - Ring must have at least 4 points (GeoJSON spec)
+     * - Ring must be closed (first == last point)
+     * - Coordinates must be valid (lng: -180..180, lat: -90..90)
+     * Auto-closes ring if not closed.
+     */
+    private function validatePolygon(array $polygon): ?array
+    {
+        if (empty($polygon['coordinates']) || !is_array($polygon['coordinates'])) {
+            return null;
+        }
+
+        $rings = $polygon['coordinates'];
+        $validatedRings = [];
+
+        foreach ($rings as $ring) {
+            if (!is_array($ring) || count($ring) < 3) {
+                return null; // Need at least 3 unique points
+            }
+
+            // Validate each coordinate
+            foreach ($ring as $point) {
+                if (!is_array($point) || count($point) < 2) {
+                    return null;
+                }
+                $lng = $point[0];
+                $lat = $point[1];
+                if (!is_numeric($lng) || !is_numeric($lat)) return null;
+                if ($lng < -180 || $lng > 180 || $lat < -90 || $lat > 90) return null;
+            }
+
+            // Auto-close ring if not closed
+            $first = $ring[0];
+            $last = $ring[count($ring) - 1];
+            if ($first[0] !== $last[0] || $first[1] !== $last[1]) {
+                $ring[] = $first;
+            }
+
+            // After closing, must have at least 4 points
+            if (count($ring) < 4) {
+                return null;
+            }
+
+            $validatedRings[] = $ring;
+        }
+
+        return [
+            'type'        => 'Polygon',
+            'coordinates' => $validatedRings,
+        ];
     }
 
     /**
