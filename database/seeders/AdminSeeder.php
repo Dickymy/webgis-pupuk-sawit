@@ -17,5 +17,13 @@ class AdminSeeder extends Seeder
                 'nama_lengkap' => 'Administrator',
             ]
         );
+
+        Admin::firstOrCreate(
+            ['username' => 'test'],
+            [
+                'password'     => 'test',
+                'nama_lengkap' => 'Akun Tester Kuesioner',
+            ]
+        );
     }
 }

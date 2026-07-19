@@ -56,7 +56,7 @@
                         value="{{ old('tanggal_pemupukan_terakhir', $kondisiLahan->tanggal_pemupukan_terakhir?->format('Y-m-d')) }}"
                         max="{{ now()->format('Y-m-d') }}"
                         class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
-                    <p class="mt-1 text-xs text-slate-400">Koreksi dosis: &lt;60 hari → ×0.75, &gt;120 hari → ×1.25</p>
+                    <p class="mt-1 text-xs text-slate-400">Interval &lt;60 hari → aplikasi ditunda. &gt;120 hari → perlu dijadwalkan segera.</p>
                 </div>
                 <div></div>
             </div>

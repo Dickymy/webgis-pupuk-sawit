@@ -589,7 +589,7 @@
     <div class="meta-info">
         <strong>Validitas:</strong> {{ $rekomendasiRbs->validitas_rekomendasi ?? 'Estimasi Visual' }}
         &nbsp;·&nbsp;
-        <strong>Tingkat Keyakinan:</strong> {{ $rekomendasiRbs->confidence_label ?? 'Rendah' }} ({{ $rekomendasiRbs->confidence_score ?? 0 }}%)
+        <strong>Tingkat Keandalan Data:</strong> {{ $rekomendasiRbs->confidence_label ?? 'Rendah' }} ({{ $rekomendasiRbs->confidence_score ?? 0 }}%)
         @if(!$rekomendasiRbs->data_cukup)
         &nbsp;·&nbsp; <span style="color: #dc2626;">Data observasi belum lengkap</span>
         @endif

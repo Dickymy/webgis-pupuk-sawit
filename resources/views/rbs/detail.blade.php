@@ -108,7 +108,7 @@
 {{-- SECTION 4: Info Tambahan (Validitas + Confidence) --}}
 {{-- ═══════════════════════════════════════════════════════════ --}}
 <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 mt-5">
-    <h3 class="text-sm font-bold text-slate-800 mb-3">📊 Tingkat Keyakinan Rekomendasi</h3>
+    <h3 class="text-sm font-bold text-slate-800 mb-3">📊 Tingkat Kelengkapan & Keandalan Data</h3>
     <div class="flex flex-wrap items-center gap-2 mb-3">
         {{-- Confidence --}}
         @php
@@ -124,7 +124,7 @@
             };
         @endphp
         <span class="inline-flex items-center gap-1 px-2.5 py-1 border rounded-full text-xs font-semibold {{ $confColor }}">
-            Keyakinan: {{ $rbs->confidence_label }} ({{ $rbs->confidence_score }}%)
+            Keandalan: {{ $rbs->confidence_label }} ({{ $rbs->confidence_score }}%)
         </span>
         <span class="inline-flex items-center gap-1 px-2.5 py-1 border rounded-full text-xs font-semibold {{ $validitasColor }}">
             {{ $rbs->validitas_rekomendasi }}
