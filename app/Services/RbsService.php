@@ -936,7 +936,8 @@ class RbsService
         ];
 
         // JSON encode dengan key sorting agar hasilnya deterministik
-        $json = json_encode($fingerprintData, JSON_SORT_KEYS | JSON_UNESCAPED_UNICODE);
+        ksort($fingerprintData);
+        $json = json_encode($fingerprintData, JSON_UNESCAPED_UNICODE);
 
         return hash('sha256', $json);
     }
