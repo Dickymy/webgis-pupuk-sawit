@@ -850,6 +850,10 @@ class RbsService
     private function simpanDenganHistori(int $blokLahanId, array $data): RekomendasiRbs
     {
         return DB::transaction(function () use ($blokLahanId, $data) {
+            // Generate fingerprint untuk data baru
+            $fingerprint = $this->generateFingerprint($data);
+            $data['analysis_fingerprint'] = $fingerprint;
+
             // Cek apakah hasil sama dengan rekomendasi terakhir
             $existing = RekomendasiRbs::where('blok_lahan_id', $blokLahanId)
                 ->where('is_latest', true)
@@ -857,8 +861,11 @@ class RbsService
 
             if ($existing && $this->hasilSamaDenganSebelumnya($existing, $data)) {
                 // Hanya update tanggal analisis tanpa membuat record baru
-                $existing->update(['tanggal_analisis' => $data['tanggal_analisis']]);
-                $existing->touch(); // Force update the updated_at timestamp to sync with the latest analysis run
+                $existing->update([
+                    'tanggal_analisis' => $data['tanggal_analisis'],
+                    'analysis_fingerprint' => $fingerprint,
+                ]);
+                $existing->touch();
                 return $existing;
             }
 
@@ -879,22 +886,59 @@ class RbsService
 
     /**
      * Cek apakah hasil analisis baru sama dengan rekomendasi sebelumnya.
-     * Perbandingan berdasarkan: kondisi_lahan_id + status + jumlah_rule + dosis.
+     * Menggunakan fingerprint SHA-256 dari data penting untuk perbandingan akurat.
      */
     private function hasilSamaDenganSebelumnya(RekomendasiRbs $existing, array $newData): bool
     {
-        // Jika struktur atau jumlah tahapan jadwal berubah, anggap hasil berbeda agar diperbarui
-        $existingJadwal = $existing->jadwal_pemupukan ?? [];
-        $newJadwal = $newData['jadwal_pemupukan'] ?? [];
-        if (count($existingJadwal) !== count($newJadwal)) {
-            return false;
+        $newFingerprint = $this->generateFingerprint($newData);
+
+        // Jika existing sudah punya fingerprint, bandingkan langsung
+        if ($existing->analysis_fingerprint) {
+            return $existing->analysis_fingerprint === $newFingerprint;
         }
 
+        // Fallback untuk data lama tanpa fingerprint: bandingkan field utama
         return $existing->kondisi_lahan_id == $newData['kondisi_lahan_id']
             && $existing->status_kebutuhan_dominan === $newData['status_kebutuhan_dominan']
             && $existing->jumlah_rule_terpicu == $newData['jumlah_rule_terpicu']
             && (float) $existing->dosis_urea === (float) ($newData['dosis_urea'] ?? 0)
-            && (float) $existing->dosis_kcl === (float) ($newData['dosis_kcl'] ?? 0);
+            && (float) $existing->dosis_kcl === (float) ($newData['dosis_kcl'] ?? 0)
+            && $existing->status_kondisi_tanaman === ($newData['status_kondisi_tanaman'] ?? null)
+            && $existing->status_kelayakan_aplikasi === ($newData['status_kelayakan_aplikasi'] ?? null);
+    }
+
+    /**
+     * Generate fingerprint SHA-256 dari data analisis penting.
+     * Digunakan untuk deteksi perubahan bermakna pada hasil.
+     */
+    private function generateFingerprint(array $data): string
+    {
+        // Ekstrak kode rule dari rules_terpicu
+        $rulesCodes = collect($data['rules_terpicu'] ?? [])
+            ->pluck('indikasi')
+            ->sort()
+            ->values()
+            ->toArray();
+
+        $fingerprintData = [
+            'kondisi_lahan_id'          => $data['kondisi_lahan_id'] ?? null,
+            'versi_mesin'               => $data['versi_mesin_rekomendasi'] ?? null,
+            'fase'                      => $data['fase_tanaman_snapshot'] ?? null,
+            'umur'                      => $data['umur_tanaman_snapshot'] ?? null,
+            'strategi_estimasi'         => $data['strategi_estimasi_dosis'] ?? null,
+            'urea_estimasi'             => $data['urea_estimasi_kg_per_pokok_tahun'] ?? null,
+            'kcl_estimasi'              => $data['kcl_estimasi_kg_per_pokok_tahun'] ?? null,
+            'status_kondisi'            => $data['status_kondisi_tanaman'] ?? null,
+            'status_kelayakan'          => $data['status_kelayakan_aplikasi'] ?? null,
+            'rules_terpicu'             => $rulesCodes,
+            'jumlah_jadwal'             => count($data['jadwal_pemupukan'] ?? []),
+            'kelengkapan_data_score'    => $data['kelengkapan_data_score'] ?? null,
+        ];
+
+        // JSON encode dengan key sorting agar hasilnya deterministik
+        $json = json_encode($fingerprintData, JSON_SORT_KEYS | JSON_UNESCAPED_UNICODE);
+
+        return hash('sha256', $json);
     }
 
     /**

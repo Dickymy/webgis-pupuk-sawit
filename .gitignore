@@ -18,3 +18,14 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Deployment archives (tidak diperlukan di repo)
+*.zip
+deploy_update.zip
+update_hosting.zip
+routes.zip
+
+# OS generated files
+~$*
+Thumbs.db
+.DS_Store

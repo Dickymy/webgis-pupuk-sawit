@@ -56,6 +56,7 @@ class RekomendasiRbs extends Model
         'status_kelayakan_aplikasi',
         'alasan_kelayakan',
         'versi_mesin_rekomendasi',
+        'analysis_fingerprint',
     ];
 
     protected function casts(): array
