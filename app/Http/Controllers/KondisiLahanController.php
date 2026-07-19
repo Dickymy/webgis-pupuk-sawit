@@ -70,8 +70,12 @@ class KondisiLahanController extends Controller
             'tanggal_observasi'          => ['required', 'date'],
             'tanggal_pemupukan_terakhir' => ['nullable', 'date', 'before_or_equal:today'],
             'ph_tanah'                   => ['nullable', 'numeric', 'min:3', 'max:8'],
+            'metode_pengukuran_ph'       => ['nullable', 'in:kertas_lakmus,ph_meter,estimasi,laboratorium'],
             'kelembaban_tanah'           => ['nullable', 'string'],
             'curah_hujan_kategori'       => ['nullable', 'string'],
+            'curah_hujan_mm_bulanan'     => ['nullable', 'numeric', 'min:0', 'max:1000'],
+            'periode_curah_hujan'        => ['nullable', 'string', 'max:50'],
+            'sumber_curah_hujan'         => ['nullable', 'in:manual,open-meteo,alat_ukur,lainnya'],
             'musim_saat_ini'             => ['nullable', 'string'],
             'warna_daun'                 => ['nullable', 'string'],
             'kondisi_pelepah'            => ['nullable', 'string'],
@@ -88,12 +92,25 @@ class KondisiLahanController extends Controller
             'ph_tanah.numeric'           => 'pH tanah harus berupa angka.',
             'ph_tanah.min'               => 'pH tanah minimal 3.0.',
             'ph_tanah.max'               => 'pH tanah maksimal 8.0.',
+            'curah_hujan_mm_bulanan.numeric' => 'Curah hujan harus berupa angka.',
+            'curah_hujan_mm_bulanan.min' => 'Curah hujan tidak boleh negatif.',
         ]);
 
         // Checkbox boolean
         $validated['ada_gulma_dominan'] = $request->boolean('ada_gulma_dominan');
         $validated['ada_serangan_hama'] = $request->boolean('ada_serangan_hama');
         $validated['gejala_defisiensi'] = $validated['gejala_defisiensi'] ?? [];
+
+        // Sanitize: empty strings → null for nullable enum fields
+        foreach (['sumber_curah_hujan', 'metode_pengukuran_ph', 'periode_curah_hujan'] as $field) {
+            if (isset($validated[$field]) && $validated[$field] === '') {
+                $validated[$field] = null;
+            }
+        }
+        // Ensure curah_hujan_mm_bulanan empty string → null
+        if (isset($validated['curah_hujan_mm_bulanan']) && $validated['curah_hujan_mm_bulanan'] === '') {
+            $validated['curah_hujan_mm_bulanan'] = null;
+        }
 
         // Validasi konsistensi logis lintas-field (A4)
         $warnings = $this->validasiKonsistensi($validated);
@@ -144,8 +161,12 @@ class KondisiLahanController extends Controller
             'tanggal_observasi'          => ['required', 'date'],
             'tanggal_pemupukan_terakhir' => ['nullable', 'date', 'before_or_equal:today'],
             'ph_tanah'                   => ['nullable', 'numeric', 'min:3', 'max:8'],
+            'metode_pengukuran_ph'       => ['nullable', 'in:kertas_lakmus,ph_meter,estimasi,laboratorium'],
             'kelembaban_tanah'           => ['nullable', 'string'],
             'curah_hujan_kategori'       => ['nullable', 'string'],
+            'curah_hujan_mm_bulanan'     => ['nullable', 'numeric', 'min:0', 'max:1000'],
+            'periode_curah_hujan'        => ['nullable', 'string', 'max:50'],
+            'sumber_curah_hujan'         => ['nullable', 'in:manual,open-meteo,alat_ukur,lainnya'],
             'musim_saat_ini'             => ['nullable', 'string'],
             'warna_daun'                 => ['nullable', 'string'],
             'kondisi_pelepah'            => ['nullable', 'string'],
@@ -164,6 +185,16 @@ class KondisiLahanController extends Controller
         $validated['ada_gulma_dominan'] = $request->boolean('ada_gulma_dominan');
         $validated['ada_serangan_hama'] = $request->boolean('ada_serangan_hama');
         $validated['gejala_defisiensi'] = $validated['gejala_defisiensi'] ?? [];
+
+        // Sanitize: empty strings → null for nullable enum fields
+        foreach (['sumber_curah_hujan', 'metode_pengukuran_ph', 'periode_curah_hujan'] as $field) {
+            if (isset($validated[$field]) && $validated[$field] === '') {
+                $validated[$field] = null;
+            }
+        }
+        if (isset($validated['curah_hujan_mm_bulanan']) && $validated['curah_hujan_mm_bulanan'] === '') {
+            $validated['curah_hujan_mm_bulanan'] = null;
+        }
 
         // Validasi konsistensi logis lintas-field (A4)
         $warnings = $this->validasiKonsistensi($validated);

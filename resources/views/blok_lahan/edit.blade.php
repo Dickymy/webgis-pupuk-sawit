@@ -298,6 +298,30 @@
                         ])
                     </div>
                 </div>
+
+                {{-- Fase Tanaman --}}
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
+                        Fase Tanaman
+                        <span class="text-xs text-slate-400 font-normal ml-1">(opsional)</span>
+                    </label>
+                    <div class="flex gap-3">
+                        <label class="flex items-center gap-2 px-4 py-2.5 border rounded-xl cursor-pointer transition-colors {{ old('fase_tanaman', $blokLahan->fase_tanaman) === 'TBM' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 hover:border-emerald-300' }}">
+                            <input type="radio" name="fase_tanaman" value="TBM" {{ old('fase_tanaman', $blokLahan->fase_tanaman) === 'TBM' ? 'checked' : '' }}
+                                class="text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-sm font-medium text-slate-700">🌱 TBM</span>
+                            <span class="text-xs text-slate-400">Belum Menghasilkan</span>
+                        </label>
+                        <label class="flex items-center gap-2 px-4 py-2.5 border rounded-xl cursor-pointer transition-colors {{ old('fase_tanaman', $blokLahan->fase_tanaman) === 'TM' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 hover:border-emerald-300' }}">
+                            <input type="radio" name="fase_tanaman" value="TM" {{ old('fase_tanaman', $blokLahan->fase_tanaman) === 'TM' ? 'checked' : '' }}
+                                class="text-emerald-600 focus:ring-emerald-500">
+                            <span class="text-sm font-medium text-slate-700">🌴 TM</span>
+                            <span class="text-xs text-slate-400">Menghasilkan</span>
+                        </label>
+                    </div>
+                    <p class="mt-1.5 text-xs text-slate-400">TBM: tanaman belum berbuah. TM: tanaman sudah berbuah. Umur 3 tahun bisa TBM atau TM tergantung kondisi lapangan.</p>
+                    @error('fase_tanaman') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                </div>
             </div>
 
             {{-- Koordinat GeoJSON --}}
@@ -575,9 +599,9 @@ function switchTab(tab) {
 }
 
 var drawMap = L.map('draw-map', { center: [-1.5, 110.0], zoom: 10, zoomControl: false, zoomSnap: 0, zoomDelta: 0.25, wheelDebounceTime: 40, wheelPxPerZoomLevel: 120 });
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(drawMap);
-var satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: 17 });
-L.control.layers({'Peta': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}), 'Satelit': satLayer}).addTo(drawMap);
+var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OSM' });
+var satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: 17 }).addTo(drawMap);
+L.control.layers({'🗺️ Peta': osmLayer, '🛰️ Satelit': satLayer}, null, {position: 'topright'}).addTo(drawMap);
 
 // ─── ZOOM SLIDER (smooth continuous zoom on hold) ────────────────
 (function(){

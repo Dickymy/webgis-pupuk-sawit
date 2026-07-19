@@ -18,6 +18,7 @@ class BlokLahan extends Model
         'tahun_tanam',
         'jenis_tanah',
         'topografi',
+        'fase_tanaman',
     ];
 
     protected function casts(): array

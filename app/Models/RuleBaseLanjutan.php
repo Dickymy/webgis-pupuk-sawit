@@ -9,6 +9,7 @@ class RuleBaseLanjutan extends Model
     protected $table = 'rule_bases_lanjutan';
 
     protected $fillable = [
+        'kode_rule',
         'kondisi_warna_daun',
         'kondisi_ph_min',
         'kondisi_ph_max',
@@ -35,6 +36,19 @@ class RuleBaseLanjutan extends Model
         'prioritas',
         'aktif',
         'keterangan_rule',
+        // Provenance fields (Pahan-v2)
+        'sumber_judul',
+        'sumber_penulis',
+        'sumber_tahun',
+        'sumber_halaman',
+        'sumber_tabel',
+        'tingkat_bukti',
+        'versi_rule',
+        'is_system_rule',
+        'status_validasi',
+        'divalidasi_oleh',
+        'tanggal_validasi',
+        'catatan_validasi',
     ];
 
     protected function casts(): array

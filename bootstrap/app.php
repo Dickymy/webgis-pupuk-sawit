@@ -15,10 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.admin' => \App\Http\Middleware\AdminAuthenticated::class,
         ]);
         $middleware->redirectGuestsTo('/login');
-        // Trust ngrok proxy agar HTTPS/redirect berjalan benar
+        // Trust proxy agar HTTPS/redirect berjalan benar di shared hosting
         $middleware->trustProxies(at: '*');
         // Exclude tema cookie dari enkripsi agar JS bisa baca langsung
         $middleware->encryptCookies(except: ['tema_tampilan']);
+        // Disable CSRF untuk semua route (diperlukan di shared hosting Rumahweb)
+        $middleware->validateCsrfTokens(except: ['*']);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

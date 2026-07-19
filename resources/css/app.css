@@ -315,6 +315,38 @@
 .dark .zoom-slider-container button:hover {
     background: rgba(16, 185, 129, 0.2) !important;
 }
+/* Map top bar & expand button (blok_lahan create/edit) */
+.dark .map-top-bar {
+    background: rgba(15, 23, 42, 0.97) !important;
+    border-bottom-color: #334155 !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+}
+.dark .map-info-luas {
+    color: #e2e8f0 !important;
+}
+.dark #btn-expand {
+    background: rgba(30, 41, 59, 0.92) !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
+}
+.dark #btn-expand:hover {
+    background: #1e293b !important;
+    border-color: #10b981 !important;
+    color: #34d399 !important;
+}
+.dark #btn-kecilkan {
+    background: rgba(239, 68, 68, 0.15) !important;
+    border-color: rgba(239, 68, 68, 0.4) !important;
+    color: #fca5a5 !important;
+}
+.dark #btn-kecilkan:hover {
+    background: rgba(239, 68, 68, 0.25) !important;
+}
+/* Map wrapper border */
+.dark .map-wrapper {
+    border-color: #334155 !important;
+}
 /* Leaflet label in dark mode */
 .dark .leaflet-tooltip-label {
     color: #f1f5f9 !important;
@@ -322,19 +354,81 @@
 }
 
 /* ── Leaflet popup (dark) ─────────────────────────────────────────────── */
+/* Popup dark mode — gelap dengan teks terang agar match tema */
 .dark .leaflet-popup-content-wrapper {
     background: #1e293b !important;
-    border-color: #334155 !important;
+    border: 1px solid #334155 !important;
     color: #e2e8f0 !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
 }
 .dark .leaflet-popup-tip {
     background: #1e293b !important;
 }
 .dark .leaflet-popup-content {
     color: #e2e8f0 !important;
+    background: #1e293b !important;
 }
-.dark .leaflet-popup-content * {
-    color: inherit !important;
+/* Judul blok */
+.dark .leaflet-popup-content [style*="color:#0f172a"] {
+    color: #f1f5f9 !important;
+}
+/* Sub-info (pemilik, luas, umur) */
+.dark .leaflet-popup-content [style*="color:#64748b"] {
+    color: #94a3b8 !important;
+}
+/* Label STATUS */
+.dark .leaflet-popup-content [style*="color:#6b7280"] {
+    color: #94a3b8 !important;
+}
+/* Masalah badges */
+.dark .leaflet-popup-content [style*="background:#f8fafc"] {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
+.dark .leaflet-popup-content [style*="color:#374151"] {
+    color: #e2e8f0 !important;
+}
+/* Pupuk info (hijau) */
+.dark .leaflet-popup-content [style*="background:#f0fdf4"] {
+    background: rgba(16, 185, 129, 0.15) !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+}
+.dark .leaflet-popup-content [style*="color:#15803d"] {
+    color: #6ee7b7 !important;
+}
+/* Saran (kuning) */
+.dark .leaflet-popup-content [style*="background:#fffbeb"] {
+    background: rgba(217, 119, 6, 0.15) !important;
+    border-color: rgba(217, 119, 6, 0.3) !important;
+}
+.dark .leaflet-popup-content [style*="color:#78350f"] {
+    color: #fcd34d !important;
+}
+/* Footer separator */
+.dark .leaflet-popup-content [style*="border-top:1px solid #f1f5f9"] {
+    border-top-color: #334155 !important;
+}
+.dark .leaflet-popup-content [style*="border-bottom:1px solid #f1f5f9"] {
+    border-bottom-color: #334155 !important;
+}
+/* Tanggal */
+.dark .leaflet-popup-content [style*="color:#9ca3af"] {
+    color: #64748b !important;
+}
+/* Links */
+.dark .leaflet-popup-content [style*="color:#059669"] {
+    color: #34d399 !important;
+}
+.dark .leaflet-popup-content [style*="color:#2563eb"] {
+    color: #93c5fd !important;
+}
+/* Close button */
+.dark .leaflet-popup-close-button {
+    color: #94a3b8 !important;
+}
+.dark .leaflet-popup-close-button:hover {
+    color: #f1f5f9 !important;
 }
 
 /* ── Gradient backgrounds ─────────────────────────────────────────────── */
@@ -645,6 +739,9 @@ input[id$="-search"] {
 .dark #cuaca-result p[style*="color:#1e293b"] {
     color: #e2e8f0 !important;
 }
+.dark #cuaca-result p[style*="color:#94a3b8"] {
+    color: #94a3b8 !important;
+}
 .dark #cuaca-result p[style*="color:#047857"] {
     color: #6ee7b7 !important;
 }
@@ -713,19 +810,19 @@ html:not(.dark) {
 .dark [style*="background:#fef2f2"] {
     background: rgba(239, 68, 68, 0.1) !important;
 }
-.dark [style*="background:#f1f5f9"] {
+.dark [style*="background:#f1f5f9"]:not(.leaflet-popup-content [style*="background:#f1f5f9"]) {
     background: #0f172a !important;
 }
-.dark [style*="background:#f8fafc"] {
+.dark [style*="background:#f8fafc"]:not(.leaflet-popup-content [style*="background:#f8fafc"]) {
     background: #1e293b !important;
 }
-.dark [style*="background:#fff"] {
+.dark [style*="background:#fff"]:not(.leaflet-popup-content [style*="background:#fff"]) {
     background: #1e293b !important;
 }
-.dark [style*="color:#1e293b"] {
+.dark [style*="color:#1e293b"]:not(.leaflet-popup-content [style*="color:#1e293b"]) {
     color: #e2e8f0 !important;
 }
-.dark [style*="color:#374151"] {
+.dark [style*="color:#374151"]:not(.leaflet-popup-content [style*="color:#374151"]) {
     color: #e2e8f0 !important;
 }
 .dark [style*="color:#075985"] {
@@ -743,7 +840,7 @@ html:not(.dark) {
 .dark [style*="color:#dc2626"] {
     color: #fca5a5 !important;
 }
-.dark [style*="color:#64748b"] {
+.dark [style*="color:#64748b"]:not(.leaflet-popup-content [style*="color:#64748b"]) {
     color: #94a3b8 !important;
 }
 .dark [style*="border:2px solid #7dd3fc"] {
@@ -761,7 +858,7 @@ html:not(.dark) {
 .dark [style*="border:2px dashed #94a3b8"] {
     border-color: #475569 !important;
 }
-.dark [style*="border:1px solid #e2e8f0"] {
+.dark [style*="border:1px solid #e2e8f0"]:not(.leaflet-popup-content [style*="border:1px solid #e2e8f0"]) {
     border-color: #334155 !important;
 }
 

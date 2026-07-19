@@ -191,7 +191,9 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        var temaAktif = '{{ $admin->tema ?? "system" }}';
+        // Baca tema aktif dari localStorage (sumber kebenaran)
+        var temaAktif = 'system';
+        try { temaAktif = localStorage.getItem('tema_tampilan') || '{{ $admin->tema ?? "system" }}'; } catch(e) { temaAktif = '{{ $admin->tema ?? "system" }}'; }
         highlightThemeButton(temaAktif);
 
         document.querySelectorAll('.theme-btn').forEach(function(btn) {

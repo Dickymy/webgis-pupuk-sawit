@@ -36,6 +36,26 @@ class RekomendasiRbs extends Model
         'data_cukup',
         'data_kurang',
         'notifikasi_data',
+        // Pahan-v2 fields
+        'fase_tanaman_snapshot',
+        'umur_tanaman_snapshot',
+        'urea_min_kg_per_pokok_tahun',
+        'urea_max_kg_per_pokok_tahun',
+        'urea_estimasi_kg_per_pokok_tahun',
+        'kcl_min_kg_per_pokok_tahun',
+        'kcl_max_kg_per_pokok_tahun',
+        'kcl_estimasi_kg_per_pokok_tahun',
+        'strategi_estimasi_dosis',
+        'jumlah_pokok_snapshot',
+        'dasar_perhitungan_json',
+        'peringatan_json',
+        'kelengkapan_data_score',
+        'kategori_keandalan',
+        'rincian_skor_json',
+        'status_kondisi_tanaman',
+        'status_kelayakan_aplikasi',
+        'alasan_kelayakan',
+        'versi_mesin_rekomendasi',
     ];
 
     protected function casts(): array
@@ -47,6 +67,9 @@ class RekomendasiRbs extends Model
             'rekomendasi_pupuk'       => 'array',
             'jadwal_pemupukan'        => 'array',
             'data_kurang'             => 'array',
+            'dasar_perhitungan_json'  => 'array',
+            'peringatan_json'         => 'array',
+            'rincian_skor_json'       => 'array',
             'is_latest'               => 'boolean',
             'data_cukup'              => 'boolean',
             'dosis_urea'              => 'double',
@@ -54,6 +77,7 @@ class RekomendasiRbs extends Model
             'total_urea'              => 'double',
             'total_kcl'               => 'double',
             'confidence_score'        => 'integer',
+            'kelengkapan_data_score'  => 'integer',
         ];
     }
 

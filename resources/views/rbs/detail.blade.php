@@ -31,7 +31,9 @@
         <div>
             <p class="text-[10px] text-slate-400 uppercase font-semibold">Umur</p>
             <p class="text-sm font-bold text-slate-800">{{ $blokLahan->umur_tanaman ?? '—' }} tahun</p>
-            @if($blokLahan->kategori_umur)
+            @if($blokLahan->fase_tanaman)
+            <p class="text-[9px] text-emerald-600 font-medium">{{ $blokLahan->fase_tanaman === 'TBM' ? '🌱 TBM' : '🌴 TM' }}</p>
+            @elseif($blokLahan->kategori_umur)
             <p class="text-[9px] text-emerald-600 font-medium">{{ $blokLahan->kategori_umur }}</p>
             @endif
         </div>
@@ -54,7 +56,32 @@
 {{-- ═══════════════════════════════════════════════════════════ --}}
 @if($rbs->total_urea || $rbs->total_kcl)
 <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 mt-5">
-    <h3 class="text-sm font-bold text-slate-800 mb-3">🧮 Total Kebutuhan Pupuk</h3>
+    <h3 class="text-sm font-bold text-slate-800 mb-3">🧮 Kebutuhan Pupuk Tahunan</h3>
+
+    {{-- Rentang Referensi Pahan --}}
+    @if($rbs->urea_min_kg_per_pokok_tahun)
+    <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+        <p class="text-[10px] text-blue-600 uppercase font-bold mb-2">📖 Rentang Referensi (Pahan, 2013 — Tabel 9.13 & 9.14)</p>
+        <div class="grid grid-cols-2 gap-3 text-xs">
+            <div>
+                <span class="text-slate-500">Urea:</span>
+                <span class="font-bold text-slate-800">{{ number_format($rbs->urea_min_kg_per_pokok_tahun, 2) }}–{{ number_format($rbs->urea_max_kg_per_pokok_tahun, 2) }}</span>
+                <span class="text-slate-400">kg/pokok/tahun</span>
+            </div>
+            <div>
+                <span class="text-slate-500">KCl:</span>
+                <span class="font-bold text-slate-800">{{ number_format($rbs->kcl_min_kg_per_pokok_tahun, 2) }}–{{ number_format($rbs->kcl_max_kg_per_pokok_tahun, 2) }}</span>
+                <span class="text-slate-400">kg/pokok/tahun</span>
+            </div>
+        </div>
+        @if($rbs->fase_tanaman_snapshot)
+        <p class="text-[10px] text-blue-500 mt-1.5">Fase: {{ $rbs->fase_tanaman_snapshot }} · Umur: {{ $rbs->umur_tanaman_snapshot }} tahun · Strategi: {{ $rbs->strategi_estimasi_dosis ?? 'midpoint' }}</p>
+        @endif
+    </div>
+    @endif
+
+    {{-- Estimasi Dosis Kerja --}}
+    <p class="text-[10px] text-slate-400 uppercase font-bold mb-2">Estimasi Dosis Kerja Sistem</p>
     <div class="grid grid-cols-2 gap-4">
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
             <p class="text-[10px] text-amber-600 uppercase font-semibold mb-1">Urea</p>
@@ -72,6 +99,24 @@
             <p class="text-[9px] text-cyan-500 mt-1">{{ $rbs->dosis_kcl }} kg/pokok</p>
             @endif
         </div>
+    </div>
+
+    {{-- Kelayakan Aplikasi --}}
+    @if($rbs->status_kelayakan_aplikasi && $rbs->status_kelayakan_aplikasi !== 'LAYAK_DIJADWALKAN')
+    <div class="mt-3 bg-amber-50/60 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
+        <p class="font-bold">⏸️ Status Aplikasi: {{ \App\Services\FertilizationWindowService::labelStatus($rbs->status_kelayakan_aplikasi) }}</p>
+        @if($rbs->alasan_kelayakan)
+        <p class="mt-1 text-[11px] text-amber-700">{{ $rbs->alasan_kelayakan }}</p>
+        @endif
+        <p class="mt-1 text-[10px] text-amber-600 italic">Kebutuhan tahunan tetap tercatat. Dosis akan diaplikasikan setelah kondisi memenuhi syarat.</p>
+    </div>
+    @endif
+
+    {{-- Disclaimer --}}
+    <div class="mt-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+        <p class="text-[10px] text-slate-500 leading-relaxed">
+            ⚠️ <strong>Disclaimer:</strong> Rekomendasi ini merupakan estimasi awal berbasis data blok, observasi visual, dan basis aturan. Hasil ini bukan pengganti analisis laboratorium tanah/daun atau keputusan ahli agronomi. Perhitungan kuantitatif dibatasi pada Urea dan MOP/KCl.
+        </p>
     </div>
 </div>
 @else
@@ -108,7 +153,7 @@
 {{-- SECTION 4: Info Tambahan (Validitas + Confidence) --}}
 {{-- ═══════════════════════════════════════════════════════════ --}}
 <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 mt-5">
-    <h3 class="text-sm font-bold text-slate-800 mb-3">📊 Tingkat Keyakinan Rekomendasi</h3>
+    <h3 class="text-sm font-bold text-slate-800 mb-3">📊 Tingkat Kelengkapan & Keandalan Data</h3>
     <div class="flex flex-wrap items-center gap-2 mb-3">
         {{-- Confidence --}}
         @php
@@ -124,7 +169,7 @@
             };
         @endphp
         <span class="inline-flex items-center gap-1 px-2.5 py-1 border rounded-full text-xs font-semibold {{ $confColor }}">
-            Keyakinan: {{ $rbs->confidence_label }} ({{ $rbs->confidence_score }}%)
+            Keandalan: {{ $rbs->confidence_label }} ({{ $rbs->confidence_score }}%)
         </span>
         <span class="inline-flex items-center gap-1 px-2.5 py-1 border rounded-full text-xs font-semibold {{ $validitasColor }}">
             {{ $rbs->validitas_rekomendasi }}

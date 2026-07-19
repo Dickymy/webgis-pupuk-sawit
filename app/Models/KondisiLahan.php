@@ -13,8 +13,12 @@ class KondisiLahan extends Model
         'tanggal_observasi',
         'tanggal_pemupukan_terakhir',
         'ph_tanah',
+        'metode_pengukuran_ph',
         'kelembaban_tanah',
         'curah_hujan_kategori',
+        'curah_hujan_mm_bulanan',
+        'periode_curah_hujan',
+        'sumber_curah_hujan',
         'musim_saat_ini',
         'warna_daun',
         'kondisi_pelepah',
@@ -24,6 +28,7 @@ class KondisiLahan extends Model
         'ada_gulma_dominan',
         'ada_serangan_hama',
         'catatan_observasi',
+        'status_verifikasi_gejala',
     ];
 
     protected function casts(): array
@@ -35,6 +40,7 @@ class KondisiLahan extends Model
             'ada_gulma_dominan'          => 'boolean',
             'ada_serangan_hama'          => 'boolean',
             'ph_tanah'                   => 'decimal:2',
+            'curah_hujan_mm_bulanan'     => 'decimal:1',
         ];
     }
 

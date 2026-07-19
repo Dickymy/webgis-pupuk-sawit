@@ -16,6 +16,27 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn() => redirect()->route('dashboard'));
 
 // === ROUTE MAINTENANCE — HAPUS SETELAH FIX ===
+Route::get('/setup-database', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $output = \Illuminate\Support\Facades\Artisan::output();
+        return '<pre>Migration berhasil!<br><br>' . $output . '</pre><br><a href="/fix-cache">Clear Cache</a>';
+    } catch (\Exception $e) {
+        return '<pre>Error: ' . $e->getMessage() . '</pre>';
+    }
+});
+
+Route::get('/seed-tester', function () {
+    \App\Models\Admin::firstOrCreate(
+        ['username' => 'test'],
+        [
+            'password'     => 'test',
+            'nama_lengkap' => 'Akun Tester Kuesioner',
+        ]
+    );
+    return 'Akun tester berhasil dibuat! Username: test | Password: test<br><br><a href="/login">Login</a>';
+});
+
 Route::get('/fix-cache', function () {
     \Illuminate\Support\Facades\Artisan::call('config:clear');
     \Illuminate\Support\Facades\Artisan::call('cache:clear');

@@ -13,7 +13,8 @@
     .leaflet-tooltip-label { background: transparent !important; border: none !important; box-shadow: none !important; color: #1e293b; font-size: 10px; font-weight: 700; text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff; padding: 0 !important; }
     .leaflet-popup-content-wrapper { background: #fff; border: 1px solid #e2e8f0; color: #1e293b; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
     .leaflet-popup-tip { background: #fff; }
-    .leaflet-popup-content { margin: 10px 12px; max-height: 200px; overflow-y: auto; }
+    .leaflet-popup-content { margin: 10px 12px; max-height: 250px; overflow-y: auto; }
+    .leaflet-popup-content div, .leaflet-popup-content span, .leaflet-popup-content p, .leaflet-popup-content a { color: inherit; }
     @media (max-width: 640px) {
         .leaflet-popup-content { margin: 8px 10px; max-height: 180px; font-size: 11px; }
         .leaflet-popup-content-wrapper { max-width: 260px !important; }
@@ -134,6 +135,15 @@
     #map-container.is-fullscreen .map-legend {
         bottom: 24px;
         right: 16px;
+    }
+    #map-container.is-fullscreen .leaflet-control-layers {
+        /* Expanded saat fullscreen */
+    }
+    #map-container.is-fullscreen .leaflet-control-layers .leaflet-control-layers-list {
+        display: block !important;
+    }
+    #map-container.is-fullscreen .leaflet-control-layers .leaflet-control-layers-toggle {
+        display: none !important;
     }
     #map-container.is-fullscreen .zoom-slider-container {
         bottom: 24px;
@@ -456,9 +466,9 @@ var activeStatuses = ['Darurat', 'Segera', 'Normal', 'Tunda', 'Belum Dianalisis'
 
 var map = L.map('map', { center: [-2.5489, 118.0149], zoom: 5, zoomControl: false, zoomSnap: 0, zoomDelta: 0.25, wheelDebounceTime: 40, wheelPxPerZoomLevel: 120 });
 var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
-osm.addTo(map);
 var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: '&copy; Esri', maxZoom: 19, maxNativeZoom: 17 });
-L.control.layers({'Peta': osm, 'Satelit': satellite}).addTo(map);
+satellite.addTo(map);
+L.control.layers({'🗺️ Peta': osm, '🛰️ Satelit': satellite}, null, {position: 'topright'}).addTo(map);
 
 // ─── ZOOM SLIDER (smooth continuous zoom on hold) ────────────────
 (function(){
