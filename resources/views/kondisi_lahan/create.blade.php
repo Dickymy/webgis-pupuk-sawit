@@ -266,24 +266,24 @@
                 <p class="text-[10px] text-emerald-700 uppercase font-bold mb-2.5">📐 Data Presisi Curah Hujan (Opsional — meningkatkan akurasi rekomendasi)</p>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Curah Hujan (mm/bulan)</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Curah Hujan (mm/bulan)</label>
                         <input type="number" name="curah_hujan_mm_bulanan" id="curah_hujan_mm_bulanan"
                             value="{{ old('curah_hujan_mm_bulanan') }}"
                             step="0.1" min="0" max="1000" placeholder="Contoh: 87.7"
-                            class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                            class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
                         <p class="mt-0.5 text-[10px] text-slate-400">Layak pupuk: 100–250 mm/bln</p>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-slate-600 mb-1">Periode Data</label>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Periode Data</label>
                         <input type="text" name="periode_curah_hujan" id="periode_curah_hujan"
                             value="{{ old('periode_curah_hujan') }}"
                             placeholder="Juli 2026"
-                            class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                            class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
                     </div>
                     <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Sumber Data</label>
                         @include('components.custom-select', [
                             'name'    => 'sumber_curah_hujan',
-                            'label'   => 'Sumber Data',
                             'options' => [
                                 ['value' => 'manual', 'label' => 'Input Manual'],
                                 ['value' => 'open-meteo', 'label' => 'Open-Meteo API'],
