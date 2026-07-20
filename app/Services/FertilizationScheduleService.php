@@ -30,6 +30,9 @@ class FertilizationScheduleService
     /**
      * Generate jadwal pemupukan berdasarkan konteks tanaman dan kelayakan.
      *
+     * Pahan v2.4: Jadwal KOSONG ([]) jika belum layak.
+     * Informasi penundaan disimpan pada status_kelayakan_aplikasi dan alasan_kelayakan.
+     *
      * @param  array  $doseData  ['dosis_urea', 'dosis_kcl', 'total_urea', 'total_kcl']
      * @param  array  $windowResult  Output dari FertilizationWindowService::evaluate()
      * @param  array  $plantContext  Output dari PlantContextService::resolve()
@@ -41,14 +44,14 @@ class FertilizationScheduleService
         array $windowResult,
         array $plantContext,
     ): array {
-        // Rule 1: Jadwal hanya dibuat jika layak
+        // Rule 1: Jadwal hanya dibuat jika layak — jika tidak, return kosong
         if (! $windowResult['layak']) {
-            return $this->jadwalDitunda($windowResult, $plantContext);
+            return [];
         }
 
-        // Rule 2: Data hujan numerik harus tersedia
+        // Rule 2: Data hujan numerik harus tersedia — jika tidak, return kosong
         if ($kondisi->curah_hujan_mm_bulanan === null) {
-            return $this->jadwalMenungguData($plantContext);
+            return [];
         }
 
         $totalUrea = $doseData['total_urea'] ?? 0;
@@ -113,52 +116,9 @@ class FertilizationScheduleService
         return $jadwal;
     }
 
-    /**
-     * Jadwal saat aplikasi ditunda.
-     */
-    private function jadwalDitunda(array $windowResult, array $plantContext): array
-    {
-        $faseLabel = $plantContext['fase_label'] ?? 'Belum Ditentukan';
-        $alasan = implode(' ', $windowResult['alasan'] ?? []);
-
-        return [[
-            'tahap' => 1,
-            'nama_tahap' => 'Pemupukan Ditunda',
-            'estimasi_waktu' => 'Setelah kondisi kelayakan terpenuhi',
-            'persentase_urea' => 0,
-            'persentase_kcl' => 0,
-            'urea_kg' => 0,
-            'kcl_kg' => 0,
-            'urea_per_pokok' => 0,
-            'kcl_per_pokok' => 0,
-            'metode_aplikasi' => 'Tidak ada aplikasi saat ini.',
-            'catatan' => "Fase: {$faseLabel}. Alasan penundaan: {$alasan}. Kebutuhan tahunan tetap berlaku dan akan dijadwalkan saat kondisi memenuhi syarat.",
-            'status_tahap' => 'Ditunda',
-        ]];
-    }
-
-    /**
-     * Jadwal saat data hujan numerik belum tersedia.
-     */
-    private function jadwalMenungguData(array $plantContext): array
-    {
-        $faseLabel = $plantContext['fase_label'] ?? 'Belum Ditentukan';
-
-        return [[
-            'tahap' => 1,
-            'nama_tahap' => 'Menunggu Data Curah Hujan',
-            'estimasi_waktu' => 'Setelah data curah hujan numerik tersedia',
-            'persentase_urea' => 0,
-            'persentase_kcl' => 0,
-            'urea_kg' => 0,
-            'kcl_kg' => 0,
-            'urea_per_pokok' => 0,
-            'kcl_per_pokok' => 0,
-            'metode_aplikasi' => 'Jadwal belum dapat disusun tanpa data curah hujan numerik.',
-            'catatan' => "Fase: {$faseLabel}. Masukkan data curah hujan bulanan (mm/bulan) untuk menghasilkan jadwal pemupukan yang presisi.",
-            'status_tahap' => 'Menunggu Data',
-        ]];
-    }
+    // REMOVED in Pahan v2.4: jadwalDitunda() and jadwalMenungguData()
+    // Informasi penundaan hanya disimpan pada status_kelayakan_aplikasi dan alasan_kelayakan.
+    // Jadwal_pemupukan HARUS kosong ([]) jika tidak layak.
 
     /**
      * Tahap persiapan (gulma/hama).

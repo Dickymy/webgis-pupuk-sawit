@@ -13,19 +13,6 @@ use Illuminate\Support\Facades\DB;
 
 class RbsService
 {
-    /**
-     * Mapping warna daun → dugaan unsur hara (untuk skor keandalan).
-     */
-    private array $mappingVisualUnsur = [
-        'Hijau Pucat' => ['N'],
-        'Kuning Merata' => ['N', 'Zn'],
-        'Kuning Tepi' => ['K'],
-        'Oranye/Kemerahan' => ['K'],
-        'Kuning Antar Tulang' => ['Mg', 'Fe'],
-        'Coklat Ujung' => ['P', 'K'],
-        'Bercak Nekrotik' => ['K', 'P'],
-    ];
-
     private PahanDoseReferenceService $doseService;
 
     private FertilizationWindowService $windowService;
@@ -46,6 +33,8 @@ class RbsService
 
     private SupportingFertilizerSanitizer $sanitizer;
 
+    private AnnualFertilizerSnapshotBuilder $snapshotBuilder;
+
     public function __construct(
         PahanDoseReferenceService $doseService,
         FertilizationWindowService $windowService,
@@ -56,7 +45,8 @@ class RbsService
         PlantAgeService $ageService,
         PlantContextService $contextService,
         FertilizationScheduleService $scheduleService,
-        SupportingFertilizerSanitizer $sanitizer
+        SupportingFertilizerSanitizer $sanitizer,
+        AnnualFertilizerSnapshotBuilder $snapshotBuilder
     ) {
         $this->doseService = $doseService;
         $this->windowService = $windowService;
@@ -68,6 +58,7 @@ class RbsService
         $this->contextService = $contextService;
         $this->scheduleService = $scheduleService;
         $this->sanitizer = $sanitizer;
+        $this->snapshotBuilder = $snapshotBuilder;
     }
 
     /**
@@ -94,29 +85,33 @@ class RbsService
         // 2. Resolve konteks tanaman pada tanggal observasi (BUKAN saat ini)
         $tanggalObservasi = $kondisi->tanggal_observasi ?? now();
         $plantContext = $this->contextService->resolve($blok, $tanggalObservasi);
-        $ageInfo = $this->ageService->calculateAgeAt($blok, $tanggalObservasi);
 
         // 3. Evaluasi kelengkapan observasi (satu-satunya sumber)
         $completeness = $this->completenessService->evaluate($kondisi);
 
-        // 4. Cek apakah data kondisi cukup untuk analisis (minimal 1 field terisi)
-        if (! $this->kondisiCukup($kondisi)) {
-            return $this->hasilDataTidakCukup($blok, $kondisi, $plantContext, $ageInfo);
+        // 4. Cek verifikasi fase: umur 3 tanpa verifikasi tidak menghasilkan dosis
+        if ($plantContext['umur'] === 3 && $plantContext['fase'] === null && $plantContext['needs_phase_verification']) {
+            return $this->hasilPerluVerifikasiFase($blok, $kondisi, $plantContext);
         }
 
-        // 5. Jika data tidak cukup untuk diagnosis spesifik, kembalikan dosis dasar saja
+        // 5. Cek apakah data kondisi cukup untuk analisis (minimal 1 field terisi)
+        if (! $this->kondisiCukupMinimal($kondisi)) {
+            return $this->hasilDataTidakCukup($blok, $kondisi, $plantContext);
+        }
+
+        // 6. Jika data tidak cukup untuk diagnosis spesifik, kembalikan dosis dasar saja
         if (! $completeness['can_run_diagnosis']) {
-            return $this->hasilDosisDasarTanpaDiagnosis($blok, $kondisi, $completeness, $plantContext, $ageInfo);
+            return $this->hasilDosisDasarTanpaDiagnosis($blok, $kondisi, $completeness, $plantContext);
         }
 
-        // 6. Ambil kategori umur berdasarkan umur saat observasi
+        // 7. Ambil kategori umur berdasarkan umur saat observasi
         $umurSaatObservasi = $plantContext['umur'];
         $kategoriUmur = $this->tentukanKategoriUmurDariNilai($umurSaatObservasi);
 
-        // 7. Ambil semua rule aktif, urutkan dari prioritas tertinggi
+        // 8. Ambil semua rule aktif, urutkan dari prioritas tertinggi
         $rules = RuleBaseLanjutan::aktif()->orderBy('prioritas')->get();
 
-        // 8. Evaluasi setiap rule (Forward Chaining dengan Rule Chaining)
+        // 9. Evaluasi setiap rule (Forward Chaining dengan Rule Chaining)
         $rulesTerpicu = [];
         $intermediateFlags = [];
 
@@ -134,13 +129,13 @@ class RbsService
             }
         }
 
-        // 9. Jika tidak ada rule terpicu, return status normal
+        // 10. Jika tidak ada rule terpicu, return status normal
         if (empty($rulesTerpicu)) {
-            return $this->hasilNormal($blok, $kondisi, $plantContext, $ageInfo);
+            return $this->hasilNormal($blok, $kondisi, $plantContext);
         }
 
-        // 10. Susun output dari semua rule terpicu
-        return $this->susunHasil($blok, $kondisi, $rulesTerpicu, $plantContext, $ageInfo);
+        // 11. Susun output dari semua rule terpicu
+        return $this->susunHasil($blok, $kondisi, $rulesTerpicu, $plantContext);
     }
 
     /**
@@ -170,290 +165,14 @@ class RbsService
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // FITUR 7: Cek Kecukupan Data
+    // LEGACY DEAD CODE REMOVED in Pahan v2.4
+    // cekKecukupanData() → replaced by ObservationCompletenessService
+    // tentukanValiditasRekomendasi() → replaced by RecommendationReliabilityService
+    // hitungConfidence() → replaced by RecommendationReliabilityService
+    // isDugaanUnsurSesuaiWarnaDaun() → removed (part of hitungConfidence)
+    // cekKonsistensiData() → removed (part of hitungConfidence)
+    // kondisiCukup() → replaced by kondisiCukupMinimal()
     // ═══════════════════════════════════════════════════════════════════
-
-    /**
-     * Cek apakah data observasi cukup untuk rekomendasi yang kuat.
-     */
-    private function cekKecukupanData(KondisiLahan $kondisi): array
-    {
-        $fieldPenting = [
-            'warna_daun' => 'Warna daun',
-            'ph_tanah' => 'pH tanah',
-            'kelembaban_tanah' => 'Kelembaban tanah',
-            'curah_hujan_kategori' => 'Curah hujan',
-            'musim_saat_ini' => 'Musim saat ini',
-            'kondisi_drainase' => 'Kondisi drainase',
-            'tanggal_pemupukan_terakhir' => 'Tanggal pemupukan terakhir',
-        ];
-
-        $dataKurang = [];
-        $terisi = 0;
-
-        foreach ($fieldPenting as $field => $label) {
-            if ($kondisi->$field !== null && $kondisi->$field !== '') {
-                $terisi++;
-            } else {
-                $dataKurang[] = $label;
-            }
-        }
-
-        // Cek gejala_defisiensi terpisah
-        $adaDugaanUnsur = ! empty($kondisi->gejala_defisiensi);
-
-        // Data dianggap cukup jika minimal 5 dari 7 field penting terisi
-        $dataCukup = $terisi >= 5;
-
-        // Atau tidak cukup jika: warna_daun kosong ATAU (pH kosong DAN drainase kosong)
-        if ($kondisi->warna_daun === null) {
-            $dataCukup = false;
-        }
-        if ($kondisi->ph_tanah === null && $kondisi->kondisi_drainase === null) {
-            $dataCukup = false;
-        }
-
-        // Re-override: jika terisi >= 5, anggap cukup
-        if ($terisi >= 5) {
-            $dataCukup = true;
-        }
-
-        $pesan = $dataCukup
-            ? 'Data observasi cukup untuk menjalankan analisis RBS.'
-            : 'Data observasi belum cukup untuk menghasilkan rekomendasi yang kuat. Lengkapi data berikut: '.implode(', ', $dataKurang).'.';
-
-        return [
-            'data_cukup' => $dataCukup,
-            'data_kurang' => $dataKurang,
-            'pesan' => $pesan,
-            'terisi' => $terisi,
-            'total_field' => count($fieldPenting),
-        ];
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
-    // FITUR 3: Validitas Rekomendasi
-    // ═══════════════════════════════════════════════════════════════════
-
-    /**
-     * Tentukan validitas rekomendasi berdasarkan kelengkapan data.
-     */
-    private function tentukanValiditasRekomendasi(KondisiLahan $kondisi, array $kecukupanData): array
-    {
-        $warnaDaun = $kondisi->warna_daun !== null;
-        $phTanah = $kondisi->ph_tanah !== null;
-        $kelembaban = $kondisi->kelembaban_tanah !== null;
-        $curahHujan = $kondisi->curah_hujan_kategori !== null;
-        $drainase = $kondisi->kondisi_drainase !== null;
-        $tglPupuk = $kondisi->tanggal_pemupukan_terakhir !== null;
-        $musim = $kondisi->musim_saat_ini !== null;
-
-        // Cukup Kuat: warna daun + pH + (kelembaban ATAU curah hujan) + drainase
-        $isCukupKuat = $warnaDaun
-            && $phTanah
-            && ($kelembaban || $curahHujan)
-            && $drainase;
-
-        if ($isCukupKuat) {
-            $catatan = 'Rekomendasi cukup kuat karena didukung data warna daun, pH tanah, '
-                .($kelembaban ? 'kelembaban, ' : '')
-                .($curahHujan ? 'curah hujan, ' : '')
-                .'dan drainase.';
-
-            return [
-                'validitas' => 'Cukup Kuat',
-                'catatan' => rtrim($catatan, ', ').'.',
-            ];
-        }
-
-        // Default: Estimasi Visual
-        $missing = [];
-        if (! $phTanah) {
-            $missing[] = 'pH tanah';
-        }
-        if (! $drainase) {
-            $missing[] = 'kondisi drainase';
-        }
-        if (! $kelembaban && ! $curahHujan) {
-            $missing[] = 'kelembaban/curah hujan';
-        }
-
-        $catatan = 'Rekomendasi ini bersifat estimasi visual karena belum didukung data '
-            .implode(' dan ', $missing).'.';
-
-        return [
-            'validitas' => 'Estimasi Visual',
-            'catatan' => $catatan,
-        ];
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
-    // FITUR 6: Confidence Score
-    // ═══════════════════════════════════════════════════════════════════
-
-    /**
-     * Hitung confidence score 0-100.
-     */
-    private function hitungConfidence(KondisiLahan $kondisi, array $rulesTerpicu, array $warnings = []): array
-    {
-        $score = 0;
-        $details = [];
-
-        // A. Kelengkapan Data — Maks 40 poin
-        $fieldsPenting = [
-            'warna_daun', 'ph_tanah', 'kelembaban_tanah', 'curah_hujan_kategori',
-            'musim_saat_ini', 'kondisi_drainase', 'tanggal_pemupukan_terakhir',
-        ];
-        // Tambah gejala_defisiensi sebagai field ke-8
-        $totalFields = count($fieldsPenting) + 1;
-        $terisi = 0;
-        foreach ($fieldsPenting as $f) {
-            if ($kondisi->$f !== null && $kondisi->$f !== '') {
-                $terisi++;
-            }
-        }
-        if (! empty($kondisi->gejala_defisiensi)) {
-            $terisi++;
-        }
-
-        $skorA = (int) round(($terisi / $totalFields) * 40);
-        $score += $skorA;
-        $details[] = "Kelengkapan data: {$terisi}/{$totalFields} field ({$skorA} poin)";
-
-        // B. Jumlah Rule Terpicu — Maks 25 poin
-        $jumlahRule = count($rulesTerpicu);
-        $skorB = match (true) {
-            $jumlahRule >= 3 => 25,
-            $jumlahRule === 2 => 18,
-            $jumlahRule === 1 => 12,
-            default => 5,
-        };
-        $score += $skorB;
-        $details[] = "Rule terpicu: {$jumlahRule} ({$skorB} poin)";
-
-        // C. Kesesuaian Visual + Dugaan Unsur — Maks 20 poin
-        $skorC = 0;
-        $warnaDaun = $kondisi->warna_daun;
-        $dugaanUnsur = $kondisi->gejala_defisiensi ?? [];
-
-        if ($warnaDaun && ! empty($dugaanUnsur)) {
-            if ($this->isDugaanUnsurSesuaiWarnaDaun($warnaDaun, $dugaanUnsur)) {
-                $skorC = 20;
-            } else {
-                $skorC = 10; // Ada data tapi tidak cocok mapping
-            }
-        } elseif ($warnaDaun || ! empty($dugaanUnsur)) {
-            $skorC = 5; // Hanya salah satu terisi
-        }
-        $score += $skorC;
-        $details[] = "Kesesuaian visual-unsur: {$skorC} poin";
-
-        // D. Penalti Data Kontradiktif — Maks -20 poin
-        $penalti = 0;
-        $warningsKonsistensi = $this->cekKonsistensiData($kondisi);
-        $penalti = min(count($warningsKonsistensi) * 10, 20);
-        $score -= $penalti;
-        if ($penalti > 0) {
-            $details[] = "Penalti kontradiksi: -{$penalti} poin";
-        }
-
-        // Clamp 0-100
-        $score = max(0, min(100, $score));
-
-        // Label
-        if ($score >= 75) {
-            $label = 'Tinggi';
-        } elseif ($score >= 50) {
-            $label = 'Sedang';
-        } else {
-            $label = 'Rendah';
-        }
-
-        // Catatan
-        $dataKurangFields = [];
-        foreach ($fieldsPenting as $f) {
-            if ($kondisi->$f === null || $kondisi->$f === '') {
-                $dataKurangFields[] = str_replace('_', ' ', $f);
-            }
-        }
-
-        if ($label === 'Rendah') {
-            $catatan = 'Keyakinan rendah karena data '.implode(', ', array_slice($dataKurangFields, 0, 3)).' belum diisi.';
-        } elseif ($label === 'Tinggi') {
-            $catatan = 'Keyakinan tinggi karena data observasi lengkap dan beberapa rule saling mendukung.';
-        } else {
-            $catatan = 'Keyakinan sedang. Lengkapi data untuk meningkatkan akurasi rekomendasi.';
-        }
-
-        return [
-            'score' => $score,
-            'label' => $label,
-            'catatan' => $catatan,
-            'data_kurang' => $dataKurangFields,
-        ];
-    }
-
-    /**
-     * Cek apakah dugaan unsur sesuai dengan warna daun (mapping visual).
-     */
-    private function isDugaanUnsurSesuaiWarnaDaun(?string $warnaDaun, array $dugaanUnsur): bool
-    {
-        if (! $warnaDaun || empty($dugaanUnsur)) {
-            return false;
-        }
-
-        $unsurCocok = $this->mappingVisualUnsur[$warnaDaun] ?? [];
-        if (empty($unsurCocok)) {
-            return false;
-        }
-
-        return ! empty(array_intersect($dugaanUnsur, $unsurCocok));
-    }
-
-    /**
-     * Cek konsistensi data (untuk penalti confidence).
-     */
-    private function cekKonsistensiData(KondisiLahan $kondisi): array
-    {
-        $warnings = [];
-
-        $musim = $kondisi->musim_saat_ini;
-        $kelembaban = $kondisi->kelembaban_tanah;
-        $warnaDaun = $kondisi->warna_daun;
-        $defisiensi = $kondisi->gejala_defisiensi ?? [];
-        $curahHujan = $kondisi->curah_hujan_kategori;
-        $drainase = $kondisi->kondisi_drainase;
-
-        if ($musim === 'Musim Kemarau' && in_array($kelembaban, ['Lembab', 'Sangat Lembab'])) {
-            $warnings[] = 'Musim kemarau tapi kelembaban tinggi';
-        }
-        if ($musim === 'Musim Hujan' && in_array($kelembaban, ['Kering', 'Sangat Kering'])) {
-            $warnings[] = 'Musim hujan tapi kelembaban rendah';
-        }
-        if ($warnaDaun === 'Hijau Normal' && ! empty($defisiensi)) {
-            $warnings[] = 'Daun normal tapi ada dugaan defisiensi';
-        }
-        if ($curahHujan === 'Sangat Tinggi' && in_array($kelembaban, ['Kering', 'Sangat Kering'])) {
-            $warnings[] = 'Curah hujan tinggi tapi kelembaban rendah';
-        }
-        if ($curahHujan === 'Sangat Rendah' && in_array($kelembaban, ['Lembab', 'Sangat Lembab'])) {
-            $warnings[] = 'Curah hujan rendah tapi kelembaban tinggi';
-        }
-        if ($drainase === 'Buruk — Tergenang' && $curahHujan === 'Sangat Rendah') {
-            $warnings[] = 'Drainase tergenang tapi curah hujan sangat rendah';
-        }
-        if ($drainase === 'Buruk — Tergenang' && $musim === 'Musim Kemarau') {
-            $warnings[] = 'Drainase tergenang saat musim kemarau';
-        }
-        if ($musim === 'Musim Hujan' && $curahHujan === 'Sangat Rendah') {
-            $warnings[] = 'Musim hujan tapi curah hujan sangat rendah';
-        }
-        if ($musim === 'Musim Kemarau' && $curahHujan === 'Sangat Tinggi') {
-            $warnings[] = 'Musim kemarau tapi curah hujan sangat tinggi';
-        }
-
-        return $warnings;
-    }
 
     // ═══════════════════════════════════════════════════════════════════
     // CORE: Evaluasi Rule
@@ -753,9 +472,10 @@ class RbsService
     /**
      * Susun hasil analisis dari rule-rule yang terpicu.
      */
-    private function susunHasil(BlokLahan $blok, KondisiLahan $kondisi, array $rules, array $plantContext, array $ageInfo = []): array
+    private function susunHasil(BlokLahan $blok, KondisiLahan $kondisi, array $rules, array $plantContext): array
     {
-        // Tentukan status dominan (Tunda is prioritized to override Segera/Normal/Darurat)
+        // Tentukan status dominan (legacy — hanya untuk kompatibilitas)
+        // LEGACY ONLY — kompatibilitas histori, bukan keputusan operasional
         $hierarki = ['Tunda' => 4, 'Darurat' => 3, 'Segera' => 2, 'Normal' => 1];
         $statusDominan = collect($rules)
             ->sortByDesc(fn ($r) => $hierarki[$r->status_kebutuhan] ?? 0)
@@ -787,7 +507,7 @@ class RbsService
         }
 
         // Hitung dosis referensi Pahan (selalu dihitung untuk kebutuhan tahunan)
-        $dosisRef = $this->hitungDosisStandar($blok, $kondisi, $ageInfo);
+        $dosisRef = $this->hitungDosisStandar($blok, $kondisi, $plantContext);
 
         // Evaluasi kelayakan waktu
         $window = $dosisRef['window'];
@@ -799,34 +519,25 @@ class RbsService
         $statusKelayakan = $window ? $window['status'] : FertilizationWindowService::PERLU_VERIFIKASI_DATA;
         $alasanKelayakan = $window ? implode(' ', $window['alasan']) : 'Data kelayakan waktu belum tersedia.';
 
-        // Dosis aplikasi saat ini:
-        // - Kelayakan tidak layak → 0 (tapi kebutuhan tahunan tetap)
-        // - Kondisi berat TIDAK otomatis menunda (pemisahan status)
-        if ($window && ! $window['layak']) {
-            $dosisAplikasi = [
-                'dosis_urea' => 0.0,
-                'dosis_kcl' => 0.0,
-                'total_urea' => 0.0,
-                'total_kcl' => 0.0,
-            ];
-        } else {
-            $dosisAplikasi = [
-                'dosis_urea' => $dosisRef['dosis_urea'],
-                'dosis_kcl' => $dosisRef['dosis_kcl'],
-                'total_urea' => $dosisRef['total_urea'],
-                'total_kcl' => $dosisRef['total_kcl'],
-            ];
-        }
+        // Build annual snapshot
+        $doseReference = $dosisRef['dose_reference'] ?? null;
+        $isApplicable = $window ? $window['layak'] : false;
+        $annualSnapshot = $this->snapshotBuilder->build($blok, $doseReference ?? ['urea' => ['estimate' => null], 'kcl' => ['estimate' => null]], $isApplicable);
 
-        // Catatan dosis
-        $catatanDosis = $this->tentukanCatatanDosis($statusDominan, $masalah, $dosisAplikasi, $kondisi);
+        // Catatan dosis (v2.4: berdasarkan kelayakan, bukan status legacy)
+        $catatanDosis = $this->tentukanCatatanDosis(
+            $statusKelayakan,
+            $window ? $window['alasan'] : [],
+            $statusKondisiTanaman,
+            $masalah
+        );
 
-        // Jadwal pemupukan via FertilizationScheduleService (v2.3)
+        // Jadwal pemupukan via FertilizationScheduleService (v2.4: kosong jika tidak layak)
         $jadwal = $this->scheduleService->generate(
-            $dosisAplikasi,
+            ['dosis_urea' => $dosisRef['dosis_urea'] ?? 0, 'dosis_kcl' => $dosisRef['dosis_kcl'] ?? 0, 'total_urea' => $annualSnapshot['urea_aplikasi_saat_ini'], 'total_kcl' => $annualSnapshot['kcl_aplikasi_saat_ini']],
             $kondisi,
             $blok,
-            $window ?? ['layak' => true, 'alasan' => []],
+            $window ?? ['layak' => false, 'alasan' => ['Data kelayakan tidak tersedia']],
             $plantContext
         );
 
@@ -851,8 +562,6 @@ class RbsService
             'catatan' => 'Dosis berdasarkan rentang Pahan 2013, Tabel 9.13 & 9.14. Multiplier tanah/topografi/waktu TIDAK aktif.',
         ];
 
-        $doseReference = $dosisRef['dose_reference'] ?? null;
-
         // Simpan dengan histori
         $hasil = $this->simpanDenganHistori($blok->id, [
             'kondisi_lahan_id' => $kondisi->id,
@@ -868,13 +577,13 @@ class RbsService
             'masalah_teridentifikasi' => $masalah,
             'rekomendasi_pupuk' => $pupukSanitized,
             'saran_tindakan_utama' => $saranUtama,
-            'status_kebutuhan_dominan' => $statusDominan,
+            'status_kebutuhan_dominan' => $statusDominan, // LEGACY ONLY — kompatibilitas histori, bukan keputusan operasional
             'jumlah_rule_terpicu' => count($rules),
             // Kolom lama — kompatibilitas
-            'dosis_urea' => $dosisAplikasi['dosis_urea'],
-            'dosis_kcl' => $dosisAplikasi['dosis_kcl'],
-            'total_urea' => $dosisAplikasi['total_urea'],
-            'total_kcl' => $dosisAplikasi['total_kcl'],
+            'dosis_urea' => $isApplicable ? ($dosisRef['dosis_urea'] ?? 0) : 0.0,
+            'dosis_kcl' => $isApplicable ? ($dosisRef['dosis_kcl'] ?? 0) : 0.0,
+            'total_urea' => $annualSnapshot['urea_aplikasi_saat_ini'],
+            'total_kcl' => $annualSnapshot['kcl_aplikasi_saat_ini'],
             'catatan_dosis' => $catatanDosis,
             'jadwal_pemupukan' => $jadwal,
             'validitas_rekomendasi' => $validitas,
@@ -886,7 +595,7 @@ class RbsService
             'data_cukup' => $completeness['can_run_diagnosis'],
             'data_kurang' => $completeness['missing_fields'],
             'notifikasi_data' => $completeness['reason'],
-            // Kolom Pahan-v2.3 — fase historis via PlantContextService
+            // Kolom Pahan-v2.4 — fase historis via PlantContextService
             'fase_tanaman_snapshot' => $plantContext['fase'],
             'umur_tanaman_snapshot' => $plantContext['umur'],
             'urea_min_kg_per_pokok_tahun' => $doseReference['urea']['min'] ?? null,
@@ -896,7 +605,7 @@ class RbsService
             'kcl_max_kg_per_pokok_tahun' => $doseReference['kcl']['max'] ?? null,
             'kcl_estimasi_kg_per_pokok_tahun' => $doseReference['kcl']['estimate'] ?? null,
             'strategi_estimasi_dosis' => config('fertilization.reference_dose_strategy'),
-            'jumlah_pokok_snapshot' => $dosisRef['calculation']['jumlah_pokok'] ?? (int) ($blok->luas_ha * $blok->sph),
+            'jumlah_pokok_snapshot' => $annualSnapshot['jumlah_pokok'],
             'dasar_perhitungan_json' => $dasarPerhitungan,
             'peringatan_json' => $dosisRef['peringatan'] ?? [],
             'kelengkapan_data_score' => $reliability['score'],
@@ -905,9 +614,20 @@ class RbsService
             'status_kondisi_tanaman' => $statusKondisiTanaman,
             'status_kelayakan_aplikasi' => $statusKelayakan,
             'alasan_kelayakan' => $alasanKelayakan,
+            // Annual snapshot fields
+            'urea_total_min_tahunan' => $annualSnapshot['urea_total_min_tahunan'],
+            'urea_total_max_tahunan' => $annualSnapshot['urea_total_max_tahunan'],
+            'urea_total_estimasi_tahunan' => $annualSnapshot['urea_total_estimasi_tahunan'],
+            'kcl_total_min_tahunan' => $annualSnapshot['kcl_total_min_tahunan'],
+            'kcl_total_max_tahunan' => $annualSnapshot['kcl_total_max_tahunan'],
+            'kcl_total_estimasi_tahunan' => $annualSnapshot['kcl_total_estimasi_tahunan'],
+            'urea_karung_estimasi_tahunan' => $annualSnapshot['urea_karung_estimasi_tahunan'],
+            'kcl_karung_estimasi_tahunan' => $annualSnapshot['kcl_karung_estimasi_tahunan'],
+            'urea_aplikasi_saat_ini' => $annualSnapshot['urea_aplikasi_saat_ini'],
+            'kcl_aplikasi_saat_ini' => $annualSnapshot['kcl_aplikasi_saat_ini'],
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.3'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.4'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -964,9 +684,10 @@ class RbsService
     }
 
     /**
-     * Cek apakah data kondisi cukup untuk dianalisis.
+     * Cek apakah data kondisi cukup minimal untuk dianalisis (minimal 1 field terisi).
+     * Ini adalah pengecekan paling awal sebelum diagnosis.
      */
-    private function kondisiCukup(KondisiLahan $kondisi): bool
+    private function kondisiCukupMinimal(KondisiLahan $kondisi): bool
     {
         return $kondisi->warna_daun !== null
             || $kondisi->ph_tanah !== null
@@ -982,16 +703,86 @@ class RbsService
     }
 
     /**
+     * Return hasil ketika umur tepat 3 tahun dan fase belum diverifikasi.
+     * PAHAN v2.4: Tidak menghasilkan dosis, tidak membuat jadwal.
+     */
+    private function hasilPerluVerifikasiFase(BlokLahan $blok, KondisiLahan $kondisi, array $plantContext): array
+    {
+        $reliability = $this->reliabilityService->calculate($blok, $kondisi, []);
+
+        $hasil = $this->simpanDenganHistori($blok->id, [
+            'kondisi_lahan_id' => $kondisi->id,
+            'admin_id' => Auth::guard('admin')->id(),
+            'tanggal_analisis' => now()->toDateString(),
+            'rules_terpicu' => [],
+            'masalah_teridentifikasi' => ['Fase tanaman perlu diverifikasi — umur tepat 3 tahun'],
+            'rekomendasi_pupuk' => [],
+            'saran_tindakan_utama' => 'Umur tanaman tepat 3 tahun. Verifikasi apakah tanaman sudah memasuki fase Tanaman Menghasilkan atau masih Tanaman Belum Menghasilkan sebelum rekomendasi dosis dapat dibuat.',
+            'status_kebutuhan_dominan' => 'Normal', // LEGACY ONLY — kompatibilitas histori, bukan keputusan operasional
+            'jumlah_rule_terpicu' => 0,
+            'dosis_urea' => 0.0,
+            'dosis_kcl' => 0.0,
+            'total_urea' => 0.0,
+            'total_kcl' => 0.0,
+            'catatan_dosis' => 'Fase tanaman belum diverifikasi (umur tepat 3 tahun). Pilih fase Tanaman Belum Menghasilkan atau Tanaman Menghasilkan pada halaman edit blok lahan.',
+            'jadwal_pemupukan' => [],
+            'validitas_rekomendasi' => 'Estimasi Visual',
+            'catatan_validitas' => 'Fase tanaman perlu diverifikasi sebelum analisis dapat dilanjutkan.',
+            'confidence_score' => $reliability['score'],
+            'confidence_label' => $this->mapReliabilityToLabel($reliability['score']),
+            'catatan_confidence' => 'Tingkat Kelengkapan & Keandalan Data: '.$reliability['kategori'],
+            'data_cukup' => false,
+            'data_kurang' => ['Verifikasi fase tanaman'],
+            'notifikasi_data' => 'Fase tanaman perlu diverifikasi.',
+            'fase_tanaman_snapshot' => null,
+            'umur_tanaman_snapshot' => $plantContext['umur'],
+            'urea_min_kg_per_pokok_tahun' => null,
+            'urea_max_kg_per_pokok_tahun' => null,
+            'urea_estimasi_kg_per_pokok_tahun' => null,
+            'kcl_min_kg_per_pokok_tahun' => null,
+            'kcl_max_kg_per_pokok_tahun' => null,
+            'kcl_estimasi_kg_per_pokok_tahun' => null,
+            'strategi_estimasi_dosis' => config('fertilization.reference_dose_strategy'),
+            'jumlah_pokok_snapshot' => (int) ($blok->luas_ha * $blok->sph),
+            'dasar_perhitungan_json' => ['catatan' => 'Fase belum diverifikasi, dosis tidak dapat ditentukan.'],
+            'peringatan_json' => ['Umur tepat 3 tahun dan fase belum diverifikasi.'],
+            'kelengkapan_data_score' => $reliability['score'],
+            'kategori_keandalan' => $reliability['kategori'],
+            'rincian_skor_json' => $reliability['rincian'],
+            'status_kondisi_tanaman' => PlantConditionStatus::PERLU_VERIFIKASI->value,
+            'status_kelayakan_aplikasi' => ApplicationFeasibilityStatus::PERLU_VERIFIKASI_DATA->value,
+            'alasan_kelayakan' => 'Fase tanaman perlu diverifikasi sebelum kelayakan dapat ditentukan.',
+            'urea_total_min_tahunan' => null,
+            'urea_total_max_tahunan' => null,
+            'urea_total_estimasi_tahunan' => null,
+            'kcl_total_min_tahunan' => null,
+            'kcl_total_max_tahunan' => null,
+            'kcl_total_estimasi_tahunan' => null,
+            'urea_karung_estimasi_tahunan' => null,
+            'kcl_karung_estimasi_tahunan' => null,
+            'urea_aplikasi_saat_ini' => 0.0,
+            'kcl_aplikasi_saat_ini' => 0.0,
+            'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
+            'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.4'),
+        ]);
+
+        return ['sukses' => true, 'rekomendasi' => $hasil];
+    }
+
+    /**
      * Return hasil ketika data kondisi tidak cukup untuk analisis.
      */
-    private function hasilDataTidakCukup(BlokLahan $blok, KondisiLahan $kondisi, array $plantContext, array $ageInfo): array
+    private function hasilDataTidakCukup(BlokLahan $blok, KondisiLahan $kondisi, array $plantContext): array
     {
-        $dosisRef = $this->hitungDosisStandar($blok, $kondisi, $ageInfo);
-        $jadwal = [];
+        $dosisRef = $this->hitungDosisStandar($blok, $kondisi, $plantContext);
         $reliability = $this->reliabilityService->calculate($blok, $kondisi, []);
         $doseReference = $dosisRef['dose_reference'] ?? null;
-
         $completeness = $this->completenessService->evaluate($kondisi);
+
+        // Build annual snapshot (kebutuhan tahunan tetap tersimpan)
+        $isApplicable = false; // Data tidak cukup → tidak layak diaplikasikan
+        $annualSnapshot = $this->snapshotBuilder->build($blok, $doseReference ?? ['urea' => ['estimate' => null], 'kcl' => ['estimate' => null]], $isApplicable);
 
         $hasil = $this->simpanDenganHistori($blok->id, [
             'kondisi_lahan_id' => $kondisi->id,
@@ -1001,14 +792,14 @@ class RbsService
             'masalah_teridentifikasi' => ['Data kondisi lahan belum lengkap untuk analisis'],
             'rekomendasi_pupuk' => [['jenis_utama' => 'Pupuk Standar Rutin', 'dosis' => 'Sesuai jadwal pemupukan reguler — lengkapi data kondisi untuk rekomendasi spesifik']],
             'saran_tindakan_utama' => 'Data observasi kondisi lahan belum cukup untuk memberikan rekomendasi spesifik. Silakan lengkapi data kondisi (warna daun, pH tanah, kelembaban, kondisi drainase, dll) lalu jalankan analisis ulang.',
-            'status_kebutuhan_dominan' => 'Normal',
+            'status_kebutuhan_dominan' => 'Normal', // LEGACY ONLY — kompatibilitas histori, bukan keputusan operasional
             'jumlah_rule_terpicu' => 0,
             'dosis_urea' => 0.0,
             'dosis_kcl' => 0.0,
             'total_urea' => 0.0,
             'total_kcl' => 0.0,
-            'catatan_dosis' => 'Data observasi belum cukup untuk menghasilkan jadwal operasional. Kebutuhan tahunan tetap tercatat di kolom khusus. Lengkapi data kondisi lahan untuk rekomendasi lebih akurat.',
-            'jadwal_pemupukan' => $jadwal,
+            'catatan_dosis' => 'Data observasi belum cukup untuk menghasilkan jadwal operasional. Kebutuhan tahunan tetap tercatat. Lengkapi data kondisi lahan untuk rekomendasi lebih akurat.',
+            'jadwal_pemupukan' => [],
             'validitas_rekomendasi' => 'Estimasi Visual',
             'catatan_validitas' => 'Data observasi tidak lengkap — rekomendasi bersifat estimasi.',
             'confidence_score' => $reliability['score'],
@@ -1017,7 +808,7 @@ class RbsService
             'data_cukup' => false,
             'data_kurang' => $completeness['missing_fields'],
             'notifikasi_data' => $completeness['reason'],
-            // Kolom Pahan-v2.3 — menggunakan plantContext
+            // Kolom Pahan-v2.4 — menggunakan plantContext
             'fase_tanaman_snapshot' => $plantContext['fase'],
             'umur_tanaman_snapshot' => $plantContext['umur'],
             'urea_min_kg_per_pokok_tahun' => $doseReference['urea']['min'] ?? null,
@@ -1027,7 +818,7 @@ class RbsService
             'kcl_max_kg_per_pokok_tahun' => $doseReference['kcl']['max'] ?? null,
             'kcl_estimasi_kg_per_pokok_tahun' => $doseReference['kcl']['estimate'] ?? null,
             'strategi_estimasi_dosis' => config('fertilization.reference_dose_strategy'),
-            'jumlah_pokok_snapshot' => $dosisRef['calculation']['jumlah_pokok'] ?? (int) ($blok->luas_ha * $blok->sph),
+            'jumlah_pokok_snapshot' => $annualSnapshot['jumlah_pokok'],
             'dasar_perhitungan_json' => ['strategy' => config('fertilization.reference_dose_strategy'), 'catatan' => 'Data tidak cukup untuk analisis detail. Kebutuhan tahunan tersimpan.'],
             'peringatan_json' => $dosisRef['peringatan'] ?? [],
             'kelengkapan_data_score' => $reliability['score'],
@@ -1036,9 +827,20 @@ class RbsService
             'status_kondisi_tanaman' => PlantConditionStatus::BELUM_DIOBSERVASI->value,
             'status_kelayakan_aplikasi' => ApplicationFeasibilityStatus::PERLU_VERIFIKASI_DATA->value,
             'alasan_kelayakan' => 'Data kondisi belum lengkap untuk menentukan kelayakan waktu.',
+            // Annual snapshot fields
+            'urea_total_min_tahunan' => $annualSnapshot['urea_total_min_tahunan'],
+            'urea_total_max_tahunan' => $annualSnapshot['urea_total_max_tahunan'],
+            'urea_total_estimasi_tahunan' => $annualSnapshot['urea_total_estimasi_tahunan'],
+            'kcl_total_min_tahunan' => $annualSnapshot['kcl_total_min_tahunan'],
+            'kcl_total_max_tahunan' => $annualSnapshot['kcl_total_max_tahunan'],
+            'kcl_total_estimasi_tahunan' => $annualSnapshot['kcl_total_estimasi_tahunan'],
+            'urea_karung_estimasi_tahunan' => $annualSnapshot['urea_karung_estimasi_tahunan'],
+            'kcl_karung_estimasi_tahunan' => $annualSnapshot['kcl_karung_estimasi_tahunan'],
+            'urea_aplikasi_saat_ini' => $annualSnapshot['urea_aplikasi_saat_ini'],
+            'kcl_aplikasi_saat_ini' => $annualSnapshot['kcl_aplikasi_saat_ini'],
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.3'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.4'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -1048,11 +850,15 @@ class RbsService
      * Return hasil ketika data cukup untuk dosis dasar tapi TIDAK cukup untuk diagnosis RBS.
      * Kebutuhan tahunan tetap dihitung, tapi tidak ada diagnosis spesifik.
      */
-    private function hasilDosisDasarTanpaDiagnosis(BlokLahan $blok, KondisiLahan $kondisi, array $completeness, array $plantContext, array $ageInfo): array
+    private function hasilDosisDasarTanpaDiagnosis(BlokLahan $blok, KondisiLahan $kondisi, array $completeness, array $plantContext): array
     {
-        $dosisRef = $this->hitungDosisStandar($blok, $kondisi, $ageInfo);
+        $dosisRef = $this->hitungDosisStandar($blok, $kondisi, $plantContext);
         $reliability = $this->reliabilityService->calculate($blok, $kondisi, []);
         $doseReference = $dosisRef['dose_reference'] ?? null;
+
+        // Build annual snapshot
+        $isApplicable = false; // Data tidak cukup untuk diagnosis → tidak layak diaplikasikan
+        $annualSnapshot = $this->snapshotBuilder->build($blok, $doseReference ?? ['urea' => ['estimate' => null], 'kcl' => ['estimate' => null]], $isApplicable);
 
         $saranLengkapi = 'Data observasi belum lengkap untuk diagnosis spesifik. Lengkapi: '.implode(', ', $completeness['missing_fields']).'.';
 
@@ -1064,7 +870,7 @@ class RbsService
             'masalah_teridentifikasi' => ['Data belum cukup untuk diagnosis spesifik — kebutuhan tahunan tetap dihitung'],
             'rekomendasi_pupuk' => [['jenis_utama' => 'Pupuk Standar Rutin (Urea + KCl)', 'dosis' => 'Sesuai kebutuhan tahunan Pahan — lengkapi data untuk rekomendasi spesifik']],
             'saran_tindakan_utama' => $saranLengkapi,
-            'status_kebutuhan_dominan' => 'Normal',
+            'status_kebutuhan_dominan' => 'Normal', // LEGACY ONLY — kompatibilitas histori, bukan keputusan operasional
             'jumlah_rule_terpicu' => 0,
             'dosis_urea' => 0.0,
             'dosis_kcl' => 0.0,
@@ -1080,7 +886,7 @@ class RbsService
             'data_cukup' => false,
             'data_kurang' => $completeness['missing_fields'],
             'notifikasi_data' => $completeness['reason'],
-            // Kolom Pahan-v2.3 — menggunakan plantContext
+            // Kolom Pahan-v2.4 — menggunakan plantContext
             'fase_tanaman_snapshot' => $plantContext['fase'],
             'umur_tanaman_snapshot' => $plantContext['umur'],
             'urea_min_kg_per_pokok_tahun' => $doseReference['urea']['min'] ?? null,
@@ -1090,7 +896,7 @@ class RbsService
             'kcl_max_kg_per_pokok_tahun' => $doseReference['kcl']['max'] ?? null,
             'kcl_estimasi_kg_per_pokok_tahun' => $doseReference['kcl']['estimate'] ?? null,
             'strategi_estimasi_dosis' => config('fertilization.reference_dose_strategy'),
-            'jumlah_pokok_snapshot' => $dosisRef['calculation']['jumlah_pokok'] ?? (int) ($blok->luas_ha * $blok->sph),
+            'jumlah_pokok_snapshot' => $annualSnapshot['jumlah_pokok'],
             'dasar_perhitungan_json' => ['strategy' => config('fertilization.reference_dose_strategy'), 'catatan' => 'Dosis dasar dihitung, diagnosis belum dijalankan.'],
             'peringatan_json' => $dosisRef['peringatan'] ?? [],
             'kelengkapan_data_score' => $reliability['score'],
@@ -1099,9 +905,20 @@ class RbsService
             'status_kondisi_tanaman' => PlantConditionStatus::PERLU_VERIFIKASI->value,
             'status_kelayakan_aplikasi' => ApplicationFeasibilityStatus::PERLU_VERIFIKASI_DATA->value,
             'alasan_kelayakan' => $completeness['reason'],
+            // Annual snapshot fields
+            'urea_total_min_tahunan' => $annualSnapshot['urea_total_min_tahunan'],
+            'urea_total_max_tahunan' => $annualSnapshot['urea_total_max_tahunan'],
+            'urea_total_estimasi_tahunan' => $annualSnapshot['urea_total_estimasi_tahunan'],
+            'kcl_total_min_tahunan' => $annualSnapshot['kcl_total_min_tahunan'],
+            'kcl_total_max_tahunan' => $annualSnapshot['kcl_total_max_tahunan'],
+            'kcl_total_estimasi_tahunan' => $annualSnapshot['kcl_total_estimasi_tahunan'],
+            'urea_karung_estimasi_tahunan' => $annualSnapshot['urea_karung_estimasi_tahunan'],
+            'kcl_karung_estimasi_tahunan' => $annualSnapshot['kcl_karung_estimasi_tahunan'],
+            'urea_aplikasi_saat_ini' => $annualSnapshot['urea_aplikasi_saat_ini'],
+            'kcl_aplikasi_saat_ini' => $annualSnapshot['kcl_aplikasi_saat_ini'],
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.3'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.4'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -1135,23 +952,19 @@ class RbsService
     /**
      * Return status normal ketika tidak ada rule yang terpicu.
      */
-    private function hasilNormal(BlokLahan $blok, KondisiLahan $kondisi, array $plantContext, array $ageInfo = []): array
+    private function hasilNormal(BlokLahan $blok, KondisiLahan $kondisi, array $plantContext): array
     {
-        $dosisRef = $this->hitungDosisStandar($blok, $kondisi, $ageInfo);
+        $dosisRef = $this->hitungDosisStandar($blok, $kondisi, $plantContext);
         $window = $dosisRef['window'];
+        $doseReference = $dosisRef['dose_reference'] ?? null;
 
-        // Jika waktu tidak layak, dosis aplikasi saat ini = 0
-        $dosisAplikasi = $dosisRef;
-        if ($window && ! $window['layak']) {
-            $dosisAplikasi['dosis_urea'] = 0.0;
-            $dosisAplikasi['dosis_kcl'] = 0.0;
-            $dosisAplikasi['total_urea'] = 0.0;
-            $dosisAplikasi['total_kcl'] = 0.0;
-        }
+        // Build annual snapshot
+        $isApplicable = $window ? $window['layak'] : true;
+        $annualSnapshot = $this->snapshotBuilder->build($blok, $doseReference ?? ['urea' => ['estimate' => null], 'kcl' => ['estimate' => null]], $isApplicable);
 
-        // Jadwal baru via FertilizationScheduleService
+        // Jadwal baru via FertilizationScheduleService (v2.4: kosong jika tidak layak)
         $jadwal = $this->scheduleService->generate(
-            ['dosis_urea' => $dosisAplikasi['dosis_urea'], 'dosis_kcl' => $dosisAplikasi['dosis_kcl'], 'total_urea' => $dosisAplikasi['total_urea'], 'total_kcl' => $dosisAplikasi['total_kcl']],
+            ['dosis_urea' => $dosisRef['dosis_urea'] ?? 0, 'dosis_kcl' => $dosisRef['dosis_kcl'] ?? 0, 'total_urea' => $annualSnapshot['urea_aplikasi_saat_ini'], 'total_kcl' => $annualSnapshot['kcl_aplikasi_saat_ini']],
             $kondisi,
             $blok,
             $window ?? ['layak' => true, 'alasan' => []],
@@ -1160,10 +973,17 @@ class RbsService
 
         $completeness = $this->completenessService->evaluate($kondisi);
         $reliability = $this->reliabilityService->calculate($blok, $kondisi, []);
-        $doseReference = $dosisRef['dose_reference'] ?? null;
 
         $statusKelayakan = $window ? $window['status'] : FertilizationWindowService::LAYAK;
         $alasanKelayakan = $window ? implode(' ', $window['alasan']) : '';
+
+        // Catatan dosis (v2.4: berdasarkan kelayakan, bukan status legacy)
+        $catatanDosis = $this->tentukanCatatanDosis(
+            $statusKelayakan,
+            $window ? $window['alasan'] : [],
+            PlantConditionStatus::NORMAL_VISUAL->value,
+            []
+        );
 
         $hasil = $this->simpanDenganHistori($blok->id, [
             'kondisi_lahan_id' => $kondisi->id,
@@ -1173,15 +993,13 @@ class RbsService
             'masalah_teridentifikasi' => ['Tidak ada masalah teridentifikasi'],
             'rekomendasi_pupuk' => [['jenis_utama' => 'Pupuk Standar Rutin', 'dosis' => 'Sesuai jadwal pemupukan reguler']],
             'saran_tindakan_utama' => 'Lanjutkan program pemupukan standar. Kondisi lahan dalam batas normal.',
-            'status_kebutuhan_dominan' => 'Normal',
+            'status_kebutuhan_dominan' => 'Normal', // LEGACY ONLY — kompatibilitas histori, bukan keputusan operasional
             'jumlah_rule_terpicu' => 0,
-            'dosis_urea' => $dosisAplikasi['dosis_urea'],
-            'dosis_kcl' => $dosisAplikasi['dosis_kcl'],
-            'total_urea' => $dosisAplikasi['total_urea'],
-            'total_kcl' => $dosisAplikasi['total_kcl'],
-            'catatan_dosis' => $window && ! $window['layak']
-                ? 'Kebutuhan tahunan tetap ada namun aplikasi saat ini ditunda. Alasan: '.implode('; ', $window['alasan'])
-                : 'Kondisi lahan normal. Dosis estimasi kerja dari rentang referensi Pahan (2013).',
+            'dosis_urea' => $isApplicable ? ($dosisRef['dosis_urea'] ?? 0) : 0.0,
+            'dosis_kcl' => $isApplicable ? ($dosisRef['dosis_kcl'] ?? 0) : 0.0,
+            'total_urea' => $annualSnapshot['urea_aplikasi_saat_ini'],
+            'total_kcl' => $annualSnapshot['kcl_aplikasi_saat_ini'],
+            'catatan_dosis' => $catatanDosis,
             'jadwal_pemupukan' => $jadwal,
             'validitas_rekomendasi' => $completeness['can_run_diagnosis'] ? 'Cukup Kuat' : 'Estimasi Visual',
             'catatan_validitas' => $completeness['reason'],
@@ -1191,7 +1009,7 @@ class RbsService
             'data_cukup' => $completeness['can_run_diagnosis'],
             'data_kurang' => $completeness['missing_fields'],
             'notifikasi_data' => $completeness['reason'],
-            // Kolom Pahan-v2.3
+            // Kolom Pahan-v2.4
             'fase_tanaman_snapshot' => $plantContext['fase'],
             'umur_tanaman_snapshot' => $plantContext['umur'],
             'urea_min_kg_per_pokok_tahun' => $doseReference['urea']['min'] ?? null,
@@ -1201,7 +1019,7 @@ class RbsService
             'kcl_max_kg_per_pokok_tahun' => $doseReference['kcl']['max'] ?? null,
             'kcl_estimasi_kg_per_pokok_tahun' => $doseReference['kcl']['estimate'] ?? null,
             'strategi_estimasi_dosis' => config('fertilization.reference_dose_strategy'),
-            'jumlah_pokok_snapshot' => $dosisRef['calculation']['jumlah_pokok'] ?? (int) ($blok->luas_ha * $blok->sph),
+            'jumlah_pokok_snapshot' => $annualSnapshot['jumlah_pokok'],
             'dasar_perhitungan_json' => ['strategy' => config('fertilization.reference_dose_strategy'), 'catatan' => 'Kondisi normal, dosis dari rentang referensi.'],
             'peringatan_json' => $dosisRef['peringatan'] ?? [],
             'kelengkapan_data_score' => $reliability['score'],
@@ -1210,93 +1028,113 @@ class RbsService
             'status_kondisi_tanaman' => PlantConditionStatus::NORMAL_VISUAL->value,
             'status_kelayakan_aplikasi' => $statusKelayakan,
             'alasan_kelayakan' => $alasanKelayakan,
+            // Annual snapshot fields
+            'urea_total_min_tahunan' => $annualSnapshot['urea_total_min_tahunan'],
+            'urea_total_max_tahunan' => $annualSnapshot['urea_total_max_tahunan'],
+            'urea_total_estimasi_tahunan' => $annualSnapshot['urea_total_estimasi_tahunan'],
+            'kcl_total_min_tahunan' => $annualSnapshot['kcl_total_min_tahunan'],
+            'kcl_total_max_tahunan' => $annualSnapshot['kcl_total_max_tahunan'],
+            'kcl_total_estimasi_tahunan' => $annualSnapshot['kcl_total_estimasi_tahunan'],
+            'urea_karung_estimasi_tahunan' => $annualSnapshot['urea_karung_estimasi_tahunan'],
+            'kcl_karung_estimasi_tahunan' => $annualSnapshot['kcl_karung_estimasi_tahunan'],
+            'urea_aplikasi_saat_ini' => $annualSnapshot['urea_aplikasi_saat_ini'],
+            'kcl_aplikasi_saat_ini' => $annualSnapshot['kcl_aplikasi_saat_ini'],
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.3'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.4'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
     }
 
     /**
-     * Tentukan catatan kontekstual untuk dosis berdasarkan status dan masalah.
+     * Tentukan catatan operasional berdasarkan kelayakan dan kondisi.
+     *
+     * Pahan v2.4: Catatan hanya mengikuti status_kelayakan_aplikasi dan alasan_kelayakan.
+     * BUKAN status_kebutuhan_dominan (legacy).
+     *
+     * @param  string  $statusKelayakan  Status kelayakan aplikasi (dari FertilizationWindowService)
+     * @param  array  $alasanKelayakan  Alasan kelayakan
+     * @param  string  $statusKondisi  Status kondisi tanaman
+     * @param  array  $masalah  Masalah teridentifikasi
      */
-    private function tentukanCatatanDosis(string $statusDominan, array $masalah, array $dosis, KondisiLahan $kondisi): string
-    {
-        $masalahStr = implode(' ', $masalah);
+    private function tentukanCatatanDosis(
+        string $statusKelayakan,
+        array $alasanKelayakan,
+        string $statusKondisi,
+        array $masalah
+    ): string {
+        $alasanStr = implode(' ', $alasanKelayakan);
 
-        if ($statusDominan === 'Tunda') {
-            if (str_contains($masalahStr, 'Tergenang') || str_contains($masalahStr, 'Waterlogging')) {
-                $catatan = 'TUNDA APLIKASI PUPUK TANAH. Lahan tergenang menyebabkan leaching. Perbaiki drainase terlebih dahulu, baru aplikasikan dosis ini setelah kondisi normal.';
-            } elseif (str_contains($masalahStr, 'Kekeringan') || str_contains($masalahStr, 'Kemarau') || str_contains($masalahStr, 'kering')) {
-                $catatan = 'TUNDA PUPUK KIMIA. Kondisi terlalu kering — pupuk tidak akan terlarut dan berisiko membakar akar. Tunggu hujan turun, baru aplikasikan dosis ini.';
-            } elseif (str_contains($masalahStr, 'Tua Renta')) {
-                $catatan = 'Efisiensi penyerapan hara sangat rendah pada tanaman tua. Pertimbangkan evaluasi replanting.';
-            } elseif (str_contains($masalahStr, 'Curah hujan sangat tinggi')) {
-                $catatan = 'TUNDA PEMUPUKAN. Curah hujan terlalu tinggi menyebabkan pencucian hara. Tunggu curah hujan kembali normal.';
-            } else {
-                $catatan = 'Pemupukan ditunda sampai kondisi lahan diperbaiki. Kebutuhan tahunan tetap tercatat, dosis dapat diaplikasikan setelah masalah teratasi.';
+        // Jika tidak layak: catatan mengikuti alasan kelayakan
+        if ($statusKelayakan !== FertilizationWindowService::LAYAK && $statusKelayakan !== FertilizationWindowService::TERLAMBAT) {
+            if ($statusKelayakan === FertilizationWindowService::PERLU_PERBAIKAN_DRAINASE) {
+                return 'Pemupukan ditunda karena lahan tergenang. Perbaiki drainase terlebih dahulu. Kebutuhan tahunan tetap tercatat.';
             }
-        } elseif ($statusDominan === 'Darurat') {
-            if (str_contains($masalahStr, 'pH') || str_contains($masalahStr, 'Masam')) {
-                $catatan = 'PERHATIAN: Jangan aplikasikan Urea/KCl sebelum pH tanah dinaikkan ke 5.0+. Lakukan pengapuran (Dolomit) terlebih dahulu. Dosis kebutuhan tahunan berlaku setelah pH normal.';
-            } elseif (str_contains($masalahStr, 'Busuk') || str_contains($masalahStr, 'Ganoderma')) {
-                $catatan = 'PRIORITASKAN penanganan penyakit terlebih dahulu. Dosis pupuk kebutuhan tahunan berlaku setelah kondisi tanaman membaik.';
-            } else {
-                $catatan = 'Status DARURAT — atasi masalah utama terlebih dahulu. Kebutuhan tahunan tetap tercatat untuk referensi.';
+            if ($statusKelayakan === FertilizationWindowService::TUNDA_HUJAN_RENDAH) {
+                return 'Pemupukan ditunda karena curah hujan rendah. Tunggu curah hujan dalam rentang 100-250 mm/bulan. Kebutuhan tahunan tetap tercatat.';
             }
-        } elseif ($statusDominan === 'Segera') {
-            $catatan = 'Segera aplikasikan dosis pupuk estimasi kerja ini bersamaan dengan penanganan masalah yang teridentifikasi.';
-            if ($kondisi->ada_gulma_dominan || $kondisi->ada_serangan_hama) {
-                $notes = [];
-                if ($kondisi->ada_gulma_dominan) {
-                    $notes[] = 'kendalikan gulma dominan';
-                }
-                if ($kondisi->ada_serangan_hama) {
-                    $notes[] = 'atasi serangan hama';
-                }
-                $catatan = 'PENTING: Harap '.implode(' dan ', $notes).' sebelum pupuk kimia ditabur agar penyerapan hara oleh pokok sawit optimal.';
+            if ($statusKelayakan === FertilizationWindowService::TUNDA_HUJAN_TINGGI) {
+                return 'Pemupukan ditunda karena curah hujan tinggi. Risiko pencucian hara. Kebutuhan tahunan tetap tercatat.';
             }
-        } else {
-            $catatan = 'Kondisi lahan normal. Estimasi dosis kerja dari rentang referensi Pahan (2013) dapat diaplikasikan sesuai jadwal.';
+            if ($statusKelayakan === FertilizationWindowService::TUNDA_INTERVAL) {
+                return 'Pemupukan ditunda karena interval terlalu pendek. Tunggu minimal 60 hari antar aplikasi. Kebutuhan tahunan tetap tercatat.';
+            }
+
+            return 'Pemupukan ditunda sampai kondisi kelayakan terpenuhi. Alasan: '.$alasanStr.'. Kebutuhan tahunan tetap tercatat.';
         }
 
-        return $catatan;
+        // Jika layak: catatan mengikuti kondisi
+        if ($statusKondisi === PlantConditionStatus::GEJALA_BERAT->value) {
+            return 'Gejala berat teridentifikasi namun kondisi kelayakan aplikasi terpenuhi. Aplikasikan dosis estimasi kerja bersamaan dengan penanganan masalah utama.';
+        }
+
+        if ($statusKondisi === PlantConditionStatus::TERINDIKASI_DEFISIENSI->value) {
+            return 'Terindikasi defisiensi. Segera aplikasikan dosis estimasi kerja dari rentang referensi Pahan (2013).';
+        }
+
+        if ($statusKelayakan === FertilizationWindowService::TERLAMBAT) {
+            return 'Pemupukan terlambat. Segera jadwalkan aplikasi dosis estimasi kerja.';
+        }
+
+        return 'Kondisi lahan normal. Estimasi dosis kerja dari rentang referensi Pahan (2013) dapat diaplikasikan sesuai jadwal.';
     }
 
     /**
      * Hitung dosis standar Urea & KCl berdasarkan referensi Pahan 2013.
      *
-     * PERUBAHAN PAHAN-V2.2:
-     * - Dosis diambil berdasarkan umur PADA TANGGAL OBSERVASI
-     * - Menggunakan getDoseReferenceForContext() jika ageInfo tersedia
+     * PERUBAHAN PAHAN-V2.4:
+     * - Dosis diambil berdasarkan umur dan fase DARI plantContext (historis)
+     * - TIDAK memanggil PlantPhaseResolver::resolve($blok) untuk analisis historis
      * - Multiplier tanah/topografi/waktu DINONAKTIFKAN
      *
-     * @param  array|null  $ageInfo  Output dari PlantAgeService::calculateAgeAt()
+     * @param  array  $plantContext  Output dari PlantContextService::resolve()
      */
-    private function hitungDosisStandar(BlokLahan $blok, ?KondisiLahan $kondisi = null, ?array $ageInfo = null): array
+    private function hitungDosisStandar(BlokLahan $blok, ?KondisiLahan $kondisi, array $plantContext): array
     {
-        // PERBAIKAN v2.2: Gunakan umur dan fase saat observasi jika tersedia
-        if ($ageInfo && $ageInfo['umur'] !== null) {
-            $umurObservasi = $ageInfo['umur'];
-            $phaseInfo = $this->phaseResolver->resolve($blok);
-            $fase = $phaseInfo['fase'];
+        $umur = $plantContext['umur'] ?? null;
+        $fase = $plantContext['fase'] ?? null;
 
-            // Jika fase null tapi umur jelas, auto-resolve
-            if ($fase === null && $umurObservasi !== null) {
-                if ($umurObservasi < 3) {
-                    $fase = 'TBM';
-                } elseif ($umurObservasi > 3) {
-                    $fase = 'TM';
-                }
-            }
+        // Jika umur tepat 3 dan fase belum diverifikasi → tidak bisa menentukan dosis
+        if ($umur === 3 && $fase === null && ($plantContext['needs_phase_verification'] ?? false)) {
+            return [
+                'dosis_urea' => null,
+                'dosis_kcl' => null,
+                'total_urea' => null,
+                'total_kcl' => null,
+                'dose_reference' => $this->doseService->getDoseReferenceForContext($blok, $umur, 'TBM'),
+                'calculation' => null,
+                'window' => null,
+                'peringatan' => ['Umur tepat 3 tahun dan fase belum diverifikasi — tidak dapat menentukan kelompok dosis.'],
+                'status_verifikasi_fase' => 'PERLU_VERIFIKASI_FASE',
+            ];
+        }
 
-            if ($fase !== null) {
-                $doseRef = $this->doseService->getDoseReferenceForContext($blok, $umurObservasi, $fase);
-            } else {
-                $doseRef = $this->doseService->getDoseReference($blok);
-            }
+        // Gunakan langsung plantContext untuk dosis
+        if ($umur !== null && $fase !== null) {
+            $doseRef = $this->doseService->getDoseReferenceForContext($blok, $umur, $fase);
         } else {
+            // Fallback: gunakan blok saat ini (seharusnya tidak terjadi dalam alur normal)
             $doseRef = $this->doseService->getDoseReference($blok);
         }
 

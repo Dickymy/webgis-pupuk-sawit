@@ -91,20 +91,36 @@ class SupportingFertilizerSanitizer
 
     /**
      * Cek apakah pupuk termasuk pupuk utama.
+     *
+     * Pahan v2.4: Gunakan pencocokan eksplisit, bukan substring longgar.
+     * Nama seperti "NPK + Urea pendukung" tidak boleh otomatis lolos.
+     * Nama seperti "Urea (46% N)" tetap dikenali sebagai Urea (spesifikasi nutrisi).
      */
     private function isPupukUtama(string $namaPupuk): bool
     {
-        foreach (self::PUPUK_UTAMA as $utama) {
-            if (stripos($namaPupuk, $utama) !== false) {
-                return true;
-            }
+        // Normalisasi: trim, uppercase, hapus content dalam kurung (spesifikasi nutrisi)
+        $normalized = strtoupper(trim($namaPupuk));
+        $normalized = preg_replace('/\s*\(.*?\)\s*/', '', $normalized);
+        $normalized = trim($normalized);
+
+        // Pencocokan eksplisit — hanya nama yang PERSIS pupuk utama
+        $exactMatches = ['UREA', 'KCL', 'MOP'];
+
+        if (in_array($normalized, $exactMatches, true)) {
+            return true;
         }
 
+        // Nama campuran seperti "NPK + Urea pendukung" TIDAK lolos
+        // Hanya lolos jika nama setelah normalisasi persis salah satu pupuk utama
         return false;
     }
 
     /**
      * Cek apakah rule memiliki validasi yang memadai.
+     *
+     * Pahan v2.4: Perketat syarat metadata.
+     * TERVERIFIKASI_SUMBER: wajib sumber_judul, sumber_penulis, sumber_tahun, sumber_halaman, sumber_tabel.
+     * TERVERIFIKASI_AHLI: wajib divalidasi_oleh, tanggal_validasi, catatan_validasi.
      */
     private function isValidated(RuleBaseLanjutan $rule): bool
     {
@@ -117,12 +133,15 @@ class SupportingFertilizerSanitizer
         if ($status === 'TERVERIFIKASI_SUMBER') {
             return $rule->sumber_judul !== null
                 && $rule->sumber_penulis !== null
-                && $rule->sumber_tahun !== null;
+                && $rule->sumber_tahun !== null
+                && $rule->sumber_halaman !== null
+                && $rule->sumber_tabel !== null;
         }
 
         if ($status === 'TERVERIFIKASI_AHLI') {
             return $rule->divalidasi_oleh !== null
-                && $rule->tanggal_validasi !== null;
+                && $rule->tanggal_validasi !== null
+                && $rule->catatan_validasi !== null;
         }
 
         return false;
