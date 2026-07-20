@@ -16,14 +16,15 @@ class PlantPhaseValidationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->resolver = new PlantPhaseResolver();
+        $this->resolver = new PlantPhaseResolver;
     }
 
     private function makeBlok(array $attrs = []): BlokLahan
     {
-        $blok = new BlokLahan();
+        $blok = new BlokLahan;
         $blok->tahun_tanam = $attrs['tahun_tanam'] ?? null;
         $blok->fase_tanaman = $attrs['fase_tanaman'] ?? null;
+
         return $blok;
     }
 

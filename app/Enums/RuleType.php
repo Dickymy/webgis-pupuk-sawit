@@ -4,6 +4,8 @@ namespace App\Enums;
 
 /**
  * RuleType — Jenis rule dalam Rule-Based System.
+ *
+ * Hanya rule DIAGNOSIS_VISUAL yang mempengaruhi status kondisi tanaman.
  */
 enum RuleType: string
 {
@@ -20,7 +22,15 @@ enum RuleType: string
             self::PEMBATAS_APLIKASI => 'Pembatas Aplikasi',
             self::SARAN_PENDUKUNG => 'Saran Pendukung',
             self::PERINGATAN_DATA => 'Peringatan Data',
-            self::NORMAL => 'Normal',
+            self::NORMAL => 'Kondisi Normal',
         };
+    }
+
+    /**
+     * Apakah jenis rule ini mempengaruhi status kondisi tanaman.
+     */
+    public function affectsConditionStatus(): bool
+    {
+        return $this === self::DIAGNOSIS_VISUAL;
     }
 }

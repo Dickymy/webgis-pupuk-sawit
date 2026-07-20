@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreKondisiLahanRequest;
 use App\Http\Requests\UpdateKondisiLahanRequest;
+use App\Models\Anggota;
 use App\Models\BlokLahan;
 use App\Models\KondisiLahan;
 use Illuminate\Http\Request;
@@ -26,14 +27,15 @@ class KondisiLahanController extends Controller
         // Group by anggota — sort: terbaru di atas
         $grouped = $bloksWithKondisi->groupBy('anggota_id')->map(function ($bloks) {
             $anggota = $bloks->first()->anggota;
+
             return [
-                'anggota'         => $anggota,
-                'bloks'           => $bloks,
-                'latest_activity' => $bloks->max(fn($b) => $b->kondisiTerbaru?->updated_at?->timestamp ?? 0),
+                'anggota' => $anggota,
+                'bloks' => $bloks,
+                'latest_activity' => $bloks->max(fn ($b) => $b->kondisiTerbaru?->updated_at?->timestamp ?? 0),
             ];
         })->sortByDesc('latest_activity')->values();
 
-        $anggotas = \App\Models\Anggota::orderBy('nama')->get();
+        $anggotas = Anggota::orderBy('nama')->get();
 
         return view('kondisi_lahan.index', compact('grouped', 'anggotas'));
     }
@@ -41,7 +43,7 @@ class KondisiLahanController extends Controller
     public function create(Request $request)
     {
         $bloks = BlokLahan::with('anggota')->latest()->get();
-        $anggotas = \App\Models\Anggota::orderBy('nama')->get();
+        $anggotas = Anggota::orderBy('nama')->get();
         $selectedBlokId = $request->query('blok_lahan_id');
 
         // Build bloks data as JSON for cascading filter JS
@@ -50,13 +52,13 @@ class KondisiLahanController extends Controller
             $centroid = $this->hitungCentroid($b->koordinat_geojson);
 
             return [
-                'id'          => $b->id,
-                'nama_blok'   => $b->nama_blok,
-                'anggota_id'  => $b->anggota_id,
-                'anggota_nama'=> $b->anggota?->nama ?? '-',
-                'luas_ha'     => $b->luas_ha,
-                'kategori'    => $b->kategori_umur ?? '-',
-                'updated_at'  => $b->updated_at?->timestamp ?? 0,
+                'id' => $b->id,
+                'nama_blok' => $b->nama_blok,
+                'anggota_id' => $b->anggota_id,
+                'anggota_nama' => $b->anggota?->nama ?? '-',
+                'luas_ha' => $b->luas_ha,
+                'kategori' => $b->kategori_umur ?? '-',
+                'updated_at' => $b->updated_at?->timestamp ?? 0,
                 'centroid_lat' => $centroid['lat'],
                 'centroid_lng' => $centroid['lng'],
             ];
@@ -93,17 +95,11 @@ class KondisiLahanController extends Controller
         $redirect = redirect()->route('kondisi-lahan.index')
             ->with('success', 'Data kondisi lahan berhasil disimpan.');
 
-        if (!empty($warnings)) {
+        if (! empty($warnings)) {
             $redirect = $redirect->with('warning', implode(' | ', $warnings));
         }
 
         return $redirect;
-    }
-
-    public function show(KondisiLahan $kondisiLahan)
-    {
-        // Show tidak dipakai — data kondisi dilihat melalui rbs.detail
-        return redirect()->route('kondisi-lahan.index');
     }
 
     public function edit(KondisiLahan $kondisiLahan)
@@ -113,12 +109,13 @@ class KondisiLahanController extends Controller
         // Build bloks data with centroid for cuaca API
         $bloksJson = $bloks->map(function ($b) {
             $centroid = $this->hitungCentroid($b->koordinat_geojson);
+
             return [
-                'id'           => $b->id,
-                'nama_blok'    => $b->nama_blok,
-                'anggota_id'   => $b->anggota_id,
+                'id' => $b->id,
+                'nama_blok' => $b->nama_blok,
+                'anggota_id' => $b->anggota_id,
                 'anggota_nama' => $b->anggota?->nama ?? '-',
-                'luas_ha'      => $b->luas_ha,
+                'luas_ha' => $b->luas_ha,
                 'centroid_lat' => $centroid['lat'],
                 'centroid_lng' => $centroid['lng'],
             ];
@@ -153,7 +150,7 @@ class KondisiLahanController extends Controller
         $redirect = redirect()->route('kondisi-lahan.index')
             ->with('success', 'Data kondisi lahan berhasil diperbarui. Jalankan analisis ulang untuk mendapat rekomendasi terbaru.');
 
-        if (!empty($warnings)) {
+        if (! empty($warnings)) {
             $redirect = $redirect->with('warning', implode(' | ', $warnings));
         }
 
@@ -175,11 +172,15 @@ class KondisiLahanController extends Controller
     {
         $default = ['lat' => null, 'lng' => null];
 
-        if (!$geojsonString) return $default;
+        if (! $geojsonString) {
+            return $default;
+        }
 
         try {
             $geojson = json_decode($geojsonString, true);
-            if (!$geojson) return $default;
+            if (! $geojson) {
+                return $default;
+            }
 
             $coords = null;
             if (($geojson['type'] ?? '') === 'Polygon') {
@@ -188,7 +189,9 @@ class KondisiLahanController extends Controller
                 $coords = $geojson['geometry']['coordinates'][0] ?? null;
             }
 
-            if (!$coords || count($coords) < 3) return $default;
+            if (! $coords || count($coords) < 3) {
+                return $default;
+            }
 
             $sumLat = 0;
             $sumLng = 0;
@@ -254,7 +257,7 @@ class KondisiLahanController extends Controller
         }
 
         // Daun hijau normal tapi ada gejala defisiensi
-        if ($warnaDaun === 'Hijau Normal' && !empty($defisiensi)) {
+        if ($warnaDaun === 'Hijau Normal' && ! empty($defisiensi)) {
             $warnings[] = 'Warna daun normal tapi ada dugaan unsur hara kurang — mohon verifikasi.';
         }
 

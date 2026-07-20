@@ -10,6 +10,7 @@ class RuleBaseController extends Controller
     public function index()
     {
         $rules = RuleBaseLanjutan::orderBy('prioritas')->orderBy('status_kebutuhan')->get();
+
         return view('rule_base.index', compact('rules'));
     }
 
@@ -27,12 +28,14 @@ class RuleBaseController extends Controller
     {
         $validated = $this->validateRule($request);
         RuleBaseLanjutan::create($validated);
+
         return redirect()->route('rule-base.index')->with('success', 'Rule berhasil ditambahkan.');
     }
 
     public function edit(string $id)
     {
         $rule = RuleBaseLanjutan::findOrFail($id);
+
         return view('rule_base.edit', compact('rule'));
     }
 
@@ -41,6 +44,7 @@ class RuleBaseController extends Controller
         $rule = RuleBaseLanjutan::findOrFail($id);
         $validated = $this->validateRule($request);
         $rule->update($validated);
+
         return redirect()->route('rule-base.index')->with('success', 'Rule berhasil diperbarui.');
     }
 
@@ -48,6 +52,7 @@ class RuleBaseController extends Controller
     {
         $rule = RuleBaseLanjutan::findOrFail($id);
         $rule->delete();
+
         return redirect()->route('rule-base.index')->with('success', 'Rule berhasil dihapus.');
     }
 
@@ -58,31 +63,31 @@ class RuleBaseController extends Controller
     {
         $validated = $request->validate([
             // Kondisi (IF) — semua nullable
-            'kondisi_warna_daun'           => ['nullable', 'string', 'max:100'],
-            'kondisi_ph_min'               => ['nullable', 'numeric', 'min:3', 'max:8'],
-            'kondisi_ph_max'               => ['nullable', 'numeric', 'min:3', 'max:8'],
-            'kondisi_kelembaban'           => ['nullable', 'string', 'max:50'],
+            'kondisi_warna_daun' => ['nullable', 'string', 'max:100'],
+            'kondisi_ph_min' => ['nullable', 'numeric', 'min:3', 'max:8'],
+            'kondisi_ph_max' => ['nullable', 'numeric', 'min:3', 'max:8'],
+            'kondisi_kelembaban' => ['nullable', 'string', 'max:50'],
             'kondisi_curah_hujan_kategori' => ['nullable', 'string', 'max:50'],
-            'kondisi_musim'                => ['nullable', 'string', 'max:50'],
-            'kondisi_drainase'             => ['nullable', 'string', 'max:50'],
-            'kondisi_defisiensi'           => ['nullable', 'string', 'max:50'],
-            'kondisi_kategori_umur'        => ['nullable', 'string', 'max:50'],
-            'kondisi_pelepah'              => ['nullable', 'string', 'max:100'],
-            'kondisi_tandan'               => ['nullable', 'string', 'max:100'],
-            'ada_serangan_hama'            => ['nullable'],
-            'ada_gulma_dominan'            => ['nullable'],
+            'kondisi_musim' => ['nullable', 'string', 'max:50'],
+            'kondisi_drainase' => ['nullable', 'string', 'max:50'],
+            'kondisi_defisiensi' => ['nullable', 'string', 'max:50'],
+            'kondisi_kategori_umur' => ['nullable', 'string', 'max:50'],
+            'kondisi_pelepah' => ['nullable', 'string', 'max:100'],
+            'kondisi_tandan' => ['nullable', 'string', 'max:100'],
+            'ada_serangan_hama' => ['nullable'],
+            'ada_gulma_dominan' => ['nullable'],
             // Output (THEN)
-            'indikasi_masalah'      => ['required', 'string', 'max:255'],
-            'jenis_pupuk_utama'     => ['required', 'string', 'max:100'],
+            'indikasi_masalah' => ['required', 'string', 'max:255'],
+            'jenis_pupuk_utama' => ['required', 'string', 'max:100'],
             'jenis_pupuk_pendukung' => ['nullable', 'string', 'max:100'],
-            'dosis_anjuran'         => ['required', 'string', 'max:150'],
-            'metode_aplikasi'       => ['nullable', 'string', 'max:255'],
-            'waktu_aplikasi'        => ['nullable', 'string', 'max:150'],
-            'saran_tindakan'        => ['required', 'string', 'max:2000'],
-            'status_kebutuhan'      => ['required', 'in:Darurat,Segera,Normal,Tunda'],
-            'prioritas'             => ['required', 'integer', 'min:1', 'max:10'],
-            'aktif'                 => ['nullable'],
-            'keterangan_rule'       => ['nullable', 'string', 'max:1000'],
+            'dosis_anjuran' => ['required', 'string', 'max:150'],
+            'metode_aplikasi' => ['nullable', 'string', 'max:255'],
+            'waktu_aplikasi' => ['nullable', 'string', 'max:150'],
+            'saran_tindakan' => ['required', 'string', 'max:2000'],
+            'status_kebutuhan' => ['required', 'in:Darurat,Segera,Normal,Tunda'],
+            'prioritas' => ['required', 'integer', 'min:1', 'max:10'],
+            'aktif' => ['nullable'],
+            'keterangan_rule' => ['nullable', 'string', 'max:1000'],
         ], [
             'indikasi_masalah.required' => 'Indikasi masalah wajib diisi.',
             'jenis_pupuk_utama.required' => 'Jenis pupuk utama wajib diisi.',

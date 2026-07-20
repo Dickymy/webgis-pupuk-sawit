@@ -62,29 +62,40 @@ class RekomendasiRbs extends Model
         'analysis_fingerprint',
         'metode_perhitungan_umur',
         'tanggal_referensi_umur',
+        // Pahan-v2.3 fields
+        'urea_total_min_tahunan',
+        'urea_total_max_tahunan',
+        'urea_total_estimasi_tahunan',
+        'kcl_total_min_tahunan',
+        'kcl_total_max_tahunan',
+        'kcl_total_estimasi_tahunan',
+        'urea_karung_estimasi_tahunan',
+        'kcl_karung_estimasi_tahunan',
+        'urea_aplikasi_saat_ini',
+        'kcl_aplikasi_saat_ini',
     ];
 
     protected function casts(): array
     {
         return [
-            'tanggal_analisis'        => 'date',
-            'tanggal_referensi_umur'  => 'date',
-            'rules_terpicu'           => 'array',
+            'tanggal_analisis' => 'date',
+            'tanggal_referensi_umur' => 'date',
+            'rules_terpicu' => 'array',
             'masalah_teridentifikasi' => 'array',
-            'rekomendasi_pupuk'       => 'array',
-            'jadwal_pemupukan'        => 'array',
-            'data_kurang'             => 'array',
-            'dasar_perhitungan_json'  => 'array',
-            'peringatan_json'         => 'array',
-            'rincian_skor_json'       => 'array',
-            'is_latest'               => 'boolean',
-            'data_cukup'              => 'boolean',
-            'dosis_urea'              => 'double',
-            'dosis_kcl'               => 'double',
-            'total_urea'              => 'double',
-            'total_kcl'               => 'double',
-            'confidence_score'        => 'integer',
-            'kelengkapan_data_score'  => 'integer',
+            'rekomendasi_pupuk' => 'array',
+            'jadwal_pemupukan' => 'array',
+            'data_kurang' => 'array',
+            'dasar_perhitungan_json' => 'array',
+            'peringatan_json' => 'array',
+            'rincian_skor_json' => 'array',
+            'is_latest' => 'boolean',
+            'data_cukup' => 'boolean',
+            'dosis_urea' => 'double',
+            'dosis_kcl' => 'double',
+            'total_urea' => 'double',
+            'total_kcl' => 'double',
+            'confidence_score' => 'integer',
+            'kelengkapan_data_score' => 'integer',
         ];
     }
 
@@ -106,12 +117,12 @@ class RekomendasiRbs extends Model
     // Accessor: badge warna status
     public function getWarnaBadgeAttribute(): string
     {
-        return match($this->status_kebutuhan_dominan) {
+        return match ($this->status_kebutuhan_dominan) {
             'Darurat' => 'red',
-            'Segera'  => 'orange',
-            'Normal'  => 'green',
-            'Tunda'   => 'gray',
-            default   => 'blue',
+            'Segera' => 'orange',
+            'Normal' => 'green',
+            'Tunda' => 'gray',
+            default => 'blue',
         };
     }
 
@@ -129,12 +140,12 @@ class RekomendasiRbs extends Model
      */
     public static function labelStatus(?string $status): string
     {
-        return match($status) {
+        return match ($status) {
             'Darurat' => 'Defisiensi Berat',
-            'Segera'  => 'Perlu Pupuk',
-            'Normal'  => 'Sehat',
-            'Tunda'   => 'Tunda Pupuk',
-            default   => 'Belum Dicek',
+            'Segera' => 'Perlu Pupuk',
+            'Normal' => 'Sehat',
+            'Tunda' => 'Tunda Pupuk',
+            default => 'Belum Dicek',
         };
     }
 
@@ -157,27 +168,21 @@ class RekomendasiRbs extends Model
     // Accessor: badge warna confidence
     public function getWarnaConfidenceAttribute(): string
     {
-        return match($this->confidence_label) {
+        return match ($this->confidence_label) {
             'Tinggi' => 'green',
             'Sedang' => 'blue',
-            default  => 'amber',
+            default => 'amber',
         };
     }
 
     // Accessor: badge warna validitas
     public function getWarnaValiditasAttribute(): string
     {
-        return match($this->validitas_rekomendasi) {
+        return match ($this->validitas_rekomendasi) {
             'Terverifikasi' => 'green',
-            'Cukup Kuat'    => 'blue',
-            default         => 'amber',
+            'Cukup Kuat' => 'blue',
+            default => 'amber',
         };
-    }
-
-    // Scope: hanya rekomendasi terbaru
-    public function scopeLatest_only($query)
-    {
-        return $query->where('is_latest', true);
     }
 
     // ─── Label Helpers (v2.2) ────────────────────────────────────

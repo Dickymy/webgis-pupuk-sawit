@@ -58,14 +58,14 @@ class RuleBaseLanjutan extends Model
     protected function casts(): array
     {
         return [
-            'aktif'                    => 'boolean',
-            'ada_serangan_hama'        => 'boolean',
-            'ada_gulma_dominan'        => 'boolean',
-            'kondisi_ph_min'           => 'decimal:2',
-            'kondisi_ph_max'           => 'decimal:2',
-            'prioritas'                => 'integer',
-            'kondisi_intermediate'     => 'array',
-            'prasyarat_intermediate'   => 'array',
+            'aktif' => 'boolean',
+            'ada_serangan_hama' => 'boolean',
+            'ada_gulma_dominan' => 'boolean',
+            'kondisi_ph_min' => 'decimal:2',
+            'kondisi_ph_max' => 'decimal:2',
+            'prioritas' => 'integer',
+            'kondisi_intermediate' => 'array',
+            'prasyarat_intermediate' => 'array',
         ];
     }
 

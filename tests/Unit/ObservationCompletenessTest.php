@@ -17,12 +17,12 @@ class ObservationCompletenessTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new ObservationCompletenessService();
+        $this->service = new ObservationCompletenessService;
     }
 
     private function makeKondisi(array $attrs = []): KondisiLahan
     {
-        $kondisi = new KondisiLahan();
+        $kondisi = new KondisiLahan;
         $kondisi->warna_daun = $attrs['warna_daun'] ?? null;
         $kondisi->ph_tanah = $attrs['ph_tanah'] ?? null;
         $kondisi->kondisi_drainase = $attrs['kondisi_drainase'] ?? null;
@@ -33,6 +33,7 @@ class ObservationCompletenessTest extends TestCase
         $kondisi->tanggal_pemupukan_terakhir = isset($attrs['tanggal_pemupukan_terakhir'])
             ? Carbon::parse($attrs['tanggal_pemupukan_terakhir'])
             : null;
+
         return $kondisi;
     }
 

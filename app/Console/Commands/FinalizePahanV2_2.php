@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Enums\PlantPhase;
 use App\Models\BlokLahan;
 use App\Models\RekomendasiRbs;
 use App\Models\RuleBaseLanjutan;
@@ -21,6 +20,7 @@ use Illuminate\Console\Command;
 class FinalizePahanV2_2 extends Command
 {
     protected $signature = 'sawit:finalize-pahan-v2-2 {--dry-run : Hanya audit tanpa mengubah data}';
+
     protected $description = 'Audit dan finalisasi data untuk engine Pahan v2.2';
 
     public function handle(): int
@@ -28,7 +28,7 @@ class FinalizePahanV2_2 extends Command
         $dryRun = $this->option('dry-run');
 
         $this->info('═══════════════════════════════════════════════════════════════');
-        $this->info('  AUDIT PAHAN V2.2' . ($dryRun ? ' (DRY RUN — tidak ada perubahan)' : ''));
+        $this->info('  AUDIT PAHAN V2.2'.($dryRun ? ' (DRY RUN — tidak ada perubahan)' : ''));
         $this->info('═══════════════════════════════════════════════════════════════');
         $this->newLine();
 
@@ -41,7 +41,9 @@ class FinalizePahanV2_2 extends Command
 
         foreach ($bloks as $blok) {
             $umur = $blok->umur_tanaman;
-            if ($umur === null) continue;
+            if ($umur === null) {
+                continue;
+            }
 
             if ($umur < 3 && $blok->fase_tanaman === 'TM') {
                 $konflikFase++;
@@ -75,7 +77,7 @@ class FinalizePahanV2_2 extends Command
             ->whereNotNull('jenis_pupuk_pendukung')
             ->where(function ($q) {
                 $q->whereNull('status_validasi')
-                  ->orWhere('status_validasi', 'PERLU_VALIDASI_AHLI');
+                    ->orWhere('status_validasi', 'PERLU_VALIDASI_AHLI');
             })
             ->where('dosis_anjuran', 'LIKE', '%kg%')
             ->count();
@@ -112,18 +114,18 @@ class FinalizePahanV2_2 extends Command
         );
 
         // 7. Masalah ditemukan
-        if (!empty($issues)) {
+        if (! empty($issues)) {
             $this->newLine();
             $this->warn('⚠ Masalah ditemukan:');
             foreach ($issues as $i => $issue) {
-                $this->line("   " . ($i + 1) . ". {$issue}");
+                $this->line('   '.($i + 1).". {$issue}");
             }
         } else {
             $this->newLine();
             $this->info('✓ Tidak ada masalah kritis ditemukan.');
         }
 
-        if (!$dryRun && !empty($issues)) {
+        if (! $dryRun && ! empty($issues)) {
             $this->newLine();
             $this->warn('Mode LIVE — menjalankan perbaikan otomatis yang aman...');
 

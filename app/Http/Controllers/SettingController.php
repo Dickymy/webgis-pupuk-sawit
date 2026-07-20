@@ -12,6 +12,7 @@ class SettingController extends Controller
     public function index()
     {
         $admin = Auth::guard('admin')->user();
+
         return view('settings.index', compact('admin'));
     }
 
@@ -20,8 +21,8 @@ class SettingController extends Controller
         $admin = Auth::guard('admin')->user();
 
         $request->validate([
-            'password_lama'             => ['required', 'string', 'current_password:admin'],
-            'password_baru'             => [
+            'password_lama' => ['required', 'string', 'current_password:admin'],
+            'password_baru' => [
                 'required',
                 'string',
                 'confirmed',
@@ -30,11 +31,11 @@ class SettingController extends Controller
             ],
             'password_baru_confirmation' => ['required', 'string'],
         ], [
-            'password_lama.required'         => 'Password lama wajib diisi.',
+            'password_lama.required' => 'Password lama wajib diisi.',
             'password_lama.current_password' => 'Password lama yang Anda masukkan salah.',
-            'password_baru.required'         => 'Password baru wajib diisi.',
-            'password_baru.confirmed'        => 'Konfirmasi password baru tidak cocok.',
-            'password_baru.different'        => 'Password baru tidak boleh sama dengan password lama.',
+            'password_baru.required' => 'Password baru wajib diisi.',
+            'password_baru.confirmed' => 'Konfirmasi password baru tidak cocok.',
+            'password_baru.different' => 'Password baru tidak boleh sama dengan password lama.',
         ]);
 
         $admin->update([

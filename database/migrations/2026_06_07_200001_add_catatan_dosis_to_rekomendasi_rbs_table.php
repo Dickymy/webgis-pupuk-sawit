@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('rekomendasi_rbs', function (Blueprint $table) {
             $table->text('catatan_dosis')->nullable()->after('total_kcl')
-                  ->comment('Catatan kontekstual terkait kapan/bagaimana dosis boleh diaplikasikan');
+                ->comment('Catatan kontekstual terkait kapan/bagaimana dosis boleh diaplikasikan');
         });
     }
 

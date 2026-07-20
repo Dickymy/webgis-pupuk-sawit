@@ -25,8 +25,8 @@ class BlokLahan extends Model
     protected function casts(): array
     {
         return [
-            'luas_ha'    => 'double',
-            'sph'        => 'integer',
+            'luas_ha' => 'double',
+            'sph' => 'integer',
             'tahun_tanam' => 'integer',
         ];
     }
@@ -84,12 +84,23 @@ class BlokLahan extends Model
     public function getKategoriUmurAttribute(): ?string
     {
         $umur = $this->umur_tanaman;
-        if ($umur === null) return null;
+        if ($umur === null) {
+            return null;
+        }
 
-        if ($umur < 3) return 'Belum Menghasilkan';
-        if ($umur <= 8) return 'Remaja';
-        if ($umur <= 14) return 'Menghasilkan Muda';
-        if ($umur <= 25) return 'Menghasilkan Tua';
+        if ($umur < 3) {
+            return 'Belum Menghasilkan';
+        }
+        if ($umur <= 8) {
+            return 'Remaja';
+        }
+        if ($umur <= 14) {
+            return 'Menghasilkan Muda';
+        }
+        if ($umur <= 25) {
+            return 'Menghasilkan Tua';
+        }
+
         return 'Tua Renta';
     }
 

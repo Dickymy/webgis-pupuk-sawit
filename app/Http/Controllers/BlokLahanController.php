@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\PlantPhase;
 use App\Http\Requests\StoreBlokLahanRequest;
 use App\Http\Requests\UpdateBlokLahanRequest;
 use App\Models\Anggota;
@@ -36,14 +35,15 @@ class BlokLahanController extends Controller
         // Group by anggota — sort: terbaru diupdate di atas
         $grouped = $allFiltered->groupBy('anggota_id')->map(function ($bloks) {
             $anggota = $bloks->first()->anggota;
+
             return [
-                'anggota'         => $anggota,
-                'bloks'           => $bloks,
-                'latest_activity' => $bloks->max(fn($b) => $b->updated_at?->timestamp ?? 0),
+                'anggota' => $anggota,
+                'bloks' => $bloks,
+                'latest_activity' => $bloks->max(fn ($b) => $b->updated_at?->timestamp ?? 0),
             ];
         })->sortByDesc('latest_activity')->values();
 
-        $anggotas = \App\Models\Anggota::orderBy('nama')->get();
+        $anggotas = Anggota::orderBy('nama')->get();
         $totalBlok = BlokLahan::count();
 
         return view('blok_lahan.index', compact('grouped', 'anggotas', 'totalBlok'));
@@ -53,8 +53,8 @@ class BlokLahanController extends Controller
     {
         $anggotas = Anggota::orderBy('nama')->get();
         $existingBloks = BlokLahan::select('id', 'nama_blok', 'koordinat_geojson')->get()
-            ->map(fn($b) => ['nama' => $b->nama_blok, 'geojson' => json_decode($b->koordinat_geojson, true)])
-            ->filter(fn($b) => $b['geojson'] !== null)->values();
+            ->map(fn ($b) => ['nama' => $b->nama_blok, 'geojson' => json_decode($b->koordinat_geojson, true)])
+            ->filter(fn ($b) => $b['geojson'] !== null)->values();
 
         return view('blok_lahan.create', compact('anggotas', 'existingBloks'));
     }
@@ -62,6 +62,9 @@ class BlokLahanController extends Controller
     public function store(StoreBlokLahanRequest $request)
     {
         $validated = $request->validated();
+
+        // Fase otomatis untuk umur tidak ambigu (v2.3)
+        $this->autoSetFase($validated);
 
         BlokLahan::create($validated);
 
@@ -78,6 +81,7 @@ class BlokLahanController extends Controller
     public function show(BlokLahan $blokLahan)
     {
         $blokLahan->load(['anggota', 'kondisiTerbaru', 'rekomendasiRbsTerbaru']);
+
         return view('blok_lahan.show', compact('blokLahan'));
     }
 
@@ -86,8 +90,8 @@ class BlokLahanController extends Controller
         $anggotas = Anggota::orderBy('nama')->get();
         $existingBloks = BlokLahan::where('id', '!=', $blokLahan->id)
             ->select('id', 'nama_blok', 'koordinat_geojson')->get()
-            ->map(fn($b) => ['nama' => $b->nama_blok, 'geojson' => json_decode($b->koordinat_geojson, true)])
-            ->filter(fn($b) => $b['geojson'] !== null)->values();
+            ->map(fn ($b) => ['nama' => $b->nama_blok, 'geojson' => json_decode($b->koordinat_geojson, true)])
+            ->filter(fn ($b) => $b['geojson'] !== null)->values();
 
         return view('blok_lahan.edit', compact('blokLahan', 'anggotas', 'existingBloks'));
     }
@@ -95,6 +99,9 @@ class BlokLahanController extends Controller
     public function update(UpdateBlokLahanRequest $request, BlokLahan $blokLahan)
     {
         $validated = $request->validated();
+
+        // Fase otomatis untuk umur tidak ambigu (v2.3)
+        $this->autoSetFase($validated);
 
         $blokLahan->update($validated);
 
@@ -111,6 +118,29 @@ class BlokLahanController extends Controller
     public function destroy(BlokLahan $blokLahan)
     {
         $blokLahan->delete();
+
         return redirect()->route('blok-lahan.index')->with('success', 'Blok lahan berhasil dihapus.');
+    }
+
+    /**
+     * Auto-set fase tanaman untuk umur yang tidak ambigu (v2.3).
+     * umur < 3 → TBM otomatis
+     * umur > 3 → TM otomatis
+     * umur = 3 → pengguna wajib memilih (validasi di Request)
+     */
+    private function autoSetFase(array &$validated): void
+    {
+        $tahunTanam = $validated['tahun_tanam'] ?? null;
+        if (! $tahunTanam) {
+            return;
+        }
+
+        $umur = now()->year - (int) $tahunTanam;
+
+        if ($umur < 3 && empty($validated['fase_tanaman'])) {
+            $validated['fase_tanaman'] = 'TBM';
+        } elseif ($umur > 3 && empty($validated['fase_tanaman'])) {
+            $validated['fase_tanaman'] = 'TM';
+        }
     }
 }

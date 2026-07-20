@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('kondisi_lahans', function (Blueprint $table) {
             $table->date('tanggal_pemupukan_terakhir')->nullable()->after('tanggal_observasi')
-                  ->comment('Tanggal terakhir kali blok ini dipupuk');
+                ->comment('Tanggal terakhir kali blok ini dipupuk');
         });
     }
 

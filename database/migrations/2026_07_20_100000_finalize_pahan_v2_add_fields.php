@@ -15,17 +15,17 @@ return new class extends Migration
     {
         // 1. Tambah field normalisasi output rule
         Schema::table('rule_bases_lanjutan', function (Blueprint $table) {
-            if (!Schema::hasColumn('rule_bases_lanjutan', 'jenis_rule')) {
+            if (! Schema::hasColumn('rule_bases_lanjutan', 'jenis_rule')) {
                 $table->string('jenis_rule', 50)->nullable()->default('DIAGNOSIS_VISUAL')
                     ->after('keterangan_rule')
                     ->comment('DIAGNOSIS_VISUAL, PEMBATAS_APLIKASI, SARAN_PENDUKUNG, PERINGATAN_DATA, NORMAL');
             }
-            if (!Schema::hasColumn('rule_bases_lanjutan', 'tingkat_keparahan')) {
+            if (! Schema::hasColumn('rule_bases_lanjutan', 'tingkat_keparahan')) {
                 $table->string('tingkat_keparahan', 30)->nullable()->default('NORMAL')
                     ->after('jenis_rule')
                     ->comment('NORMAL, RINGAN, SEDANG, BERAT, PERLU_VERIFIKASI');
             }
-            if (!Schema::hasColumn('rule_bases_lanjutan', 'kategori_kesimpulan')) {
+            if (! Schema::hasColumn('rule_bases_lanjutan', 'kategori_kesimpulan')) {
                 $table->string('kategori_kesimpulan', 50)->nullable()
                     ->after('tingkat_keparahan')
                     ->comment('Kategori kesimpulan rule untuk normalisasi output');
@@ -34,12 +34,12 @@ return new class extends Migration
 
         // 2. Tambah field umur tanaman saat observasi ke rekomendasi_rbs
         Schema::table('rekomendasi_rbs', function (Blueprint $table) {
-            if (!Schema::hasColumn('rekomendasi_rbs', 'metode_perhitungan_umur')) {
+            if (! Schema::hasColumn('rekomendasi_rbs', 'metode_perhitungan_umur')) {
                 $table->string('metode_perhitungan_umur', 30)->nullable()
                     ->after('umur_tanaman_snapshot')
                     ->comment('tahun_tanam, tanggal_tanam, tidak_tersedia');
             }
-            if (!Schema::hasColumn('rekomendasi_rbs', 'tanggal_referensi_umur')) {
+            if (! Schema::hasColumn('rekomendasi_rbs', 'tanggal_referensi_umur')) {
                 $table->date('tanggal_referensi_umur')->nullable()
                     ->after('metode_perhitungan_umur')
                     ->comment('Tanggal observasi yang digunakan untuk menghitung umur');

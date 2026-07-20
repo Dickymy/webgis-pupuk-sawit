@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::table('rule_bases_lanjutan', function (Blueprint $table) {
             $table->json('kondisi_intermediate')->nullable()->after('ada_serangan_hama')
-                  ->comment('Flag intermediate yang dihasilkan rule ini jika terpicu, e.g. {"butuh_pengapuran": true}');
+                ->comment('Flag intermediate yang dihasilkan rule ini jika terpicu, e.g. {"butuh_pengapuran": true}');
             $table->json('prasyarat_intermediate')->nullable()->after('kondisi_intermediate')
-                  ->comment('Flag intermediate yang harus ada agar rule ini bisa dievaluasi, e.g. {"butuh_pengapuran": true}');
+                ->comment('Flag intermediate yang harus ada agar rule ini bisa dievaluasi, e.g. {"butuh_pengapuran": true}');
         });
     }
 

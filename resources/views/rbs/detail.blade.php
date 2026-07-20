@@ -32,7 +32,7 @@
             <p class="text-[10px] text-slate-400 uppercase font-semibold">Umur</p>
             <p class="text-sm font-bold text-slate-800">{{ $blokLahan->umur_tanaman ?? '—' }} tahun</p>
             @if($blokLahan->fase_tanaman)
-            <p class="text-[9px] text-emerald-600 font-medium">{{ $blokLahan->fase_tanaman === 'TBM' ? '🌱 Tanaman Belum Menghasilkan' : '🌴 Tanaman Menghasilkan' }}</p>
+            <p class="text-[9px] text-emerald-600 font-medium">{{ $blokLahan->fase_tanaman === 'TBM' ? '🌱' : '🌴' }} {{ $blokLahan->fase_label }}</p>
             @elseif($blokLahan->kategori_umur)
             <p class="text-[9px] text-emerald-600 font-medium">{{ $blokLahan->kategori_umur }}</p>
             @endif

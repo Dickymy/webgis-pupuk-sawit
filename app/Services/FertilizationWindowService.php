@@ -18,11 +18,17 @@ class FertilizationWindowService
 {
     // Status kelayakan
     public const LAYAK = 'LAYAK_DIJADWALKAN';
+
     public const TUNDA_HUJAN_RENDAH = 'TUNDA_HUJAN_RENDAH';
+
     public const TUNDA_HUJAN_TINGGI = 'TUNDA_HUJAN_TINGGI';
+
     public const TUNDA_INTERVAL = 'TUNDA_INTERVAL';
+
     public const PERLU_PERBAIKAN_DRAINASE = 'PERLU_PERBAIKAN_DRAINASE';
+
     public const PERLU_VERIFIKASI_DATA = 'PERLU_VERIFIKASI_DATA';
+
     public const TERLAMBAT = 'TERLAMBAT_PERLU_DIJADWALKAN';
 
     /**
@@ -64,10 +70,10 @@ class FertilizationWindowService
             $kategori = $kondisi->curah_hujan_kategori;
             if ($kategori === 'Sangat Rendah') {
                 $statuses[] = self::TUNDA_HUJAN_RENDAH;
-                $alasan[] = "Curah hujan sangat rendah (kategori, tanpa data numerik) — indikasi tunda, verifikasi nilai aktual disarankan.";
+                $alasan[] = 'Curah hujan sangat rendah (kategori, tanpa data numerik) — indikasi tunda, verifikasi nilai aktual disarankan.';
             } elseif ($kategori === 'Sangat Tinggi') {
                 $statuses[] = self::TUNDA_HUJAN_TINGGI;
-                $alasan[] = "Curah hujan sangat tinggi (kategori, tanpa data numerik) — indikasi tunda, verifikasi nilai aktual disarankan.";
+                $alasan[] = 'Curah hujan sangat tinggi (kategori, tanpa data numerik) — indikasi tunda, verifikasi nilai aktual disarankan.';
             } elseif ($kategori === 'Rendah' || $kategori === 'Tinggi') {
                 // Kategori Rendah/Tinggi tanpa numerik → tidak bisa memastikan layak
                 $statuses[] = self::PERLU_VERIFIKASI_DATA;
@@ -81,7 +87,7 @@ class FertilizationWindowService
             // Jika tidak ada data hujan sama sekali
             if ($curahHujan === null && $kategori === null) {
                 $statuses[] = self::PERLU_VERIFIKASI_DATA;
-                $alasan[] = "Data curah hujan tidak tersedia — verifikasi kondisi lapangan diperlukan.";
+                $alasan[] = 'Data curah hujan tidak tersedia — verifikasi kondisi lapangan diperlukan.';
             }
         }
 
@@ -104,7 +110,7 @@ class FertilizationWindowService
         // 3. Cek drainase
         if ($kondisi->kondisi_drainase === 'Buruk — Tergenang') {
             $statuses[] = self::PERLU_PERBAIKAN_DRAINASE;
-            $alasan[] = "Lahan tergenang — pupuk tanah tidak efektif, perbaiki drainase terlebih dahulu.";
+            $alasan[] = 'Lahan tergenang — pupuk tanah tidak efektif, perbaiki drainase terlebih dahulu.';
         }
 
         // Tentukan status final
@@ -114,25 +120,25 @@ class FertilizationWindowService
             // Prioritas: Drainase > Interval > Hujan > Verifikasi
             $priority = [
                 self::PERLU_PERBAIKAN_DRAINASE => 5,
-                self::TUNDA_INTERVAL           => 4,
-                self::TUNDA_HUJAN_TINGGI       => 3,
-                self::TUNDA_HUJAN_RENDAH       => 3,
-                self::PERLU_VERIFIKASI_DATA    => 1,
+                self::TUNDA_INTERVAL => 4,
+                self::TUNDA_HUJAN_TINGGI => 3,
+                self::TUNDA_HUJAN_RENDAH => 3,
+                self::PERLU_VERIFIKASI_DATA => 1,
             ];
 
-            usort($statuses, fn($a, $b) => ($priority[$b] ?? 0) - ($priority[$a] ?? 0));
+            usort($statuses, fn ($a, $b) => ($priority[$b] ?? 0) - ($priority[$a] ?? 0));
             $statusFinal = $statuses[0];
         }
 
         $layak = $statusFinal === self::LAYAK || $statusFinal === self::TERLAMBAT;
 
         return [
-            'status'         => $statusFinal,
-            'layak'          => $layak,
-            'alasan'         => $alasan,
+            'status' => $statusFinal,
+            'layak' => $layak,
+            'alasan' => $alasan,
             'curah_hujan_mm' => $curahHujan,
-            'interval_hari'  => $intervalHari,
-            'terlambat'      => $terlambat,
+            'interval_hari' => $intervalHari,
+            'terlambat' => $terlambat,
         ];
     }
 
@@ -142,14 +148,14 @@ class FertilizationWindowService
     public static function labelStatus(string $status): string
     {
         return match ($status) {
-            self::LAYAK                    => 'Layak Dijadwalkan',
-            self::TUNDA_HUJAN_RENDAH       => 'Tunda — Curah Hujan Rendah',
-            self::TUNDA_HUJAN_TINGGI       => 'Tunda — Curah Hujan Tinggi',
-            self::TUNDA_INTERVAL           => 'Tunda — Interval Terlalu Pendek',
+            self::LAYAK => 'Layak Dijadwalkan',
+            self::TUNDA_HUJAN_RENDAH => 'Tunda — Curah Hujan Rendah',
+            self::TUNDA_HUJAN_TINGGI => 'Tunda — Curah Hujan Tinggi',
+            self::TUNDA_INTERVAL => 'Tunda — Interval Terlalu Pendek',
             self::PERLU_PERBAIKAN_DRAINASE => 'Tunda — Drainase Perlu Diperbaiki',
-            self::PERLU_VERIFIKASI_DATA    => 'Perlu Verifikasi Data',
-            self::TERLAMBAT                => 'Terlambat — Perlu Dijadwalkan',
-            default                        => $status,
+            self::PERLU_VERIFIKASI_DATA => 'Perlu Verifikasi Data',
+            self::TERLAMBAT => 'Terlambat — Perlu Dijadwalkan',
+            default => $status,
         };
     }
 }

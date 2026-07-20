@@ -34,10 +34,17 @@ class RecommendationReliabilityService
 
         // 1. Identitas blok: luas, SPH, tahun/tanggal tanam (max 15)
         $identitasScore = 0;
-        if ($blok->luas_ha > 0) $identitasScore += 5;
-        if ($blok->sph > 0) $identitasScore += 5;
-        if ($blok->tahun_tanam) $identitasScore += 5;
-        else $saran[] = 'Lengkapi tahun tanam blok lahan.';
+        if ($blok->luas_ha > 0) {
+            $identitasScore += 5;
+        }
+        if ($blok->sph > 0) {
+            $identitasScore += 5;
+        }
+        if ($blok->tahun_tanam) {
+            $identitasScore += 5;
+        } else {
+            $saran[] = 'Lengkapi tahun tanam blok lahan.';
+        }
 
         $identitasScore = min($identitasScore, $weights['identitas_blok']);
         $rincian['identitas_blok'] = ['skor' => $identitasScore, 'max' => $weights['identitas_blok']];
@@ -105,11 +112,18 @@ class RecommendationReliabilityService
 
         // 6. Data visual: daun, pelepah, defisiensi (max 15)
         $visualScore = 0;
-        if ($kondisi->warna_daun !== null) $visualScore += 6;
-        else $saran[] = 'Observasi warna daun tanaman.';
+        if ($kondisi->warna_daun !== null) {
+            $visualScore += 6;
+        } else {
+            $saran[] = 'Observasi warna daun tanaman.';
+        }
 
-        if ($kondisi->kondisi_pelepah !== null) $visualScore += 4;
-        if (!empty($kondisi->gejala_defisiensi)) $visualScore += 5;
+        if ($kondisi->kondisi_pelepah !== null) {
+            $visualScore += 4;
+        }
+        if (! empty($kondisi->gejala_defisiensi)) {
+            $visualScore += 5;
+        }
 
         $visualScore = min($visualScore, $weights['data_visual']);
         $rincian['data_visual'] = ['skor' => $visualScore, 'max' => $weights['data_visual']];
@@ -117,7 +131,9 @@ class RecommendationReliabilityService
 
         // 7. Drainase, gulma, hama (max 10)
         $lingkunganScore = 0;
-        if ($kondisi->kondisi_drainase !== null) $lingkunganScore += 5;
+        if ($kondisi->kondisi_drainase !== null) {
+            $lingkunganScore += 5;
+        }
         // Gulma dan hama selalu terisi (boolean default)
         $lingkunganScore += 5;
 
@@ -127,9 +143,8 @@ class RecommendationReliabilityService
 
         // 8. Rule terpicu memiliki sumber (max 10)
         $ruleScore = 0;
-        if (!empty($rulesTerpicu)) {
-            $bersumber = collect($rulesTerpicu)->filter(fn($r) =>
-                $r->sumber_penulis !== null || $r->tingkat_bukti === 'BUKU'
+        if (! empty($rulesTerpicu)) {
+            $bersumber = collect($rulesTerpicu)->filter(fn ($r) => $r->sumber_penulis !== null || $r->tingkat_bukti === 'BUKU'
             )->count();
             $total = count($rulesTerpicu);
             $ruleScore = $total > 0 ? (int) round(($bersumber / $total) * $weights['rule_bersumber']) : 0;
@@ -152,10 +167,10 @@ class RecommendationReliabilityService
         $kategori = $this->getKategori($totalScore);
 
         return [
-            'score'              => $totalScore,
-            'kategori'           => $kategori,
-            'rincian'            => $rincian,
-            'saran_peningkatan'  => $saran,
+            'score' => $totalScore,
+            'kategori' => $kategori,
+            'rincian' => $rincian,
+            'saran_peningkatan' => $saran,
         ];
     }
 

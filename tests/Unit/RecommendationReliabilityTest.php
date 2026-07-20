@@ -19,20 +19,22 @@ class RecommendationReliabilityTest extends TestCase
 
     private function makeBlok(array $attrs = []): BlokLahan
     {
-        $blok = new BlokLahan();
+        $blok = new BlokLahan;
         $blok->luas_ha = $attrs['luas_ha'] ?? 5.0;
         $blok->sph = $attrs['sph'] ?? 136;
         $blok->tahun_tanam = $attrs['tahun_tanam'] ?? (now()->year - 10);
         $blok->fase_tanaman = $attrs['fase_tanaman'] ?? 'TM';
+
         return $blok;
     }
 
     private function makeKondisi(array $attrs = []): KondisiLahan
     {
-        $kondisi = new KondisiLahan();
+        $kondisi = new KondisiLahan;
         foreach ($attrs as $key => $value) {
             $kondisi->$key = $value;
         }
+
         return $kondisi;
     }
 

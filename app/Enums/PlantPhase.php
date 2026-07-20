@@ -48,6 +48,7 @@ enum PlantPhase: string
         }
 
         $phase = self::tryFrom($value);
+
         return $phase?->label() ?? $value;
     }
 
