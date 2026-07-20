@@ -32,8 +32,8 @@ return new class extends Migration
             $table->foreignId('source_realisasi_id')->nullable()->constrained('realisasi_pemupukans')->onDelete('set null');
             $table->timestamp('created_at')->useCurrent();
 
-            $table->index(['rekomendasi_rbs_id', 'created_at']);
-            $table->index(['program_pemupukan_id', 'event_type']);
+            $table->index(['rekomendasi_rbs_id', 'created_at'], 'idx_roh_rbs_created');
+            $table->index(['program_pemupukan_id', 'event_type'], 'idx_roh_program_event');
         });
     }
 
