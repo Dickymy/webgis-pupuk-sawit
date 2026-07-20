@@ -16,6 +16,7 @@ class RekomendasiRbs extends Model
 
     protected $fillable = [
         'blok_lahan_id',
+        'program_pemupukan_id',
         'kondisi_lahan_id',
         'admin_id',
         'tanggal_analisis',
@@ -127,6 +128,11 @@ class RekomendasiRbs extends Model
     public function realisasiPemupukans(): HasMany
     {
         return $this->hasMany(RealisasiPemupukan::class, 'rekomendasi_rbs_id');
+    }
+
+    public function programPemupukan(): BelongsTo
+    {
+        return $this->belongsTo(ProgramPemupukan::class, 'program_pemupukan_id');
     }
 
     public function admin(): BelongsTo

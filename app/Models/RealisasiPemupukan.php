@@ -21,6 +21,7 @@ class RealisasiPemupukan extends Model
     protected $fillable = [
         'rekomendasi_rbs_id',
         'blok_lahan_id',
+        'program_pemupukan_id',
         'admin_id',
         'tahun_program',
         'tahap',
@@ -66,6 +67,11 @@ class RealisasiPemupukan extends Model
     public function admin(): BelongsTo
     {
         return $this->belongsTo(Admin::class, 'admin_id');
+    }
+
+    public function programPemupukan(): BelongsTo
+    {
+        return $this->belongsTo(ProgramPemupukan::class, 'program_pemupukan_id');
     }
 
     // ─── Constants ───────────────────────────────────────────
