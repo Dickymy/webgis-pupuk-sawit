@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PlantPhase;
+use App\Http\Requests\StoreBlokLahanRequest;
+use App\Http\Requests\UpdateBlokLahanRequest;
 use App\Models\Anggota;
 use App\Models\BlokLahan;
 use Illuminate\Http\Request;
@@ -56,45 +59,9 @@ class BlokLahanController extends Controller
         return view('blok_lahan.create', compact('anggotas', 'existingBloks'));
     }
 
-    public function store(Request $request)
+    public function store(StoreBlokLahanRequest $request)
     {
-        $validated = $request->validate([
-            'anggota_id'        => ['required', 'exists:anggotas,id'],
-            'nama_blok'         => ['required', 'string', 'max:100'],
-            'luas_ha'           => ['required', 'numeric', 'min:0.01'],
-            'sph'               => ['required', 'integer', 'min:1'],
-            'koordinat_geojson' => ['required', 'string'],
-            'tahun_tanam'       => ['required', 'integer', 'min:1990', 'max:' . now()->year],
-            'jenis_tanah'       => ['required', 'in:Tanah Lempung,Tanah Lempung Berpasir,Tanah Berpasir,Tanah Liat,Tanah Gambut,Tanah Aluvial,Tanah Podsolik Merah Kuning (PMK),Tanah Laterit,Tanah Berbatu,Lainnya'],
-            'topografi'         => ['required', 'in:Datar 0-15°,Bergelombang 15-30°,Curam >30°'],
-            'fase_tanaman'      => ['nullable', 'in:TBM,TM'],
-        ], [
-            'anggota_id.required'        => 'Pemilik lahan wajib dipilih.',
-            'nama_blok.required'         => 'Nama blok wajib diisi.',
-            'luas_ha.required'           => 'Luas lahan wajib diisi.',
-            'sph.required'               => 'SPH wajib diisi.',
-            'koordinat_geojson.required' => 'Koordinat GeoJSON wajib diisi.',
-            'tahun_tanam.required'       => 'Tahun tanam wajib diisi.',
-            'jenis_tanah.required'       => 'Jenis tanah wajib dipilih.',
-            'topografi.required'         => 'Topografi wajib dipilih.',
-        ]);
-
-        $geojson = json_decode($validated['koordinat_geojson'], true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return back()->withErrors(['koordinat_geojson' => 'Format GeoJSON tidak valid.'])->withInput();
-        }
-
-        // Validasi struktur GeoJSON polygon
-        $type = $geojson['type'] ?? null;
-        $isValidGeometry = in_array($type, ['Polygon', 'MultiPolygon', 'Feature', 'FeatureCollection']);
-        if (!$isValidGeometry) {
-            return back()->withErrors(['koordinat_geojson' => 'GeoJSON harus berupa Polygon, MultiPolygon, Feature, atau FeatureCollection.'])->withInput();
-        }
-
-        // Validasi minimal: coordinates tidak kosong
-        if ($type === 'Polygon' && (empty($geojson['coordinates']) || empty($geojson['coordinates'][0]) || count($geojson['coordinates'][0]) < 4)) {
-            return back()->withErrors(['koordinat_geojson' => 'Polygon harus memiliki minimal 4 titik koordinat.'])->withInput();
-        }
+        $validated = $request->validated();
 
         BlokLahan::create($validated);
 
@@ -125,31 +92,9 @@ class BlokLahanController extends Controller
         return view('blok_lahan.edit', compact('blokLahan', 'anggotas', 'existingBloks'));
     }
 
-    public function update(Request $request, BlokLahan $blokLahan)
+    public function update(UpdateBlokLahanRequest $request, BlokLahan $blokLahan)
     {
-        $validated = $request->validate([
-            'anggota_id'        => ['required', 'exists:anggotas,id'],
-            'nama_blok'         => ['required', 'string', 'max:100'],
-            'luas_ha'           => ['required', 'numeric', 'min:0.01'],
-            'sph'               => ['required', 'integer', 'min:1'],
-            'koordinat_geojson' => ['required', 'string'],
-            'tahun_tanam'       => ['required', 'integer', 'min:1990', 'max:' . now()->year],
-            'jenis_tanah'       => ['required', 'in:Tanah Lempung,Tanah Lempung Berpasir,Tanah Berpasir,Tanah Liat,Tanah Gambut,Tanah Aluvial,Tanah Podsolik Merah Kuning (PMK),Tanah Laterit,Tanah Berbatu,Lainnya'],
-            'topografi'         => ['required', 'in:Datar 0-15°,Bergelombang 15-30°,Curam >30°'],
-            'fase_tanaman'      => ['nullable', 'in:TBM,TM'],
-        ]);
-
-        json_decode($validated['koordinat_geojson'], true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return back()->withErrors(['koordinat_geojson' => 'Format GeoJSON tidak valid.'])->withInput();
-        }
-
-        // Validasi struktur GeoJSON polygon
-        $geojson = json_decode($validated['koordinat_geojson'], true);
-        $type = $geojson['type'] ?? null;
-        if (!in_array($type, ['Polygon', 'MultiPolygon', 'Feature', 'FeatureCollection'])) {
-            return back()->withErrors(['koordinat_geojson' => 'GeoJSON harus berupa Polygon, MultiPolygon, Feature, atau FeatureCollection.'])->withInput();
-        }
+        $validated = $request->validated();
 
         $blokLahan->update($validated);
 

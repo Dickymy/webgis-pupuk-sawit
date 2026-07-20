@@ -315,17 +315,19 @@
                         <label class="flex items-center gap-2 px-4 py-2.5 border rounded-xl cursor-pointer transition-colors {{ old('fase_tanaman') === 'TBM' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 hover:border-emerald-300' }}">
                             <input type="radio" name="fase_tanaman" value="TBM" {{ old('fase_tanaman') === 'TBM' ? 'checked' : '' }}
                                 class="text-emerald-600 focus:ring-emerald-500">
-                            <span class="text-sm font-medium text-slate-700">🌱 TBM</span>
-                            <span class="text-xs text-slate-400">Belum Menghasilkan</span>
+                            <span class="text-sm font-medium text-slate-700">🌱 Tanaman Belum Menghasilkan</span>
                         </label>
                         <label class="flex items-center gap-2 px-4 py-2.5 border rounded-xl cursor-pointer transition-colors {{ old('fase_tanaman') === 'TM' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 hover:border-emerald-300' }}">
                             <input type="radio" name="fase_tanaman" value="TM" {{ old('fase_tanaman') === 'TM' ? 'checked' : '' }}
                                 class="text-emerald-600 focus:ring-emerald-500">
-                            <span class="text-sm font-medium text-slate-700">🌴 TM</span>
-                            <span class="text-xs text-slate-400">Menghasilkan</span>
+                            <span class="text-sm font-medium text-slate-700">🌴 Tanaman Menghasilkan</span>
                         </label>
                     </div>
-                    <p class="mt-1.5 text-xs text-slate-400">TBM: tanaman belum berbuah (umumnya 0–3 tahun). TM: tanaman sudah berbuah. Umur 3 tahun bisa TBM atau TM tergantung kondisi lapangan.</p>
+                    <div class="mt-1.5 text-xs text-slate-500 space-y-0.5">
+                        <p><strong>Tanaman Belum Menghasilkan:</strong> tanaman yang belum memasuki fase produksi.</p>
+                        <p><strong>Tanaman Menghasilkan:</strong> tanaman yang telah memasuki fase produksi tandan.</p>
+                        <p class="text-slate-400 italic">Umur tanaman tepat tiga tahun dapat berada pada fase Tanaman Belum Menghasilkan atau Tanaman Menghasilkan. Pilih berdasarkan kondisi aktual di lapangan.</p>
+                    </div>
                     @error('fase_tanaman') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
             </div>

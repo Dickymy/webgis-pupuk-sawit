@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreKondisiLahanRequest;
+use App\Http\Requests\UpdateKondisiLahanRequest;
 use App\Models\BlokLahan;
 use App\Models\KondisiLahan;
 use Illuminate\Http\Request;
@@ -63,38 +65,9 @@ class KondisiLahanController extends Controller
         return view('kondisi_lahan.create', compact('bloks', 'anggotas', 'selectedBlokId', 'bloksJson'));
     }
 
-    public function store(Request $request)
+    public function store(StoreKondisiLahanRequest $request)
     {
-        $validated = $request->validate([
-            'blok_lahan_id'              => ['required', 'exists:blok_lahans,id'],
-            'tanggal_observasi'          => ['required', 'date'],
-            'tanggal_pemupukan_terakhir' => ['nullable', 'date', 'before_or_equal:today'],
-            'ph_tanah'                   => ['nullable', 'numeric', 'min:3', 'max:8'],
-            'metode_pengukuran_ph'       => ['nullable', 'in:kertas_lakmus,ph_meter,estimasi,laboratorium'],
-            'kelembaban_tanah'           => ['nullable', 'string'],
-            'curah_hujan_kategori'       => ['nullable', 'string'],
-            'curah_hujan_mm_bulanan'     => ['nullable', 'numeric', 'min:0', 'max:1000'],
-            'periode_curah_hujan'        => ['nullable', 'string', 'max:50'],
-            'sumber_curah_hujan'         => ['nullable', 'in:manual,open-meteo,alat_ukur,lainnya'],
-            'musim_saat_ini'             => ['nullable', 'string'],
-            'warna_daun'                 => ['nullable', 'string'],
-            'kondisi_pelepah'            => ['nullable', 'string'],
-            'gejala_defisiensi'          => ['nullable', 'array'],
-            'gejala_defisiensi.*'        => ['string'],
-            'kondisi_tandan'             => ['nullable', 'string'],
-            'kondisi_drainase'           => ['nullable', 'string'],
-            'ada_gulma_dominan'          => ['nullable', 'boolean'],
-            'ada_serangan_hama'          => ['nullable', 'boolean'],
-            'catatan_observasi'          => ['nullable', 'string', 'max:1000'],
-        ], [
-            'blok_lahan_id.required'     => 'Blok lahan wajib dipilih.',
-            'tanggal_observasi.required' => 'Tanggal observasi wajib diisi.',
-            'ph_tanah.numeric'           => 'pH tanah harus berupa angka.',
-            'ph_tanah.min'               => 'pH tanah minimal 3.0.',
-            'ph_tanah.max'               => 'pH tanah maksimal 8.0.',
-            'curah_hujan_mm_bulanan.numeric' => 'Curah hujan harus berupa angka.',
-            'curah_hujan_mm_bulanan.min' => 'Curah hujan tidak boleh negatif.',
-        ]);
+        $validated = $request->validated();
 
         // Checkbox boolean
         $validated['ada_gulma_dominan'] = $request->boolean('ada_gulma_dominan');
@@ -154,33 +127,9 @@ class KondisiLahanController extends Controller
         return view('kondisi_lahan.edit', compact('kondisiLahan', 'bloks', 'bloksJson'));
     }
 
-    public function update(Request $request, KondisiLahan $kondisiLahan)
+    public function update(UpdateKondisiLahanRequest $request, KondisiLahan $kondisiLahan)
     {
-        $validated = $request->validate([
-            'blok_lahan_id'              => ['required', 'exists:blok_lahans,id'],
-            'tanggal_observasi'          => ['required', 'date'],
-            'tanggal_pemupukan_terakhir' => ['nullable', 'date', 'before_or_equal:today'],
-            'ph_tanah'                   => ['nullable', 'numeric', 'min:3', 'max:8'],
-            'metode_pengukuran_ph'       => ['nullable', 'in:kertas_lakmus,ph_meter,estimasi,laboratorium'],
-            'kelembaban_tanah'           => ['nullable', 'string'],
-            'curah_hujan_kategori'       => ['nullable', 'string'],
-            'curah_hujan_mm_bulanan'     => ['nullable', 'numeric', 'min:0', 'max:1000'],
-            'periode_curah_hujan'        => ['nullable', 'string', 'max:50'],
-            'sumber_curah_hujan'         => ['nullable', 'in:manual,open-meteo,alat_ukur,lainnya'],
-            'musim_saat_ini'             => ['nullable', 'string'],
-            'warna_daun'                 => ['nullable', 'string'],
-            'kondisi_pelepah'            => ['nullable', 'string'],
-            'gejala_defisiensi'          => ['nullable', 'array'],
-            'gejala_defisiensi.*'        => ['string'],
-            'kondisi_tandan'             => ['nullable', 'string'],
-            'kondisi_drainase'           => ['nullable', 'string'],
-            'ada_gulma_dominan'          => ['nullable', 'boolean'],
-            'ada_serangan_hama'          => ['nullable', 'boolean'],
-            'catatan_observasi'          => ['nullable', 'string', 'max:1000'],
-        ], [
-            'blok_lahan_id.required'     => 'Blok lahan wajib dipilih.',
-            'tanggal_observasi.required' => 'Tanggal observasi wajib diisi.',
-        ]);
+        $validated = $request->validated();
 
         $validated['ada_gulma_dominan'] = $request->boolean('ada_gulma_dominan');
         $validated['ada_serangan_hama'] = $request->boolean('ada_serangan_hama');
