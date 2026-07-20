@@ -34,9 +34,11 @@ class FertilizationScheduleServiceTest extends TestCase
             ['umur' => 10, 'fase' => 'TM', 'fase_label' => 'Tanaman Menghasilkan', 'tanggal_referensi' => '2026-07-20', 'metode_perhitungan_umur' => 'tahun_tanam', 'needs_phase_verification' => false, 'phase_conflict' => false]
         );
 
-        $this->assertCount(2, $jadwal);
-        $this->assertEquals(50, $jadwal[0]['persentase_urea']);
-        $this->assertEquals(50, $jadwal[1]['persentase_urea']);
+        // Pahan v2.5: jadwal berisi satu entry tahap aktif (jumlah dari CurrentApplicationCalculator)
+        $this->assertCount(1, $jadwal);
+        $this->assertEquals(544, $jadwal[0]['urea_kg']);
+        $this->assertEquals(680, $jadwal[0]['kcl_kg']);
+        $this->assertEquals('Rencana', $jadwal[0]['status_tahap']);
     }
 
     public function test_no_march_september_automatic(): void
@@ -78,8 +80,10 @@ class FertilizationScheduleServiceTest extends TestCase
             ['umur' => 10, 'fase' => 'TM', 'fase_label' => 'Tanaman Menghasilkan', 'tanggal_referensi' => '2026-07-20', 'metode_perhitungan_umur' => 'tahun_tanam', 'needs_phase_verification' => false, 'phase_conflict' => false]
         );
 
-        $this->assertEquals('Menunggu Realisasi Tahap 1', $jadwal[1]['status_tahap']);
-        $this->assertStringContainsString('60 hari', $jadwal[1]['estimasi_waktu']);
+        // Pahan v2.5: Tahap 2 dikelola oleh CurrentApplicationCalculator, bukan FertilizationScheduleService
+        // Jadwal hanya berisi satu entry tahap aktif
+        $this->assertCount(1, $jadwal);
+        $this->assertEquals('Rencana', $jadwal[0]['status_tahap']);
     }
 
     public function test_not_feasible_returns_empty_array(): void

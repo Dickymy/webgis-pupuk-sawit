@@ -798,6 +798,15 @@ class RbsService
             'kcl_karung_estimasi_tahunan' => null,
             'urea_aplikasi_saat_ini' => 0.0,
             'kcl_aplikasi_saat_ini' => 0.0,
+            // Pahan v2.5: snapshot luas/SPH
+            'luas_ha_snapshot' => $blok->luas_ha,
+            'sph_snapshot' => $blok->sph,
+            'active_stage' => 0,
+            'status_stage' => null,
+            'urea_sisa_tahunan' => null,
+            'kcl_sisa_tahunan' => null,
+            'tanggal_minimum_tahap_berikutnya' => null,
+            'alasan_tahap' => 'Fase tanaman perlu diverifikasi sebelum tahap aktif dapat ditentukan.',
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
             'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.5'),
@@ -874,6 +883,15 @@ class RbsService
             'kcl_karung_estimasi_tahunan' => $annualSnapshot['kcl_karung_estimasi_tahunan'],
             'urea_aplikasi_saat_ini' => $annualSnapshot['urea_aplikasi_saat_ini'],
             'kcl_aplikasi_saat_ini' => $annualSnapshot['kcl_aplikasi_saat_ini'],
+            // Pahan v2.5: snapshot luas/SPH
+            'luas_ha_snapshot' => $annualSnapshot['luas_ha_snapshot'] ?? $blok->luas_ha,
+            'sph_snapshot' => $annualSnapshot['sph_snapshot'] ?? $blok->sph,
+            'active_stage' => 0,
+            'status_stage' => null,
+            'urea_sisa_tahunan' => $annualSnapshot['urea_total_estimasi_tahunan'],
+            'kcl_sisa_tahunan' => $annualSnapshot['kcl_total_estimasi_tahunan'],
+            'tanggal_minimum_tahap_berikutnya' => null,
+            'alasan_tahap' => 'Data kondisi belum lengkap untuk menentukan tahap aktif.',
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
             'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.5'),
@@ -952,6 +970,15 @@ class RbsService
             'kcl_karung_estimasi_tahunan' => $annualSnapshot['kcl_karung_estimasi_tahunan'],
             'urea_aplikasi_saat_ini' => $annualSnapshot['urea_aplikasi_saat_ini'],
             'kcl_aplikasi_saat_ini' => $annualSnapshot['kcl_aplikasi_saat_ini'],
+            // Pahan v2.5: snapshot luas/SPH
+            'luas_ha_snapshot' => $annualSnapshot['luas_ha_snapshot'] ?? $blok->luas_ha,
+            'sph_snapshot' => $annualSnapshot['sph_snapshot'] ?? $blok->sph,
+            'active_stage' => 0,
+            'status_stage' => null,
+            'urea_sisa_tahunan' => $annualSnapshot['urea_total_estimasi_tahunan'],
+            'kcl_sisa_tahunan' => $annualSnapshot['kcl_total_estimasi_tahunan'],
+            'tanggal_minimum_tahap_berikutnya' => null,
+            'alasan_tahap' => 'Data observasi belum cukup untuk diagnosis — tahap belum ditentukan.',
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
             'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.5'),
@@ -998,9 +1025,20 @@ class RbsService
         $isApplicable = $window ? $window['layak'] : true;
         $annualSnapshot = $this->snapshotBuilder->build($blok, $doseReference ?? ['urea' => ['estimate' => null], 'kcl' => ['estimate' => null]], $isApplicable);
 
-        // Jadwal baru via FertilizationScheduleService (v2.4: kosong jika tidak layak)
+        // Pahan v2.5: Hitung aplikasi saat ini via CurrentApplicationCalculator
+        $realizationSummary = $this->realizationService->getRealizationSummary($blok);
+        $currentApp = $this->currentAppCalculator->calculate([
+            'annual_snapshot' => $annualSnapshot,
+            'window_result' => $window ?? ['layak' => true],
+            'realization_summary' => $realizationSummary,
+            'analysis_date' => now(),
+        ]);
+        $annualSnapshot['urea_aplikasi_saat_ini'] = $currentApp['urea_aplikasi_saat_ini'];
+        $annualSnapshot['kcl_aplikasi_saat_ini'] = $currentApp['kcl_aplikasi_saat_ini'];
+
+        // Jadwal via FertilizationScheduleService (v2.5: menggunakan currentApp)
         $jadwal = $this->scheduleService->generate(
-            ['dosis_urea' => $dosisRef['dosis_urea'] ?? 0, 'dosis_kcl' => $dosisRef['dosis_kcl'] ?? 0, 'total_urea' => $annualSnapshot['urea_aplikasi_saat_ini'], 'total_kcl' => $annualSnapshot['kcl_aplikasi_saat_ini']],
+            ['dosis_urea' => $dosisRef['dosis_urea'] ?? 0, 'dosis_kcl' => $dosisRef['dosis_kcl'] ?? 0, 'total_urea' => $currentApp['urea_aplikasi_saat_ini'], 'total_kcl' => $currentApp['kcl_aplikasi_saat_ini']],
             $kondisi,
             $blok,
             $window ?? ['layak' => true, 'alasan' => []],
@@ -1075,6 +1113,15 @@ class RbsService
             'kcl_karung_estimasi_tahunan' => $annualSnapshot['kcl_karung_estimasi_tahunan'],
             'urea_aplikasi_saat_ini' => $annualSnapshot['urea_aplikasi_saat_ini'],
             'kcl_aplikasi_saat_ini' => $annualSnapshot['kcl_aplikasi_saat_ini'],
+            // Pahan v2.5: snapshot luas/SPH dan tahap aktif
+            'luas_ha_snapshot' => $annualSnapshot['luas_ha_snapshot'] ?? $blok->luas_ha,
+            'sph_snapshot' => $annualSnapshot['sph_snapshot'] ?? $blok->sph,
+            'active_stage' => $currentApp['active_stage'],
+            'status_stage' => $currentApp['status_stage'],
+            'urea_sisa_tahunan' => $currentApp['urea_sisa_tahunan'],
+            'kcl_sisa_tahunan' => $currentApp['kcl_sisa_tahunan'],
+            'tanggal_minimum_tahap_berikutnya' => $currentApp['tanggal_minimum_tahap_berikutnya'],
+            'alasan_tahap' => $currentApp['reason'],
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
             'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.5'),
