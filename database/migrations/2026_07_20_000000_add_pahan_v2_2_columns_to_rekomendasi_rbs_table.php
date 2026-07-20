@@ -13,17 +13,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('rekomendasi_rbs', function (Blueprint $table) {
-            // Kolom ini mungkin sudah ada dari migration sebelumnya
-            if (! Schema::hasColumn('rekomendasi_rbs', 'metode_perhitungan_umur')) {
-                $table->string('metode_perhitungan_umur', 50)->nullable()
-                    ->after('tanggal_referensi_umur')
-                    ->comment('tahun_tanam | tanggal_tanam | tidak_tersedia');
-            }
-
             if (! Schema::hasColumn('rekomendasi_rbs', 'tanggal_referensi_umur')) {
                 $table->date('tanggal_referensi_umur')->nullable()
-                    ->after('umur_tanaman_snapshot')
                     ->comment('Tanggal observasi yang digunakan untuk menghitung umur');
+            }
+
+            if (! Schema::hasColumn('rekomendasi_rbs', 'metode_perhitungan_umur')) {
+                $table->string('metode_perhitungan_umur', 50)->nullable()
+                    ->comment('tahun_tanam | tanggal_tanam | tidak_tersedia');
             }
         });
     }
