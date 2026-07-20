@@ -21,11 +21,7 @@ class RbsService
 
     private RecommendationReliabilityService $reliabilityService;
 
-    private PlantPhaseResolver $phaseResolver;
-
     private ObservationCompletenessService $completenessService;
-
-    private PlantAgeService $ageService;
 
     private PlantContextService $contextService;
 
@@ -35,42 +31,46 @@ class RbsService
 
     private AnnualFertilizerSnapshotBuilder $snapshotBuilder;
 
+    private FertilizationRealizationService $realizationService;
+
+    private CurrentApplicationCalculator $currentAppCalculator;
+
     public function __construct(
         PahanDoseReferenceService $doseService,
         FertilizationWindowService $windowService,
         FertilizationCalculationService $calcService,
         RecommendationReliabilityService $reliabilityService,
-        PlantPhaseResolver $phaseResolver,
         ObservationCompletenessService $completenessService,
-        PlantAgeService $ageService,
         PlantContextService $contextService,
         FertilizationScheduleService $scheduleService,
         SupportingFertilizerSanitizer $sanitizer,
-        AnnualFertilizerSnapshotBuilder $snapshotBuilder
+        AnnualFertilizerSnapshotBuilder $snapshotBuilder,
+        FertilizationRealizationService $realizationService,
+        CurrentApplicationCalculator $currentAppCalculator
     ) {
         $this->doseService = $doseService;
         $this->windowService = $windowService;
         $this->calcService = $calcService;
         $this->reliabilityService = $reliabilityService;
-        $this->phaseResolver = $phaseResolver;
         $this->completenessService = $completenessService;
-        $this->ageService = $ageService;
         $this->contextService = $contextService;
         $this->scheduleService = $scheduleService;
         $this->sanitizer = $sanitizer;
         $this->snapshotBuilder = $snapshotBuilder;
+        $this->realizationService = $realizationService;
+        $this->currentAppCalculator = $currentAppCalculator;
     }
 
     /**
      * Jalankan analisis RBS untuk satu blok lahan berdasarkan kondisi terbaru.
      *
-     * Versi: pahan-v2.3
-     * Perubahan utama dari v2.2:
-     * - Fase historis mengikuti umur pada tanggal observasi (PlantContextService)
-     * - Status kondisi terpisah penuh dari status kelayakan
-     * - Jadwal default 50/50, tanpa Maret/September otomatis
-     * - Pupuk pendukung disanitasi
-     * - Kebutuhan tahunan tetap tampil saat ditunda
+     * Versi: pahan-v2.5
+     * Perubahan utama dari v2.4:
+     * - Aplikasi saat ini = tahap aktif (50% Tahap 1, sisa aktual Tahap 2)
+     * - Integrasi realisasi pemupukan
+     * - Fingerprint mencakup luas/SPH/realisasi
+     * - Snapshot luas dan SPH disimpan
+     * - CurrentApplicationCalculator menentukan jumlah tahap aktif
      *
      * @throws \Exception
      */
@@ -164,19 +164,19 @@ class RbsService
         return ['results' => $results, 'errors' => $errors];
     }
 
-    // ═══════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // LEGACY DEAD CODE REMOVED in Pahan v2.4
-    // cekKecukupanData() → replaced by ObservationCompletenessService
-    // tentukanValiditasRekomendasi() → replaced by RecommendationReliabilityService
-    // hitungConfidence() → replaced by RecommendationReliabilityService
-    // isDugaanUnsurSesuaiWarnaDaun() → removed (part of hitungConfidence)
-    // cekKonsistensiData() → removed (part of hitungConfidence)
-    // kondisiCukup() → replaced by kondisiCukupMinimal()
-    // ═══════════════════════════════════════════════════════════════════
+    // cekKecukupanData() â†’ replaced by ObservationCompletenessService
+    // tentukanValiditasRekomendasi() â†’ replaced by RecommendationReliabilityService
+    // hitungConfidence() â†’ replaced by RecommendationReliabilityService
+    // isDugaanUnsurSesuaiWarnaDaun() â†’ removed (part of hitungConfidence)
+    // cekKonsistensiData() â†’ removed (part of hitungConfidence)
+    // kondisiCukup() â†’ replaced by kondisiCukupMinimal()
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-    // ═══════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
     // CORE: Evaluasi Rule
-    // ═══════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     /**
      * Cek apakah prasyarat intermediate terpenuhi (Rule Chaining - A2).
@@ -361,14 +361,14 @@ class RbsService
         return true;
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    // FITUR 1: Histori — Simpan Hasil (create, bukan updateOrCreate)
-    // ═══════════════════════════════════════════════════════════════════
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // FITUR 1: Histori â€” Simpan Hasil (create, bukan updateOrCreate)
+    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
     /**
      * Simpan rekomendasi baru dengan histori (Fitur 1).
      * Jika hasil analisis sama persis dengan rekomendasi terakhir (kondisi_lahan_id dan status sama),
-     * tidak membuat record baru — hanya update tanggal_analisis.
+     * tidak membuat record baru â€” hanya update tanggal_analisis.
      */
     private function simpanDenganHistori(int $blokLahanId, array $data): RekomendasiRbs
     {
@@ -447,6 +447,8 @@ class RbsService
             ->values()
             ->toArray();
 
+        // Pahan v2.5: Fingerprint menyertakan luas, SPH, jumlah pokok, total tahunan,
+        // aplikasi saat ini, sisa tahunan, tahap aktif, dan ringkasan realisasi
         $fingerprintData = [
             'kondisi_lahan_id' => $data['kondisi_lahan_id'] ?? null,
             'versi_mesin' => $data['versi_mesin_rekomendasi'] ?? null,
@@ -460,6 +462,18 @@ class RbsService
             'rules_terpicu' => $rulesCodes,
             'jumlah_jadwal' => count($data['jadwal_pemupukan'] ?? []),
             'kelengkapan_data_score' => $data['kelengkapan_data_score'] ?? null,
+            // Pahan v2.5: komponen baru fingerprint
+            'luas_ha_snapshot' => $data['luas_ha_snapshot'] ?? null,
+            'sph_snapshot' => $data['sph_snapshot'] ?? null,
+            'jumlah_pokok_snapshot' => $data['jumlah_pokok_snapshot'] ?? null,
+            'urea_total_estimasi_tahunan' => $data['urea_total_estimasi_tahunan'] ?? null,
+            'kcl_total_estimasi_tahunan' => $data['kcl_total_estimasi_tahunan'] ?? null,
+            'urea_aplikasi_saat_ini' => $data['urea_aplikasi_saat_ini'] ?? null,
+            'kcl_aplikasi_saat_ini' => $data['kcl_aplikasi_saat_ini'] ?? null,
+            'urea_sisa_tahunan' => $data['urea_sisa_tahunan'] ?? null,
+            'kcl_sisa_tahunan' => $data['kcl_sisa_tahunan'] ?? null,
+            'active_stage' => $data['active_stage'] ?? null,
+            'status_stage' => $data['status_stage'] ?? null,
         ];
 
         // JSON encode dengan key sorting agar hasilnya deterministik
@@ -474,8 +488,8 @@ class RbsService
      */
     private function susunHasil(BlokLahan $blok, KondisiLahan $kondisi, array $rules, array $plantContext): array
     {
-        // Tentukan status dominan (legacy — hanya untuk kompatibilitas)
-        // LEGACY ONLY — kompatibilitas histori, bukan keputusan operasional
+        // Tentukan status dominan (legacy â€” hanya untuk kompatibilitas)
+        // LEGACY ONLY â€” kompatibilitas histori, bukan keputusan operasional
         $hierarki = ['Tunda' => 4, 'Darurat' => 3, 'Segera' => 2, 'Normal' => 1];
         $statusDominan = collect($rules)
             ->sortByDesc(fn ($r) => $hierarki[$r->status_kebutuhan] ?? 0)
@@ -524,7 +538,20 @@ class RbsService
         $isApplicable = $window ? $window['layak'] : false;
         $annualSnapshot = $this->snapshotBuilder->build($blok, $doseReference ?? ['urea' => ['estimate' => null], 'kcl' => ['estimate' => null]], $isApplicable);
 
-        // Catatan dosis (v2.4: berdasarkan kelayakan, bukan status legacy)
+        // Pahan v2.5: Hitung aplikasi saat ini via CurrentApplicationCalculator
+        $realizationSummary = $this->realizationService->getRealizationSummary($blok);
+        $currentApp = $this->currentAppCalculator->calculate([
+            'annual_snapshot' => $annualSnapshot,
+            'window_result' => $window ?? ['layak' => false],
+            'realization_summary' => $realizationSummary,
+            'analysis_date' => now(),
+        ]);
+
+        // Override aplikasi saat ini dari CurrentApplicationCalculator
+        $annualSnapshot['urea_aplikasi_saat_ini'] = $currentApp['urea_aplikasi_saat_ini'];
+        $annualSnapshot['kcl_aplikasi_saat_ini'] = $currentApp['kcl_aplikasi_saat_ini'];
+
+        // Catatan dosis (v2.5: berdasarkan kelayakan, bukan status legacy)
         $catatanDosis = $this->tentukanCatatanDosis(
             $statusKelayakan,
             $window ? $window['alasan'] : [],
@@ -532,9 +559,9 @@ class RbsService
             $masalah
         );
 
-        // Jadwal pemupukan via FertilizationScheduleService (v2.4: kosong jika tidak layak)
+        // Jadwal pemupukan via FertilizationScheduleService (v2.5: menggunakan aplikasi saat ini dari CurrentApplicationCalculator)
         $jadwal = $this->scheduleService->generate(
-            ['dosis_urea' => $dosisRef['dosis_urea'] ?? 0, 'dosis_kcl' => $dosisRef['dosis_kcl'] ?? 0, 'total_urea' => $annualSnapshot['urea_aplikasi_saat_ini'], 'total_kcl' => $annualSnapshot['kcl_aplikasi_saat_ini']],
+            ['dosis_urea' => $dosisRef['dosis_urea'] ?? 0, 'dosis_kcl' => $dosisRef['dosis_kcl'] ?? 0, 'total_urea' => $currentApp['urea_aplikasi_saat_ini'], 'total_kcl' => $currentApp['kcl_aplikasi_saat_ini']],
             $kondisi,
             $blok,
             $window ?? ['layak' => false, 'alasan' => ['Data kelayakan tidak tersedia']],
@@ -577,9 +604,9 @@ class RbsService
             'masalah_teridentifikasi' => $masalah,
             'rekomendasi_pupuk' => $pupukSanitized,
             'saran_tindakan_utama' => $saranUtama,
-            'status_kebutuhan_dominan' => $statusDominan, // LEGACY ONLY — kompatibilitas histori, bukan keputusan operasional
+            'status_kebutuhan_dominan' => $statusDominan, // LEGACY ONLY â€” kompatibilitas histori, bukan keputusan operasional
             'jumlah_rule_terpicu' => count($rules),
-            // Kolom lama — kompatibilitas
+            // Kolom lama â€” kompatibilitas
             'dosis_urea' => $isApplicable ? ($dosisRef['dosis_urea'] ?? 0) : 0.0,
             'dosis_kcl' => $isApplicable ? ($dosisRef['dosis_kcl'] ?? 0) : 0.0,
             'total_urea' => $annualSnapshot['urea_aplikasi_saat_ini'],
@@ -595,7 +622,7 @@ class RbsService
             'data_cukup' => $completeness['can_run_diagnosis'],
             'data_kurang' => $completeness['missing_fields'],
             'notifikasi_data' => $completeness['reason'],
-            // Kolom Pahan-v2.4 — fase historis via PlantContextService
+            // Kolom Pahan-v2.4 â€” fase historis via PlantContextService
             'fase_tanaman_snapshot' => $plantContext['fase'],
             'umur_tanaman_snapshot' => $plantContext['umur'],
             'urea_min_kg_per_pokok_tahun' => $doseReference['urea']['min'] ?? null,
@@ -625,9 +652,18 @@ class RbsService
             'kcl_karung_estimasi_tahunan' => $annualSnapshot['kcl_karung_estimasi_tahunan'],
             'urea_aplikasi_saat_ini' => $annualSnapshot['urea_aplikasi_saat_ini'],
             'kcl_aplikasi_saat_ini' => $annualSnapshot['kcl_aplikasi_saat_ini'],
+            // Pahan v2.5: snapshot luas/SPH dan tahap aktif
+            'luas_ha_snapshot' => $annualSnapshot['luas_ha_snapshot'] ?? $blok->luas_ha,
+            'sph_snapshot' => $annualSnapshot['sph_snapshot'] ?? $blok->sph,
+            'active_stage' => $currentApp['active_stage'],
+            'status_stage' => $currentApp['status_stage'],
+            'urea_sisa_tahunan' => $currentApp['urea_sisa_tahunan'],
+            'kcl_sisa_tahunan' => $currentApp['kcl_sisa_tahunan'],
+            'tanggal_minimum_tahap_berikutnya' => $currentApp['tanggal_minimum_tahap_berikutnya'],
+            'alasan_tahap' => $currentApp['reason'],
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.4'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.5'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -715,10 +751,10 @@ class RbsService
             'admin_id' => Auth::guard('admin')->id(),
             'tanggal_analisis' => now()->toDateString(),
             'rules_terpicu' => [],
-            'masalah_teridentifikasi' => ['Fase tanaman perlu diverifikasi — umur tepat 3 tahun'],
+            'masalah_teridentifikasi' => ['Fase tanaman perlu diverifikasi â€” umur tepat 3 tahun'],
             'rekomendasi_pupuk' => [],
             'saran_tindakan_utama' => 'Umur tanaman tepat 3 tahun. Verifikasi apakah tanaman sudah memasuki fase Tanaman Menghasilkan atau masih Tanaman Belum Menghasilkan sebelum rekomendasi dosis dapat dibuat.',
-            'status_kebutuhan_dominan' => 'Normal', // LEGACY ONLY — kompatibilitas histori, bukan keputusan operasional
+            'status_kebutuhan_dominan' => 'Normal', // LEGACY ONLY â€” kompatibilitas histori, bukan keputusan operasional
             'jumlah_rule_terpicu' => 0,
             'dosis_urea' => 0.0,
             'dosis_kcl' => 0.0,
@@ -762,9 +798,18 @@ class RbsService
             'kcl_karung_estimasi_tahunan' => null,
             'urea_aplikasi_saat_ini' => 0.0,
             'kcl_aplikasi_saat_ini' => 0.0,
+            // Pahan v2.5: snapshot luas/SPH
+            'luas_ha_snapshot' => $blok->luas_ha,
+            'sph_snapshot' => $blok->sph,
+            'active_stage' => 0,
+            'status_stage' => null,
+            'urea_sisa_tahunan' => null,
+            'kcl_sisa_tahunan' => null,
+            'tanggal_minimum_tahap_berikutnya' => null,
+            'alasan_tahap' => 'Fase tanaman perlu diverifikasi sebelum tahap aktif dapat ditentukan.',
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.4'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.5'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -781,7 +826,7 @@ class RbsService
         $completeness = $this->completenessService->evaluate($kondisi);
 
         // Build annual snapshot (kebutuhan tahunan tetap tersimpan)
-        $isApplicable = false; // Data tidak cukup → tidak layak diaplikasikan
+        $isApplicable = false; // Data tidak cukup â†’ tidak layak diaplikasikan
         $annualSnapshot = $this->snapshotBuilder->build($blok, $doseReference ?? ['urea' => ['estimate' => null], 'kcl' => ['estimate' => null]], $isApplicable);
 
         $hasil = $this->simpanDenganHistori($blok->id, [
@@ -790,9 +835,9 @@ class RbsService
             'tanggal_analisis' => now()->toDateString(),
             'rules_terpicu' => [],
             'masalah_teridentifikasi' => ['Data kondisi lahan belum lengkap untuk analisis'],
-            'rekomendasi_pupuk' => [['jenis_utama' => 'Pupuk Standar Rutin', 'dosis' => 'Sesuai jadwal pemupukan reguler — lengkapi data kondisi untuk rekomendasi spesifik']],
+            'rekomendasi_pupuk' => [['jenis_utama' => 'Pupuk Standar Rutin', 'dosis' => 'Sesuai jadwal pemupukan reguler â€” lengkapi data kondisi untuk rekomendasi spesifik']],
             'saran_tindakan_utama' => 'Data observasi kondisi lahan belum cukup untuk memberikan rekomendasi spesifik. Silakan lengkapi data kondisi (warna daun, pH tanah, kelembaban, kondisi drainase, dll) lalu jalankan analisis ulang.',
-            'status_kebutuhan_dominan' => 'Normal', // LEGACY ONLY — kompatibilitas histori, bukan keputusan operasional
+            'status_kebutuhan_dominan' => 'Normal', // LEGACY ONLY â€” kompatibilitas histori, bukan keputusan operasional
             'jumlah_rule_terpicu' => 0,
             'dosis_urea' => 0.0,
             'dosis_kcl' => 0.0,
@@ -801,14 +846,14 @@ class RbsService
             'catatan_dosis' => 'Data observasi belum cukup untuk menghasilkan jadwal operasional. Kebutuhan tahunan tetap tercatat. Lengkapi data kondisi lahan untuk rekomendasi lebih akurat.',
             'jadwal_pemupukan' => [],
             'validitas_rekomendasi' => 'Estimasi Visual',
-            'catatan_validitas' => 'Data observasi tidak lengkap — rekomendasi bersifat estimasi.',
+            'catatan_validitas' => 'Data observasi tidak lengkap â€” rekomendasi bersifat estimasi.',
             'confidence_score' => $reliability['score'],
             'confidence_label' => $this->mapReliabilityToLabel($reliability['score']),
             'catatan_confidence' => 'Tingkat Kelengkapan & Keandalan Data: '.$reliability['kategori'],
             'data_cukup' => false,
             'data_kurang' => $completeness['missing_fields'],
             'notifikasi_data' => $completeness['reason'],
-            // Kolom Pahan-v2.4 — menggunakan plantContext
+            // Kolom Pahan-v2.4 â€” menggunakan plantContext
             'fase_tanaman_snapshot' => $plantContext['fase'],
             'umur_tanaman_snapshot' => $plantContext['umur'],
             'urea_min_kg_per_pokok_tahun' => $doseReference['urea']['min'] ?? null,
@@ -838,9 +883,18 @@ class RbsService
             'kcl_karung_estimasi_tahunan' => $annualSnapshot['kcl_karung_estimasi_tahunan'],
             'urea_aplikasi_saat_ini' => $annualSnapshot['urea_aplikasi_saat_ini'],
             'kcl_aplikasi_saat_ini' => $annualSnapshot['kcl_aplikasi_saat_ini'],
+            // Pahan v2.5: snapshot luas/SPH
+            'luas_ha_snapshot' => $annualSnapshot['luas_ha_snapshot'] ?? $blok->luas_ha,
+            'sph_snapshot' => $annualSnapshot['sph_snapshot'] ?? $blok->sph,
+            'active_stage' => 0,
+            'status_stage' => null,
+            'urea_sisa_tahunan' => $annualSnapshot['urea_total_estimasi_tahunan'],
+            'kcl_sisa_tahunan' => $annualSnapshot['kcl_total_estimasi_tahunan'],
+            'tanggal_minimum_tahap_berikutnya' => null,
+            'alasan_tahap' => 'Data kondisi belum lengkap untuk menentukan tahap aktif.',
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.4'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.5'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -857,7 +911,7 @@ class RbsService
         $doseReference = $dosisRef['dose_reference'] ?? null;
 
         // Build annual snapshot
-        $isApplicable = false; // Data tidak cukup untuk diagnosis → tidak layak diaplikasikan
+        $isApplicable = false; // Data tidak cukup untuk diagnosis â†’ tidak layak diaplikasikan
         $annualSnapshot = $this->snapshotBuilder->build($blok, $doseReference ?? ['urea' => ['estimate' => null], 'kcl' => ['estimate' => null]], $isApplicable);
 
         $saranLengkapi = 'Data observasi belum lengkap untuk diagnosis spesifik. Lengkapi: '.implode(', ', $completeness['missing_fields']).'.';
@@ -867,10 +921,10 @@ class RbsService
             'admin_id' => Auth::guard('admin')->id(),
             'tanggal_analisis' => now()->toDateString(),
             'rules_terpicu' => [],
-            'masalah_teridentifikasi' => ['Data belum cukup untuk diagnosis spesifik — kebutuhan tahunan tetap dihitung'],
-            'rekomendasi_pupuk' => [['jenis_utama' => 'Pupuk Standar Rutin (Urea + KCl)', 'dosis' => 'Sesuai kebutuhan tahunan Pahan — lengkapi data untuk rekomendasi spesifik']],
+            'masalah_teridentifikasi' => ['Data belum cukup untuk diagnosis spesifik â€” kebutuhan tahunan tetap dihitung'],
+            'rekomendasi_pupuk' => [['jenis_utama' => 'Pupuk Standar Rutin (Urea + KCl)', 'dosis' => 'Sesuai kebutuhan tahunan Pahan â€” lengkapi data untuk rekomendasi spesifik']],
             'saran_tindakan_utama' => $saranLengkapi,
-            'status_kebutuhan_dominan' => 'Normal', // LEGACY ONLY — kompatibilitas histori, bukan keputusan operasional
+            'status_kebutuhan_dominan' => 'Normal', // LEGACY ONLY â€” kompatibilitas histori, bukan keputusan operasional
             'jumlah_rule_terpicu' => 0,
             'dosis_urea' => 0.0,
             'dosis_kcl' => 0.0,
@@ -886,7 +940,7 @@ class RbsService
             'data_cukup' => false,
             'data_kurang' => $completeness['missing_fields'],
             'notifikasi_data' => $completeness['reason'],
-            // Kolom Pahan-v2.4 — menggunakan plantContext
+            // Kolom Pahan-v2.4 â€” menggunakan plantContext
             'fase_tanaman_snapshot' => $plantContext['fase'],
             'umur_tanaman_snapshot' => $plantContext['umur'],
             'urea_min_kg_per_pokok_tahun' => $doseReference['urea']['min'] ?? null,
@@ -916,9 +970,18 @@ class RbsService
             'kcl_karung_estimasi_tahunan' => $annualSnapshot['kcl_karung_estimasi_tahunan'],
             'urea_aplikasi_saat_ini' => $annualSnapshot['urea_aplikasi_saat_ini'],
             'kcl_aplikasi_saat_ini' => $annualSnapshot['kcl_aplikasi_saat_ini'],
+            // Pahan v2.5: snapshot luas/SPH
+            'luas_ha_snapshot' => $annualSnapshot['luas_ha_snapshot'] ?? $blok->luas_ha,
+            'sph_snapshot' => $annualSnapshot['sph_snapshot'] ?? $blok->sph,
+            'active_stage' => 0,
+            'status_stage' => null,
+            'urea_sisa_tahunan' => $annualSnapshot['urea_total_estimasi_tahunan'],
+            'kcl_sisa_tahunan' => $annualSnapshot['kcl_total_estimasi_tahunan'],
+            'tanggal_minimum_tahap_berikutnya' => null,
+            'alasan_tahap' => 'Data observasi belum cukup untuk diagnosis — tahap belum ditentukan.',
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.4'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.5'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -962,9 +1025,20 @@ class RbsService
         $isApplicable = $window ? $window['layak'] : true;
         $annualSnapshot = $this->snapshotBuilder->build($blok, $doseReference ?? ['urea' => ['estimate' => null], 'kcl' => ['estimate' => null]], $isApplicable);
 
-        // Jadwal baru via FertilizationScheduleService (v2.4: kosong jika tidak layak)
+        // Pahan v2.5: Hitung aplikasi saat ini via CurrentApplicationCalculator
+        $realizationSummary = $this->realizationService->getRealizationSummary($blok);
+        $currentApp = $this->currentAppCalculator->calculate([
+            'annual_snapshot' => $annualSnapshot,
+            'window_result' => $window ?? ['layak' => true],
+            'realization_summary' => $realizationSummary,
+            'analysis_date' => now(),
+        ]);
+        $annualSnapshot['urea_aplikasi_saat_ini'] = $currentApp['urea_aplikasi_saat_ini'];
+        $annualSnapshot['kcl_aplikasi_saat_ini'] = $currentApp['kcl_aplikasi_saat_ini'];
+
+        // Jadwal via FertilizationScheduleService (v2.5: menggunakan currentApp)
         $jadwal = $this->scheduleService->generate(
-            ['dosis_urea' => $dosisRef['dosis_urea'] ?? 0, 'dosis_kcl' => $dosisRef['dosis_kcl'] ?? 0, 'total_urea' => $annualSnapshot['urea_aplikasi_saat_ini'], 'total_kcl' => $annualSnapshot['kcl_aplikasi_saat_ini']],
+            ['dosis_urea' => $dosisRef['dosis_urea'] ?? 0, 'dosis_kcl' => $dosisRef['dosis_kcl'] ?? 0, 'total_urea' => $currentApp['urea_aplikasi_saat_ini'], 'total_kcl' => $currentApp['kcl_aplikasi_saat_ini']],
             $kondisi,
             $blok,
             $window ?? ['layak' => true, 'alasan' => []],
@@ -993,7 +1067,7 @@ class RbsService
             'masalah_teridentifikasi' => ['Tidak ada masalah teridentifikasi'],
             'rekomendasi_pupuk' => [['jenis_utama' => 'Pupuk Standar Rutin', 'dosis' => 'Sesuai jadwal pemupukan reguler']],
             'saran_tindakan_utama' => 'Lanjutkan program pemupukan standar. Kondisi lahan dalam batas normal.',
-            'status_kebutuhan_dominan' => 'Normal', // LEGACY ONLY — kompatibilitas histori, bukan keputusan operasional
+            'status_kebutuhan_dominan' => 'Normal', // LEGACY ONLY â€” kompatibilitas histori, bukan keputusan operasional
             'jumlah_rule_terpicu' => 0,
             'dosis_urea' => $isApplicable ? ($dosisRef['dosis_urea'] ?? 0) : 0.0,
             'dosis_kcl' => $isApplicable ? ($dosisRef['dosis_kcl'] ?? 0) : 0.0,
@@ -1039,9 +1113,18 @@ class RbsService
             'kcl_karung_estimasi_tahunan' => $annualSnapshot['kcl_karung_estimasi_tahunan'],
             'urea_aplikasi_saat_ini' => $annualSnapshot['urea_aplikasi_saat_ini'],
             'kcl_aplikasi_saat_ini' => $annualSnapshot['kcl_aplikasi_saat_ini'],
+            // Pahan v2.5: snapshot luas/SPH dan tahap aktif
+            'luas_ha_snapshot' => $annualSnapshot['luas_ha_snapshot'] ?? $blok->luas_ha,
+            'sph_snapshot' => $annualSnapshot['sph_snapshot'] ?? $blok->sph,
+            'active_stage' => $currentApp['active_stage'],
+            'status_stage' => $currentApp['status_stage'],
+            'urea_sisa_tahunan' => $currentApp['urea_sisa_tahunan'],
+            'kcl_sisa_tahunan' => $currentApp['kcl_sisa_tahunan'],
+            'tanggal_minimum_tahap_berikutnya' => $currentApp['tanggal_minimum_tahap_berikutnya'],
+            'alasan_tahap' => $currentApp['reason'],
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.4'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.5'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -1115,7 +1198,7 @@ class RbsService
         $umur = $plantContext['umur'] ?? null;
         $fase = $plantContext['fase'] ?? null;
 
-        // Jika umur tepat 3 dan fase belum diverifikasi → tidak bisa menentukan dosis
+        // Jika umur tepat 3 dan fase belum diverifikasi â†’ tidak bisa menentukan dosis
         if ($umur === 3 && $fase === null && ($plantContext['needs_phase_verification'] ?? false)) {
             return [
                 'dosis_urea' => null,
@@ -1125,7 +1208,7 @@ class RbsService
                 'dose_reference' => $this->doseService->getDoseReferenceForContext($blok, $umur, 'TBM'),
                 'calculation' => null,
                 'window' => null,
-                'peringatan' => ['Umur tepat 3 tahun dan fase belum diverifikasi — tidak dapat menentukan kelompok dosis.'],
+                'peringatan' => ['Umur tepat 3 tahun dan fase belum diverifikasi â€” tidak dapat menentukan kelompok dosis.'],
                 'status_verifikasi_fase' => 'PERLU_VERIFIKASI_FASE',
             ];
         }

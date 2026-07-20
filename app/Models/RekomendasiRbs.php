@@ -7,6 +7,7 @@ use App\Enums\PlantConditionStatus;
 use App\Enums\PlantPhase;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RekomendasiRbs extends Model
 {
@@ -73,6 +74,15 @@ class RekomendasiRbs extends Model
         'kcl_karung_estimasi_tahunan',
         'urea_aplikasi_saat_ini',
         'kcl_aplikasi_saat_ini',
+        // Pahan-v2.5 fields
+        'luas_ha_snapshot',
+        'sph_snapshot',
+        'active_stage',
+        'status_stage',
+        'urea_sisa_tahunan',
+        'kcl_sisa_tahunan',
+        'tanggal_minimum_tahap_berikutnya',
+        'alasan_tahap',
     ];
 
     protected function casts(): array
@@ -96,6 +106,10 @@ class RekomendasiRbs extends Model
             'total_kcl' => 'double',
             'confidence_score' => 'integer',
             'kelengkapan_data_score' => 'integer',
+            'tanggal_minimum_tahap_berikutnya' => 'date',
+            'luas_ha_snapshot' => 'double',
+            'sph_snapshot' => 'integer',
+            'active_stage' => 'integer',
         ];
     }
 
@@ -107,6 +121,11 @@ class RekomendasiRbs extends Model
     public function kondisiLahan(): BelongsTo
     {
         return $this->belongsTo(KondisiLahan::class, 'kondisi_lahan_id');
+    }
+
+    public function realisasiPemupukans(): HasMany
+    {
+        return $this->hasMany(RealisasiPemupukan::class, 'rekomendasi_rbs_id');
     }
 
     public function admin(): BelongsTo

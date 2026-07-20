@@ -451,12 +451,12 @@
             </div>
         </div>
         @elseif($ureaAplikasi > 0 || $kclAplikasi > 0)
-        <p style="font-size: 8.5px; color: #6b7280; font-weight: 600; margin-top: 8px; margin-bottom: 4px;">APLIKASI SAAT INI:</p>
+        <p style="font-size: 8.5px; color: #6b7280; font-weight: 600; margin-top: 8px; margin-bottom: 4px;">TAHAP AKTIF SAAT INI{{ $rekomendasiRbs->active_stage ? ' (TAHAP ' . $rekomendasiRbs->active_stage . ')' : '' }}:</p>
         <table class="logistik-table">
             <thead>
                 <tr>
                     <th>Jenis Pupuk</th>
-                    <th>Total Aplikasi</th>
+                    <th>Jumlah Tahap Aktif</th>
                     <th>Karung (50 kg)</th>
                 </tr>
             </thead>
@@ -473,6 +473,9 @@
                 </tr>
             </tbody>
         </table>
+        @if($rekomendasiRbs->alasan_tahap)
+        <p style="font-size: 9px; color: #475569; margin-top: 2px;">{{ $rekomendasiRbs->alasan_tahap }}</p>
+        @endif
         @endif
 
         <p style="font-size: 9px; color: #6b7280; text-align: right;">*1 karung = 50 kg · Pembulatan karung ke atas (ceil)</p>
@@ -646,11 +649,6 @@
     {{-- ═══ 12. DISCLAIMER ═══ --}}
     <div class="disclaimer">
         <strong>Disclaimer:</strong> Estimasi sistem merupakan nilai kerja dari rentang referensi Pahan (2013) dan bukan pengganti analisis laboratorium atau rekomendasi agronomis lapangan. Perhitungan kuantitatif dibatasi pada Urea dan MOP/KCl. Unsur P, Mg, B, dan unsur lain tetap dapat diperlukan sesuai kondisi tanaman dan hasil evaluasi ahli.
-    </div>
-
-    {{-- ═══ DISCLAIMER TAMBAHAN ═══ --}}
-    <div style="margin-top: 12px; padding: 8px 10px; background: #fefce8; border: 1px solid #fde047; border-radius: 6px; font-size: 8.5px; color: #713f12; line-height: 1.5;">
-        <strong>⚠️ Catatan Teknis:</strong> Estimasi sistem merupakan nilai kerja dari rentang referensi Pahan (2013) dan bukan pengganti analisis laboratorium atau rekomendasi agronomis lapangan. Perhitungan kuantitatif dibatasi pada Urea dan MOP/KCl. Unsur P, Mg, B, dan unsur lain tetap dapat diperlukan sesuai kondisi tanaman dan hasil evaluasi ahli.
     </div>
 
 

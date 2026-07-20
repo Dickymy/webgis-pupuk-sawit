@@ -28,7 +28,12 @@ class AnnualFertilizerSnapshotBuilder
     private const KG_PER_KARUNG = 50;
 
     /**
-     * Bangun snapshot kebutuhan tahunan dan aplikasi saat ini.
+     * Bangun snapshot kebutuhan tahunan.
+     *
+     * PAHAN v2.5: Tanggung jawab "aplikasi saat ini" dipindah ke CurrentApplicationCalculator.
+     * Service ini menghitung kebutuhan tahunan dan menyimpan snapshot luas/SPH.
+     * Field urea_aplikasi_saat_ini dan kcl_aplikasi_saat_ini tetap ada untuk backward compat
+     * tapi diisi 50% jika layak (default sebelum CurrentApplicationCalculator override).
      *
      * @param  array  $doseReference  Output dari PahanDoseReferenceService::getDoseReferenceForContext()
      * @param  bool  $isApplicable  Apakah aplikasi saat ini layak (dari FertilizationWindowService)
@@ -43,12 +48,16 @@ class AnnualFertilizerSnapshotBuilder
      *   kcl_karung_estimasi_tahunan: ?int,
      *   urea_aplikasi_saat_ini: float,
      *   kcl_aplikasi_saat_ini: float,
-     *   jumlah_pokok: int
+     *   jumlah_pokok: int,
+     *   luas_ha_snapshot: float,
+     *   sph_snapshot: int
      * }
      */
     public function build(BlokLahan $blok, array $doseReference, bool $isApplicable): array
     {
-        $jumlahPokok = (int) ($blok->luas_ha * $blok->sph);
+        $luasHa = (float) $blok->luas_ha;
+        $sph = (int) $blok->sph;
+        $jumlahPokok = (int) ($luasHa * $sph);
 
         // Jika dosis referensi belum tersedia (fase belum ditentukan, dll)
         if ($doseReference['urea']['estimate'] === null || $doseReference['kcl']['estimate'] === null) {
@@ -64,6 +73,8 @@ class AnnualFertilizerSnapshotBuilder
                 'urea_aplikasi_saat_ini' => 0.0,
                 'kcl_aplikasi_saat_ini' => 0.0,
                 'jumlah_pokok' => $jumlahPokok,
+                'luas_ha_snapshot' => $luasHa,
+                'sph_snapshot' => $sph,
             ];
         }
 
@@ -80,9 +91,9 @@ class AnnualFertilizerSnapshotBuilder
         $ureaKarung = (int) ceil($ureaEstTahunan / self::KG_PER_KARUNG);
         $kclKarung = (int) ceil($kclEstTahunan / self::KG_PER_KARUNG);
 
-        // Aplikasi saat ini: 0 jika tidak layak, estimasi tahunan jika layak
-        $ureaAplikasiSaatIni = $isApplicable ? $ureaEstTahunan : 0.0;
-        $kclAplikasiSaatIni = $isApplicable ? $kclEstTahunan : 0.0;
+        // PAHAN v2.5: Aplikasi saat ini = 50% jika layak (akan di-override oleh CurrentApplicationCalculator)
+        $ureaAplikasiSaatIni = $isApplicable ? round($ureaEstTahunan * 0.50, 2) : 0.0;
+        $kclAplikasiSaatIni = $isApplicable ? round($kclEstTahunan * 0.50, 2) : 0.0;
 
         return [
             'urea_total_min_tahunan' => $ureaMinTahunan,
@@ -96,6 +107,8 @@ class AnnualFertilizerSnapshotBuilder
             'urea_aplikasi_saat_ini' => $ureaAplikasiSaatIni,
             'kcl_aplikasi_saat_ini' => $kclAplikasiSaatIni,
             'jumlah_pokok' => $jumlahPokok,
+            'luas_ha_snapshot' => $luasHa,
+            'sph_snapshot' => $sph,
         ];
     }
 }

@@ -30,8 +30,9 @@ class FertilizationScheduleService
     /**
      * Generate jadwal pemupukan berdasarkan konteks tanaman dan kelayakan.
      *
-     * Pahan v2.4: Jadwal KOSONG ([]) jika belum layak.
-     * Informasi penundaan disimpan pada status_kelayakan_aplikasi dan alasan_kelayakan.
+     * Pahan v2.5: Jadwal KOSONG ([]) jika belum layak.
+     * Tahap persiapan (gulma/hama) menjadi prasyarat_persiapan, bukan tahap pemupukan bernomor.
+     * total_urea/total_kcl berasal dari CurrentApplicationCalculator (tahap aktif saat ini).
      *
      * @param  array  $doseData  ['dosis_urea', 'dosis_kcl', 'total_urea', 'total_kcl']
      * @param  array  $windowResult  Output dari FertilizationWindowService::evaluate()
@@ -70,47 +71,28 @@ class FertilizationScheduleService
         $metodeUrea = $this->getMetodeAplikasi($umur, 'urea');
         $metodeKcl = $this->getMetodeAplikasi($umur, 'kcl');
 
-        // Rule 8: Default 50/50
-        $persen1 = self::SPLIT_RATIO[0];
-        $persen2 = self::SPLIT_RATIO[1];
-
         $jadwal = [];
 
-        // Tahap persiapan jika ada gulma/hama
+        // Pahan v2.5: Persiapan gulma/hama menjadi prasyarat, bukan tahap pemupukan bernomor
+        $prasyaratPersiapan = null;
         if ($kondisi->ada_gulma_dominan || $kondisi->ada_serangan_hama) {
-            $jadwal[] = $this->tahapPersiapan($kondisi);
+            $prasyaratPersiapan = $this->tahapPersiapan($kondisi);
         }
 
-        // Rule 3: Tahap 1 - Rencana
+        // Pahan v2.5: Karena total_urea/total_kcl sudah dari CurrentApplicationCalculator
+        // (yaitu jumlah tahap aktif saat ini), jadwal cukup satu entry operasional.
         $jadwal[] = [
-            'tahap' => count($jadwal) + 1,
-            'nama_tahap' => "Tahap 1: Aplikasi Urea + KCl ({$persen1}%)",
+            'tahap' => 1,
+            'nama_tahap' => 'Aplikasi Urea + KCl — Tahap Aktif',
             'estimasi_waktu' => 'Saat curah hujan dalam rentang 100-250 mm/bulan',
-            'persentase_urea' => $persen1,
-            'persentase_kcl' => $persen1,
-            'urea_kg' => round(($totalUrea * $persen1) / 100, 2),
-            'kcl_kg' => round(($totalKcl * $persen1) / 100, 2),
-            'urea_per_pokok' => round(($dosisUrea * $persen1) / 100, 3),
-            'kcl_per_pokok' => round(($dosisKcl * $persen1) / 100, 3),
+            'urea_kg' => round($totalUrea, 2),
+            'kcl_kg' => round($totalKcl, 2),
+            'urea_per_pokok' => $dosisUrea > 0 ? round($totalUrea / max(1, (int) ($blok->luas_ha * $blok->sph)), 3) : 0,
+            'kcl_per_pokok' => $dosisKcl > 0 ? round($totalKcl / max(1, (int) ($blok->luas_ha * $blok->sph)), 3) : 0,
             'metode_aplikasi' => $metodeUrea.' '.$metodeKcl,
             'catatan' => "Fase: {$faseLabel}. Aplikasi dilakukan saat curah hujan sesuai (100-250 mm/bulan). Pastikan piringan bersih sebelum pemupukan.",
             'status_tahap' => 'Rencana',
-        ];
-
-        // Rule 4: Tahap 2 - Menunggu Realisasi Tahap 1
-        $jadwal[] = [
-            'tahap' => count($jadwal) + 1,
-            'nama_tahap' => "Tahap 2: Aplikasi Urea + KCl ({$persen2}%)",
-            'estimasi_waktu' => 'Minimal '.self::MIN_INTERVAL_DAYS.' hari setelah realisasi Tahap 1',
-            'persentase_urea' => $persen2,
-            'persentase_kcl' => $persen2,
-            'urea_kg' => round(($totalUrea * $persen2) / 100, 2),
-            'kcl_kg' => round(($totalKcl * $persen2) / 100, 2),
-            'urea_per_pokok' => round(($dosisUrea * $persen2) / 100, 3),
-            'kcl_per_pokok' => round(($dosisKcl * $persen2) / 100, 3),
-            'metode_aplikasi' => $metodeUrea.' '.$metodeKcl,
-            'catatan' => "Fase: {$faseLabel}. Tunggu minimal ".self::MIN_INTERVAL_DAYS.' hari setelah realisasi Tahap 1. Pastikan curah hujan dalam rentang layak.',
-            'status_tahap' => 'Menunggu Realisasi Tahap 1',
+            'prasyarat_persiapan' => $prasyaratPersiapan,
         ];
 
         return $jadwal;
