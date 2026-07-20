@@ -436,7 +436,39 @@
         </button>
     </form>
     @endif
-    <a href="{{ route('laporan.show', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50 transition-colors">
+
+    {{-- Tombol Realisasi Pemupukan (Pahan v2.6) --}}
+    @php
+        $statusStage = $rbs->status_stage ?? null;
+        $activeStage = $rbs->active_stage ?? 0;
+        $showRealisasi = in_array($statusStage, ['TAHAP_1_SIAP', 'TAHAP_1_SEBAGIAN', 'TAHAP_2_SIAP']);
+    @endphp
+    @if($showRealisasi)
+        @if($statusStage === 'TAHAP_1_SIAP')
+        <a href="{{ route('realisasi-pemupukan.create', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
+            📝 Catat Realisasi Tahap 1
+        </a>
+        @elseif($statusStage === 'TAHAP_1_SEBAGIAN')
+        <a href="{{ route('realisasi-pemupukan.create', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
+            📝 Lanjutkan Realisasi Tahap 1
+        </a>
+        @elseif($statusStage === 'TAHAP_2_SIAP')
+        <a href="{{ route('realisasi-pemupukan.create', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
+            📝 Catat Realisasi Tahap 2
+        </a>
+        @endif
+    @elseif($statusStage === 'SELESAI_TAHUNAN')
+        <span class="inline-flex items-center gap-2 px-4 py-2.5 bg-green-100 text-green-800 text-sm font-medium rounded-xl border border-green-200">
+            ✅ Kebutuhan Tahunan Selesai
+        </span>
+    @endif
+
+    {{-- Tombol Histori Realisasi --}}
+    <a href="{{ route('realisasi-pemupukan.index', ['blok_lahan_id' => $blokLahan->id]) }}" class="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+        📋 Lihat Histori Realisasi
+    </a>
+
+    <a href="{{ route('laporan.show', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
         📄 Lihat Laporan
     </a>
     <a href="{{ route('laporan.pdf', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 border border-red-200 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 transition-colors">

@@ -42,18 +42,41 @@ return new class extends Migration
         });
 
         // Migrate data lama: copy jumlah_urea_realisasi → urea_realisasi_kg jika ada
-        if (Schema::hasColumn('realisasi_pemupukans', 'jumlah_urea_realisasi')) {
+        // Tangani masing-masing kolom secara terpisah (kolom mungkin tidak semua tersedia)
+        $hasUreaLama = Schema::hasColumn('realisasi_pemupukans', 'jumlah_urea_realisasi');
+        $hasKclLama = Schema::hasColumn('realisasi_pemupukans', 'jumlah_kcl_realisasi');
+
+        if ($hasUreaLama && $hasKclLama) {
             DB::statement('
                 UPDATE realisasi_pemupukans
                 SET urea_realisasi_kg = jumlah_urea_realisasi,
                     kcl_realisasi_kg = jumlah_kcl_realisasi
                 WHERE urea_realisasi_kg = 0 AND jumlah_urea_realisasi > 0
             ');
+        } elseif ($hasUreaLama) {
+            DB::statement('
+                UPDATE realisasi_pemupukans
+                SET urea_realisasi_kg = jumlah_urea_realisasi
+                WHERE urea_realisasi_kg = 0 AND jumlah_urea_realisasi > 0
+            ');
+        } elseif ($hasKclLama) {
+            DB::statement('
+                UPDATE realisasi_pemupukans
+                SET kcl_realisasi_kg = jumlah_kcl_realisasi
+                WHERE kcl_realisasi_kg = 0 AND jumlah_kcl_realisasi > 0
+            ');
         }
     }
 
     public function down(): void
     {
+        // Drop foreign key SEBELUM drop column (fix MySQL constraint issue)
+        Schema::table('realisasi_pemupukans', function (Blueprint $table) {
+            if (Schema::hasColumn('realisasi_pemupukans', 'blok_lahan_id')) {
+                $table->dropForeign(['blok_lahan_id']);
+            }
+        });
+
         Schema::table('realisasi_pemupukans', function (Blueprint $table) {
             $columns = ['blok_lahan_id', 'tahap', 'urea_rencana_kg', 'kcl_rencana_kg', 'urea_realisasi_kg', 'kcl_realisasi_kg', 'status_realisasi'];
             foreach ($columns as $col) {

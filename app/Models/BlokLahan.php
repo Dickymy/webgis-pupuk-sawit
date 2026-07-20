@@ -53,6 +53,11 @@ class BlokLahan extends Model
         return $this->hasMany(RekomendasiRbs::class, 'blok_lahan_id');
     }
 
+    public function realisasiPemupukans(): HasMany
+    {
+        return $this->hasMany(RealisasiPemupukan::class, 'blok_lahan_id');
+    }
+
     public function rekomendasiRbsTerbaru(): HasOne
     {
         return $this->hasOne(RekomendasiRbs::class, 'blok_lahan_id')

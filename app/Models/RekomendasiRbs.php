@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ApplicationFeasibilityStatus;
 use App\Enums\PlantConditionStatus;
 use App\Enums\PlantPhase;
+use App\Services\CurrentApplicationCalculator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -228,5 +229,43 @@ class RekomendasiRbs extends Model
     public function getLabelKelayakanAttribute(): string
     {
         return ApplicationFeasibilityStatus::labelFromValue($this->status_kelayakan_aplikasi);
+    }
+
+    // ─── Pahan v2.6: Helper Tahap Aktif ─────────────────────
+
+    /**
+     * Label status tahap (dari CurrentApplicationCalculator).
+     */
+    public function getLabelStatusStageAttribute(): string
+    {
+        return CurrentApplicationCalculator::labelStatusStage($this->status_stage);
+    }
+
+    /**
+     * Warna badge status tahap.
+     */
+    public function getWarnaStatusStageAttribute(): string
+    {
+        return CurrentApplicationCalculator::warnaStatusStage($this->status_stage);
+    }
+
+    /**
+     * Cek apakah tahap aktif siap untuk realisasi.
+     */
+    public function getIsTahapSiapAttribute(): bool
+    {
+        return in_array($this->status_stage, [
+            CurrentApplicationCalculator::TAHAP_1_SIAP,
+            CurrentApplicationCalculator::TAHAP_1_SEBAGIAN,
+            CurrentApplicationCalculator::TAHAP_2_SIAP,
+        ]);
+    }
+
+    /**
+     * Cek apakah program tahunan sudah selesai.
+     */
+    public function getIsProgramSelesaiAttribute(): bool
+    {
+        return $this->status_stage === CurrentApplicationCalculator::SELESAI_TAHUNAN;
     }
 }
