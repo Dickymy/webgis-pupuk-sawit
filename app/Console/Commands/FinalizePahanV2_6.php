@@ -159,6 +159,13 @@ class FinalizePahanV2_6 extends Command
     {
         $this->info('▸ Memeriksa logika realisasi...');
 
+        // Skip jika kolom v2.6 belum ada di database
+        if (! Schema::hasColumn('realisasi_pemupukans', 'tahun_program')) {
+            $this->comment('  Info: Kolom v2.6 belum tersedia di database. Jalankan migration terlebih dahulu.');
+
+            return;
+        }
+
         // Realisasi batal yang mungkin masih terhitung
         $batalCount = RealisasiPemupukan::where('status_realisasi', 'BATAL')->count();
         if ($batalCount > 0) {
