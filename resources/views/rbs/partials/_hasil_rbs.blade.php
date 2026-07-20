@@ -209,6 +209,20 @@ $warna = match($rbs->status_kebutuhan_dominan) {
     </div>
     @endif
 
+    {{-- Tahap Aktif Saat Ini (Pahan v2.5) --}}
+    @if($rbs->active_stage && $rbs->status_stage)
+    <div class="bg-white rounded-xl border border-slate-200 p-3">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Tahap Aktif</p>
+        <p class="text-xs text-slate-700"><span class="font-bold">Tahap {{ $rbs->active_stage }}:</span> {{ \App\Services\CurrentApplicationCalculator::labelStatusStage($rbs->status_stage) }}</p>
+        @if(($rbs->urea_aplikasi_saat_ini ?? 0) > 0)
+        <p class="text-xs text-emerald-700 font-semibold mt-1">Urea: {{ number_format($rbs->urea_aplikasi_saat_ini, 1) }} kg · KCl: {{ number_format($rbs->kcl_aplikasi_saat_ini, 1) }} kg</p>
+        @endif
+        @if($rbs->alasan_tahap)
+        <p class="text-[10px] text-slate-500 mt-0.5">{{ $rbs->alasan_tahap }}</p>
+        @endif
+    </div>
+    @endif
+
     {{-- Catatan Dosis Kontekstual --}}
     @if($rbs->catatan_dosis)
     @php

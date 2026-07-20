@@ -117,6 +117,14 @@
     <div class="mt-2 bg-amber-50/80 border border-amber-200 rounded-lg p-2">
         <p class="text-[10px] text-amber-700 font-medium">⏸️ Aplikasi saat ini: <strong>0 kg</strong> — {{ \App\Enums\ApplicationFeasibilityStatus::labelFromValue($rbs->status_kelayakan_aplikasi) }}. Kebutuhan tahunan tetap tercatat di atas.</p>
     </div>
+    @elseif(($rbs->urea_aplikasi_saat_ini ?? 0) > 0 || ($rbs->kcl_aplikasi_saat_ini ?? 0) > 0)
+    <div class="mt-2 bg-emerald-50/80 border border-emerald-200 rounded-lg p-2">
+        <p class="text-[10px] text-emerald-800 font-bold">✅ Tahap Aktif{{ $rbs->active_stage ? ' (Tahap ' . $rbs->active_stage . ')' : '' }}:</p>
+        <p class="text-xs text-emerald-700 font-semibold mt-0.5">Urea: {{ number_format($rbs->urea_aplikasi_saat_ini, 1) }} kg · KCl: {{ number_format($rbs->kcl_aplikasi_saat_ini, 1) }} kg</p>
+        @if($rbs->alasan_tahap)
+        <p class="text-[10px] text-emerald-600 mt-0.5">{{ $rbs->alasan_tahap }}</p>
+        @endif
+    </div>
     @endif
 
     {{-- Kelayakan Aplikasi --}}
