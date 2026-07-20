@@ -11,7 +11,7 @@
     <form method="GET" action="{{ route('realisasi-pemupukan.index') }}" class="flex flex-wrap gap-3 items-end" data-no-prevent-double="true">
         <div>
             <label class="text-[10px] text-slate-500 uppercase font-semibold block mb-1">Status</label>
-            <select name="status_realisasi" class="text-sm border-slate-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-1.5">
+            <select name="status_realisasi" class="text-sm border-slate-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-1.5 pr-8" style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22%236b7280%22><path fill-rule=%22evenodd%22 d=%22M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z%22 clip-rule=%22evenodd%22/></svg>');background-position:right 0.5rem center;background-repeat:no-repeat;background-size:1rem;">
                 <option value="">Semua</option>
                 <option value="SELESAI" {{ request('status_realisasi') === 'SELESAI' ? 'selected' : '' }}>Selesai</option>
                 <option value="SEBAGIAN" {{ request('status_realisasi') === 'SEBAGIAN' ? 'selected' : '' }}>Sebagian</option>
@@ -20,7 +20,7 @@
         </div>
         <div>
             <label class="text-[10px] text-slate-500 uppercase font-semibold block mb-1">Tahun</label>
-            <select name="tahun_program" class="text-sm border-slate-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-1.5">
+            <select name="tahun_program" class="text-sm border-slate-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-1.5 pr-8" style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22%236b7280%22><path fill-rule=%22evenodd%22 d=%22M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z%22 clip-rule=%22evenodd%22/></svg>');background-position:right 0.5rem center;background-repeat:no-repeat;background-size:1rem;">
                 <option value="">Semua</option>
                 @for($y = now()->year; $y >= 2024; $y--)
                 <option value="{{ $y }}" {{ request('tahun_program') == $y ? 'selected' : '' }}>{{ $y }}</option>
