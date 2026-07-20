@@ -388,7 +388,7 @@
                 KCl: {{ number_format($rekomendasiRbs->kcl_min_kg_per_pokok_tahun, 2) }}–{{ number_format($rekomendasiRbs->kcl_max_kg_per_pokok_tahun, 2) }} kg/pokok/tahun
             </p>
             <p style="color: #64748b; font-size: 8px; margin-top: 2px;">
-                Fase: {{ $rekomendasiRbs->fase_tanaman_snapshot ?? '-' }} · Umur: {{ $rekomendasiRbs->umur_tanaman_snapshot ?? '-' }} thn · Strategi: {{ $rekomendasiRbs->strategi_estimasi_dosis ?? 'midpoint' }}
+                Fase: {{ $rekomendasiRbs->label_fase }} · Umur saat observasi: {{ $rekomendasiRbs->umur_tanaman_snapshot ?? '-' }} thn · Strategi: {{ $rekomendasiRbs->strategi_estimasi_dosis ?? 'midpoint' }}
             </p>
         </div>
         @endif

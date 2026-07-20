@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\ApplicationFeasibilityStatus;
+use App\Enums\PlantConditionStatus;
+use App\Enums\PlantPhase;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -175,5 +178,31 @@ class RekomendasiRbs extends Model
     public function scopeLatest_only($query)
     {
         return $query->where('is_latest', true);
+    }
+
+    // ─── Label Helpers (v2.2) ────────────────────────────────────
+
+    /**
+     * Label fase tanaman dari snapshot (tanpa singkatan).
+     */
+    public function getLabelFaseAttribute(): string
+    {
+        return PlantPhase::labelFromValue($this->fase_tanaman_snapshot);
+    }
+
+    /**
+     * Label status kondisi tanaman.
+     */
+    public function getLabelKondisiTanamanAttribute(): string
+    {
+        return PlantConditionStatus::labelFromValue($this->status_kondisi_tanaman);
+    }
+
+    /**
+     * Label status kelayakan aplikasi.
+     */
+    public function getLabelKelayakanAttribute(): string
+    {
+        return ApplicationFeasibilityStatus::labelFromValue($this->status_kelayakan_aplikasi);
     }
 }

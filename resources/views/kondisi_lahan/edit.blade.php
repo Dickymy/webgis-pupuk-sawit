@@ -67,7 +67,7 @@
             <div class="flex items-start gap-2.5">
                 <span class="text-lg flex-shrink-0">🌱</span>
                 <div>
-                    <p class="text-xs font-bold text-blue-800">Tanaman Belum Menghasilkan (TBM)</p>
+                    <p class="text-xs font-bold text-blue-800">Tanaman Belum Menghasilkan</p>
                     <p class="text-xs text-blue-700 mt-0.5 leading-relaxed">Blok ini berusia &lt;3 tahun dan belum berbuah. Kondisi tandan otomatis diset "Tidak Ada Tandan".</p>
                 </div>
             </div>

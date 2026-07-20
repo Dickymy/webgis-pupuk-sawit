@@ -90,7 +90,7 @@ class FertilizationWindowService
         $terlambat = false;
 
         if ($kondisi->tanggal_pemupukan_terakhir) {
-            $intervalHari = $kondisi->tanggal_pemupukan_terakhir->diffInDays($tanggalRencana);
+            $intervalHari = (int) $kondisi->tanggal_pemupukan_terakhir->diffInDays($tanggalRencana);
 
             if ($intervalHari < $minInterval) {
                 $statuses[] = self::TUNDA_INTERVAL;

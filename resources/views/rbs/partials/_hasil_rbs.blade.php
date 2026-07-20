@@ -152,17 +152,24 @@ $warna = match($rbs->status_kebutuhan_dominan) {
                 $waktuDisplay = $pupuk['waktu'] ?? '';
                 
                 // Override dosis dan cara aplikasi agar sinkron dengan kalkulasi kriteria lahan (Urea & KCl)
-                if (str_contains(strtolower($pupuk['jenis_utama']), 'urea') && $rbs->dosis_urea) {
-                    $dosisDisplay = number_format($rbs->dosis_urea, 2) . ' kg/pokok (Total Blok: ' . number_format($rbs->total_urea, 1) . ' kg)';
+                // PERBAIKAN v2.2: Tampilkan kebutuhan tahunan, bukan dosis aplikasi saat ini (yang bisa 0 saat ditunda)
+                $ureaPerPokok = $rbs->urea_estimasi_kg_per_pokok_tahun ?? $rbs->dosis_urea;
+                $kclPerPokok = $rbs->kcl_estimasi_kg_per_pokok_tahun ?? $rbs->dosis_kcl;
+                $jmlPokok = $rbs->jumlah_pokok_snapshot ?? 0;
+                $ureaTotalTahunan = $ureaPerPokok ? round($ureaPerPokok * $jmlPokok, 1) : $rbs->total_urea;
+                $kclTotalTahunan = $kclPerPokok ? round($kclPerPokok * $jmlPokok, 1) : $rbs->total_kcl;
+
+                if (str_contains(strtolower($pupuk['jenis_utama']), 'urea') && $ureaPerPokok) {
+                    $dosisDisplay = number_format($ureaPerPokok, 2) . ' kg/pokok/tahun (Total Blok: ' . number_format($ureaTotalTahunan, 1) . ' kg)';
                     $umurTanaman = $blokLahan->umur_tanaman;
                     $kategoriUmur = $blokLahan->kategori_umur;
                     if ($kategoriUmur === 'Belum Menghasilkan' || ($umurTanaman !== null && $umurTanaman < 3)) {
-                        $metodeDisplay = 'Ditabur melingkar merata (lebar band 10-20 cm) sekitar 30-50 cm dari pangkal batang sawit TBM.';
+                        $metodeDisplay = 'Ditabur melingkar merata (lebar band 10-20 cm) sekitar 30-50 cm dari pangkal batang sawit (Tanaman Belum Menghasilkan).';
                     } else {
                         $metodeDisplay = 'Ditabur melingkar merata pada piringan bersih berjarak 1.5 - 2.0 meter dari pangkal batang (di bawah proyeksi tajuk terluar pelepah).';
                     }
-                } elseif (str_contains(strtolower($pupuk['jenis_utama']), 'kcl') && $rbs->dosis_kcl) {
-                    $dosisDisplay = number_format($rbs->dosis_kcl, 2) . ' kg/pokok (Total Blok: ' . number_format($rbs->total_kcl, 1) . ' kg)';
+                } elseif (str_contains(strtolower($pupuk['jenis_utama']), 'kcl') && $kclPerPokok) {
+                    $dosisDisplay = number_format($kclPerPokok, 2) . ' kg/pokok/tahun (Total Blok: ' . number_format($kclTotalTahunan, 1) . ' kg)';
                     $umurTanaman = $blokLahan->umur_tanaman;
                     $kategoriUmur = $blokLahan->kategori_umur;
                     if ($kategoriUmur === 'Belum Menghasilkan' || ($umurTanaman !== null && $umurTanaman < 3)) {

@@ -150,15 +150,15 @@ class RbsController extends Controller
             'pupuk'             => $rbs->rekomendasi_pupuk,
             'saran'             => $rbs->saran_tindakan_utama,
             'jumlah_rule'       => $rbs->jumlah_rule_terpicu,
-            // Pahan-v2
-            'fase'              => $rbs->fase_tanaman_snapshot,
+            // Pahan-v2.2 — gunakan label lengkap
+            'fase'              => $rbs->label_fase,
             'umur'              => $rbs->umur_tanaman_snapshot,
             'urea_estimasi'     => $rbs->urea_estimasi_kg_per_pokok_tahun,
             'kcl_estimasi'      => $rbs->kcl_estimasi_kg_per_pokok_tahun,
             'skor_keandalan'    => $rbs->kelengkapan_data_score,
             'kategori_keandalan' => $rbs->kategori_keandalan,
-            'status_kondisi'    => $rbs->status_kondisi_tanaman,
-            'status_kelayakan'  => $rbs->status_kelayakan_aplikasi,
+            'status_kondisi'    => $rbs->label_kondisi_tanaman,
+            'status_kelayakan'  => $rbs->label_kelayakan,
         ]);
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PlantPhase;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -90,5 +91,13 @@ class BlokLahan extends Model
         if ($umur <= 14) return 'Menghasilkan Muda';
         if ($umur <= 25) return 'Menghasilkan Tua';
         return 'Tua Renta';
+    }
+
+    /**
+     * Label fase tanaman (nama lengkap, bukan singkatan TBM/TM).
+     */
+    public function getFaseLabelAttribute(): string
+    {
+        return PlantPhase::labelFromValue($this->fase_tanaman);
     }
 }

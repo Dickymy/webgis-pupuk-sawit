@@ -32,7 +32,7 @@
             <p class="text-[10px] text-slate-400 uppercase font-semibold">Umur</p>
             <p class="text-sm font-bold text-slate-800">{{ $blokLahan->umur_tanaman ?? '—' }} tahun</p>
             @if($blokLahan->fase_tanaman)
-            <p class="text-[9px] text-emerald-600 font-medium">{{ $blokLahan->fase_tanaman === 'TBM' ? '🌱 TBM' : '🌴 TM' }}</p>
+            <p class="text-[9px] text-emerald-600 font-medium">{{ $blokLahan->fase_tanaman === 'TBM' ? '🌱 Tanaman Belum Menghasilkan' : '🌴 Tanaman Menghasilkan' }}</p>
             @elseif($blokLahan->kategori_umur)
             <p class="text-[9px] text-emerald-600 font-medium">{{ $blokLahan->kategori_umur }}</p>
             @endif
@@ -75,31 +75,49 @@
             </div>
         </div>
         @if($rbs->fase_tanaman_snapshot)
-        <p class="text-[10px] text-blue-500 mt-1.5">Fase: {{ $rbs->fase_tanaman_snapshot }} · Umur: {{ $rbs->umur_tanaman_snapshot }} tahun · Strategi: {{ $rbs->strategi_estimasi_dosis ?? 'midpoint' }}</p>
+        <p class="text-[10px] text-blue-500 mt-1.5">Fase: {{ $rbs->label_fase }} · Umur saat observasi: {{ $rbs->umur_tanaman_snapshot }} tahun · Strategi: {{ $rbs->strategi_estimasi_dosis ?? 'midpoint' }}</p>
         @endif
     </div>
     @endif
 
     {{-- Estimasi Dosis Kerja --}}
+    @php
+        $jumlahPokokRbs = $rbs->jumlah_pokok_snapshot ?? 0;
+        $ureaEstTahunanRbs = $rbs->urea_estimasi_kg_per_pokok_tahun ? round($rbs->urea_estimasi_kg_per_pokok_tahun * $jumlahPokokRbs, 1) : null;
+        $kclEstTahunanRbs = $rbs->kcl_estimasi_kg_per_pokok_tahun ? round($rbs->kcl_estimasi_kg_per_pokok_tahun * $jumlahPokokRbs, 1) : null;
+        $karungUreaRbs = $ureaEstTahunanRbs ? (int) ceil($ureaEstTahunanRbs / 50) : 0;
+        $karungKclRbs = $kclEstTahunanRbs ? (int) ceil($kclEstTahunanRbs / 50) : 0;
+        $isDitundaRbs = $rbs->status_kelayakan_aplikasi && !in_array($rbs->status_kelayakan_aplikasi, ['LAYAK_DIJADWALKAN', 'TERLAMBAT_PERLU_DIJADWALKAN']);
+    @endphp
     <p class="text-[10px] text-slate-400 uppercase font-bold mb-2">Estimasi Dosis Kerja Sistem</p>
     <div class="grid grid-cols-2 gap-4">
         <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
             <p class="text-[10px] text-amber-600 uppercase font-semibold mb-1">Urea</p>
-            <p class="text-xl sm:text-2xl font-extrabold text-amber-800">{{ $rbs->total_urea ? number_format($rbs->total_urea, 0) : '—' }}</p>
-            <p class="text-xs text-amber-600">kg ({{ $rbs->karung_urea }} karung)</p>
-            @if($rbs->dosis_urea)
+            <p class="text-xl sm:text-2xl font-extrabold text-amber-800">{{ $ureaEstTahunanRbs ? number_format($ureaEstTahunanRbs, 0) : ($rbs->total_urea ? number_format($rbs->total_urea, 0) : '—') }}</p>
+            <p class="text-xs text-amber-600">kg ({{ $karungUreaRbs ?: $rbs->karung_urea }} karung)</p>
+            @if($rbs->urea_estimasi_kg_per_pokok_tahun)
+            <p class="text-[9px] text-amber-500 mt-1">{{ $rbs->urea_estimasi_kg_per_pokok_tahun }} kg/pokok/tahun</p>
+            @elseif($rbs->dosis_urea)
             <p class="text-[9px] text-amber-500 mt-1">{{ $rbs->dosis_urea }} kg/pokok</p>
             @endif
         </div>
         <div class="bg-cyan-50 border border-cyan-200 rounded-xl p-3 text-center">
             <p class="text-[10px] text-cyan-600 uppercase font-semibold mb-1">KCl</p>
-            <p class="text-xl sm:text-2xl font-extrabold text-cyan-800">{{ $rbs->total_kcl ? number_format($rbs->total_kcl, 0) : '—' }}</p>
-            <p class="text-xs text-cyan-600">kg ({{ $rbs->karung_kcl }} karung)</p>
-            @if($rbs->dosis_kcl)
+            <p class="text-xl sm:text-2xl font-extrabold text-cyan-800">{{ $kclEstTahunanRbs ? number_format($kclEstTahunanRbs, 0) : ($rbs->total_kcl ? number_format($rbs->total_kcl, 0) : '—') }}</p>
+            <p class="text-xs text-cyan-600">kg ({{ $karungKclRbs ?: $rbs->karung_kcl }} karung)</p>
+            @if($rbs->kcl_estimasi_kg_per_pokok_tahun)
+            <p class="text-[9px] text-cyan-500 mt-1">{{ $rbs->kcl_estimasi_kg_per_pokok_tahun }} kg/pokok/tahun</p>
+            @elseif($rbs->dosis_kcl)
             <p class="text-[9px] text-cyan-500 mt-1">{{ $rbs->dosis_kcl }} kg/pokok</p>
             @endif
         </div>
     </div>
+
+    @if($isDitundaRbs)
+    <div class="mt-2 bg-amber-50/80 border border-amber-200 rounded-lg p-2">
+        <p class="text-[10px] text-amber-700 font-medium">⏸️ Aplikasi saat ini: <strong>0 kg</strong> — {{ \App\Enums\ApplicationFeasibilityStatus::labelFromValue($rbs->status_kelayakan_aplikasi) }}. Kebutuhan tahunan tetap tercatat di atas.</p>
+    </div>
+    @endif
 
     {{-- Kelayakan Aplikasi --}}
     @if($rbs->status_kelayakan_aplikasi && $rbs->status_kelayakan_aplikasi !== 'LAYAK_DIJADWALKAN')

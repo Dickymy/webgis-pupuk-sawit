@@ -8,8 +8,10 @@ use App\Models\BlokLahan;
  * PahanDoseReferenceService — Mengembalikan rentang dosis Urea & MOP/KCl
  * berdasarkan fase dan umur tanaman sesuai Pahan (2013), Tabel 9.13 & 9.14.
  *
- * Service ini TIDAK menggunakan multiplier tanah/topografi/waktu.
- * Dosis ditentukan semata-mata dari tabel referensi + strategi estimasi.
+ * PERBAIKAN v2.2:
+ * - Menerima umur dan fase eksplisit (dari tanggal observasi)
+ * - Tidak lagi mengandalkan $blok->umur_tanaman untuk analisis
+ * - Backward compatible: getDoseReference() tanpa parameter tetap bekerja
  */
 class PahanDoseReferenceService
 {
@@ -21,7 +23,65 @@ class PahanDoseReferenceService
     }
 
     /**
-     * Dapatkan referensi dosis lengkap berdasarkan blok lahan.
+     * Dapatkan referensi dosis berdasarkan umur dan fase eksplisit.
+     * Gunakan method ini untuk analisis dengan tanggal observasi tertentu.
+     *
+     * @param BlokLahan $blok
+     * @param int $umurSaatObservasi Umur tanaman pada tanggal observasi
+     * @param string $faseSaatObservasi Fase tanaman (TBM/TM) pada saat observasi
+     * @return array
+     */
+    public function getDoseReferenceForContext(BlokLahan $blok, int $umurSaatObservasi, string $faseSaatObservasi): array
+    {
+        $strategy = config('fertilization.reference_dose_strategy', 'midpoint');
+        $warnings = [];
+
+        // Tentukan kelompok umur
+        $ageGroup = $this->resolveAgeGroup($faseSaatObservasi, $umurSaatObservasi);
+
+        if ($ageGroup === null) {
+            $warnings[] = "Kombinasi fase {$faseSaatObservasi} dan umur {$umurSaatObservasi} tahun tidak ditemukan dalam tabel referensi.";
+            return $this->emptyResult($strategy, false, $warnings);
+        }
+
+        // Ambil dari config
+        $doseTable = config('fertilization.dose_reference');
+        $entry = $doseTable[$faseSaatObservasi][$ageGroup] ?? null;
+
+        if ($entry === null) {
+            $warnings[] = "Entry dosis untuk {$faseSaatObservasi}/{$ageGroup} tidak ditemukan di konfigurasi.";
+            return $this->emptyResult($strategy, false, $warnings);
+        }
+
+        $ureaEstimate = $this->calculateEstimate($entry['urea_min'], $entry['urea_max'], $strategy);
+        $kclEstimate = $this->calculateEstimate($entry['kcl_min'], $entry['kcl_max'], $strategy);
+
+        return [
+            'phase'     => $faseSaatObservasi,
+            'age_group' => $ageGroup,
+            'age_label' => $entry['label'],
+            'urea' => [
+                'min'      => $entry['urea_min'],
+                'max'      => $entry['urea_max'],
+                'estimate' => $ureaEstimate,
+            ],
+            'kcl' => [
+                'min'      => $entry['kcl_min'],
+                'max'      => $entry['kcl_max'],
+                'estimate' => $kclEstimate,
+            ],
+            'unit'      => 'kg/pokok/tahun',
+            'strategy'  => $strategy,
+            'reference' => config('fertilization.reference_source'),
+            'needs_phase_verification' => false,
+            'warnings'  => $warnings,
+        ];
+    }
+
+    /**
+     * Dapatkan referensi dosis lengkap berdasarkan blok lahan (kompatibilitas).
+     * Menggunakan umur saat ini (dari accessor model).
+     * Gunakan getDoseReferenceForContext() untuk analisis historis.
      *
      * @return array{
      *   phase: ?string,
@@ -51,46 +111,14 @@ class PahanDoseReferenceService
             return $this->emptyResult($strategy, $phaseInfo['needs_verification'], $warnings);
         }
 
-        // Tentukan kelompok umur
-        $ageGroup = $this->resolveAgeGroup($fase, $umur);
+        // Delegasi ke method konteks
+        $result = $this->getDoseReferenceForContext($blok, $umur, $fase);
 
-        if ($ageGroup === null) {
-            $warnings[] = "Kombinasi fase {$fase} dan umur {$umur} tahun tidak ditemukan dalam tabel referensi.";
-            return $this->emptyResult($strategy, $phaseInfo['needs_verification'], $warnings);
-        }
+        // Merge warnings dan overwrite needs_phase_verification
+        $result['warnings'] = array_merge($warnings, $result['warnings']);
+        $result['needs_phase_verification'] = $phaseInfo['needs_verification'];
 
-        // Ambil dari config
-        $doseTable = config('fertilization.dose_reference');
-        $entry = $doseTable[$fase][$ageGroup] ?? null;
-
-        if ($entry === null) {
-            $warnings[] = "Entry dosis untuk {$fase}/{$ageGroup} tidak ditemukan di konfigurasi.";
-            return $this->emptyResult($strategy, $phaseInfo['needs_verification'], $warnings);
-        }
-
-        $ureaEstimate = $this->calculateEstimate($entry['urea_min'], $entry['urea_max'], $strategy);
-        $kclEstimate = $this->calculateEstimate($entry['kcl_min'], $entry['kcl_max'], $strategy);
-
-        return [
-            'phase'     => $fase,
-            'age_group' => $ageGroup,
-            'age_label' => $entry['label'],
-            'urea' => [
-                'min'      => $entry['urea_min'],
-                'max'      => $entry['urea_max'],
-                'estimate' => $ureaEstimate,
-            ],
-            'kcl' => [
-                'min'      => $entry['kcl_min'],
-                'max'      => $entry['kcl_max'],
-                'estimate' => $kclEstimate,
-            ],
-            'unit'      => 'kg/pokok/tahun',
-            'strategy'  => $strategy,
-            'reference' => config('fertilization.reference_source'),
-            'needs_phase_verification' => $phaseInfo['needs_verification'],
-            'warnings'  => $warnings,
-        ];
+        return $result;
     }
 
     /**

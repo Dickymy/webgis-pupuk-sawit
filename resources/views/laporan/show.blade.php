@@ -108,34 +108,51 @@
     </div>
 
     {{-- Logistik --}}
-    @if($rekomendasiRbs->urea_estimasi_kg_per_pokok_tahun !== null || $rekomendasiRbs->kcl_estimasi_kg_per_pokok_tahun !== null || $rekomendasiRbs->total_urea)
+    @php
+        // Hitung kebutuhan tahunan dari kolom Pahan-v2 (tetap tampil meskipun ditunda)
+        $jumlahPokok = $rekomendasiRbs->jumlah_pokok_snapshot ?? 0;
+        $ureaEstTahunan = $rekomendasiRbs->urea_estimasi_kg_per_pokok_tahun ? round($rekomendasiRbs->urea_estimasi_kg_per_pokok_tahun * $jumlahPokok, 1) : null;
+        $kclEstTahunan = $rekomendasiRbs->kcl_estimasi_kg_per_pokok_tahun ? round($rekomendasiRbs->kcl_estimasi_kg_per_pokok_tahun * $jumlahPokok, 1) : null;
+        $karungUreaTahunan = $ureaEstTahunan ? (int) ceil($ureaEstTahunan / 50) : 0;
+        $karungKclTahunan = $kclEstTahunan ? (int) ceil($kclEstTahunan / 50) : 0;
+
+        $isDitunda = $rekomendasiRbs->status_kelayakan_aplikasi && !in_array($rekomendasiRbs->status_kelayakan_aplikasi, ['LAYAK_DIJADWALKAN', 'TERLAMBAT_PERLU_DIJADWALKAN']);
+    @endphp
+    @if($ureaEstTahunan !== null || $kclEstTahunan !== null || $rekomendasiRbs->total_urea)
     <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
         <h3 class="text-sm font-extrabold text-slate-800 mb-4 flex items-center gap-1.5">
             <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-            Kebutuhan Logistik Pupuk
+            Kebutuhan Pupuk Tahunan
         </h3>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-amber-50/60 border border-amber-100/80 rounded-xl p-4 text-center shadow-sm">
                 <p class="text-xs text-amber-800 font-semibold mb-1">Total Urea</p>
-                <p class="text-2xl font-extrabold text-amber-700">{{ number_format($rekomendasiRbs->total_urea, 1) }}</p>
-                <p class="text-[10px] text-slate-400 font-medium uppercase mt-0.5">kilogram</p>
+                <p class="text-2xl font-extrabold text-amber-700">{{ number_format($ureaEstTahunan ?? $rekomendasiRbs->total_urea, 1) }}</p>
+                <p class="text-[10px] text-slate-400 font-medium uppercase mt-0.5">kilogram/tahun</p>
             </div>
             <div class="bg-amber-50/60 border border-amber-100/80 rounded-xl p-4 text-center shadow-sm">
                 <p class="text-xs text-amber-800 font-semibold mb-1">Karung Urea</p>
-                <p class="text-2xl font-extrabold text-amber-800">{{ $rekomendasiRbs->karung_urea }}</p>
+                <p class="text-2xl font-extrabold text-amber-800">{{ $karungUreaTahunan ?: $rekomendasiRbs->karung_urea }}</p>
                 <p class="text-[10px] text-slate-400 font-medium uppercase mt-0.5">karung</p>
             </div>
             <div class="bg-cyan-50/60 border border-cyan-100/80 rounded-xl p-4 text-center shadow-sm">
                 <p class="text-xs text-cyan-800 font-semibold mb-1">Total KCl</p>
-                <p class="text-2xl font-extrabold text-cyan-700">{{ number_format($rekomendasiRbs->total_kcl, 1) }}</p>
-                <p class="text-[10px] text-slate-400 font-medium uppercase mt-0.5">kilogram</p>
+                <p class="text-2xl font-extrabold text-cyan-700">{{ number_format($kclEstTahunan ?? $rekomendasiRbs->total_kcl, 1) }}</p>
+                <p class="text-[10px] text-slate-400 font-medium uppercase mt-0.5">kilogram/tahun</p>
             </div>
             <div class="bg-cyan-50/60 border border-cyan-100/80 rounded-xl p-4 text-center shadow-sm">
                 <p class="text-xs text-cyan-800 font-semibold mb-1">Karung KCl</p>
-                <p class="text-2xl font-extrabold text-cyan-700">{{ $rekomendasiRbs->karung_kcl }}</p>
+                <p class="text-2xl font-extrabold text-cyan-700">{{ $karungKclTahunan ?: $rekomendasiRbs->karung_kcl }}</p>
                 <p class="text-[10px] text-slate-400 font-medium uppercase mt-0.5">karung</p>
             </div>
         </div>
+
+        @if($isDitunda)
+        <div class="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <p class="text-xs font-bold text-amber-800">⏸️ Aplikasi Saat Ini: 0 kg</p>
+            <p class="text-[11px] text-amber-700 mt-0.5">{{ \App\Enums\ApplicationFeasibilityStatus::labelFromValue($rekomendasiRbs->status_kelayakan_aplikasi) }}. Kebutuhan tahunan tetap tercatat di atas.</p>
+        </div>
+        @endif
     </div>
     @endif
 
