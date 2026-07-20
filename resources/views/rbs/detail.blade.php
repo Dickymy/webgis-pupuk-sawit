@@ -54,7 +54,7 @@
 {{-- ═══════════════════════════════════════════════════════════ --}}
 {{-- SECTION 3: Kebutuhan Pupuk (angka besar, mudah dipahami) --}}
 {{-- ═══════════════════════════════════════════════════════════ --}}
-@if($rbs->total_urea || $rbs->total_kcl)
+@if($rbs->urea_estimasi_kg_per_pokok_tahun !== null || $rbs->kcl_estimasi_kg_per_pokok_tahun !== null || $rbs->total_urea || $rbs->total_kcl)
 <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 mt-5">
     <h3 class="text-sm font-bold text-slate-800 mb-3">🧮 Kebutuhan Pupuk Tahunan</h3>
 

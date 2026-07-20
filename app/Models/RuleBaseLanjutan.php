@@ -49,6 +49,10 @@ class RuleBaseLanjutan extends Model
         'divalidasi_oleh',
         'tanggal_validasi',
         'catatan_validasi',
+        // Normalisasi output rule (Pahan-v2 finalisasi)
+        'jenis_rule',
+        'tingkat_keparahan',
+        'kategori_kesimpulan',
     ];
 
     protected function casts(): array

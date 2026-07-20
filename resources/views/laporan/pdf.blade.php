@@ -374,7 +374,7 @@
     </div>
 
     {{-- ═══ 4. KEBUTUHAN PUPUK — yang paling dicari petani ═══ --}}
-    @if($rekomendasiRbs->total_urea || $rekomendasiRbs->total_kcl)
+    @if($rekomendasiRbs->urea_estimasi_kg_per_pokok_tahun !== null || $rekomendasiRbs->kcl_estimasi_kg_per_pokok_tahun !== null || $rekomendasiRbs->total_urea || $rekomendasiRbs->total_kcl)
     <div class="section">
         <div class="section-title">Kebutuhan Pupuk</div>
 
