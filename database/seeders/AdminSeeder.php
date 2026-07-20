@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Admin;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Log;
 
 class AdminSeeder extends Seeder
 {
@@ -35,18 +34,20 @@ class AdminSeeder extends Seeder
 
         if (empty($username) || empty($password)) {
             $this->command?->warn('INITIAL_ADMIN_USERNAME dan INITIAL_ADMIN_PASSWORD belum diset di .env — akun admin tidak dibuat.');
+
             return;
         }
 
         if (strlen($password) < 8) {
             $this->command?->error('INITIAL_ADMIN_PASSWORD harus minimal 8 karakter — akun admin tidak dibuat.');
+
             return;
         }
 
         Admin::firstOrCreate(
             ['username' => $username],
             [
-                'password'     => $password,
+                'password' => $password,
                 'nama_lengkap' => $nama,
             ]
         );
@@ -58,13 +59,14 @@ class AdminSeeder extends Seeder
     {
         $createTester = filter_var(env('CREATE_TESTER_ACCOUNT', false), FILTER_VALIDATE_BOOLEAN);
 
-        if (!$createTester) {
+        if (! $createTester) {
             return;
         }
 
         // Jangan buat tester di production
         if (app()->environment('production')) {
             $this->command?->warn('CREATE_TESTER_ACCOUNT=true diabaikan di environment production.');
+
             return;
         }
 
@@ -73,18 +75,20 @@ class AdminSeeder extends Seeder
 
         if (empty($username) || empty($password)) {
             $this->command?->warn('TESTER_USERNAME dan TESTER_PASSWORD belum diset — akun tester tidak dibuat.');
+
             return;
         }
 
         if (strlen($password) < 8) {
             $this->command?->error('TESTER_PASSWORD harus minimal 8 karakter — akun tester tidak dibuat.');
+
             return;
         }
 
         Admin::firstOrCreate(
             ['username' => $username],
             [
-                'password'     => $password,
+                'password' => $password,
                 'nama_lengkap' => 'Akun Tester',
             ]
         );

@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -24,7 +24,7 @@ return new class extends Migration
 
         foreach ($existingPemilik as $row) {
             $anggotaId = DB::table('anggotas')->insertGetId([
-                'nama'       => $row->nama_pemilik,
+                'nama' => $row->nama_pemilik,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

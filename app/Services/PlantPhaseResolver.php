@@ -38,62 +38,62 @@ class PlantPhaseResolver
                 $conflict = $this->detectPhaseConflict($blok->fase_tanaman, $umur);
                 if ($conflict !== null) {
                     return [
-                        'fase'               => null, // Tidak gunakan fase yang konflik
-                        'verified'           => false,
+                        'fase' => null, // Tidak gunakan fase yang konflik
+                        'verified' => false,
                         'needs_verification' => true,
-                        'message'            => $conflict,
-                        'phase_conflict'     => true,
+                        'message' => $conflict,
+                        'phase_conflict' => true,
                     ];
                 }
             }
 
             return [
-                'fase'               => $blok->fase_tanaman,
-                'verified'           => true,
+                'fase' => $blok->fase_tanaman,
+                'verified' => true,
                 'needs_verification' => false,
-                'message'            => null,
-                'phase_conflict'     => false,
+                'message' => null,
+                'phase_conflict' => false,
             ];
         }
 
         // Auto-suggest berdasarkan umur
         if ($umur === null) {
             return [
-                'fase'               => null,
-                'verified'           => false,
+                'fase' => null,
+                'verified' => false,
                 'needs_verification' => true,
-                'message'            => 'Tahun tanam belum diisi, fase tanaman tidak dapat ditentukan.',
-                'phase_conflict'     => false,
+                'message' => 'Tahun tanam belum diisi, fase tanaman tidak dapat ditentukan.',
+                'phase_conflict' => false,
             ];
         }
 
         if ($umur < 3) {
             return [
-                'fase'               => 'TBM',
-                'verified'           => false,
+                'fase' => 'TBM',
+                'verified' => false,
                 'needs_verification' => false,
-                'message'            => "Umur {$umur} tahun — otomatis dikategorikan TBM.",
-                'phase_conflict'     => false,
+                'message' => "Umur {$umur} tahun — otomatis dikategorikan TBM.",
+                'phase_conflict' => false,
             ];
         }
 
         if ($umur === 3) {
             return [
-                'fase'               => null,
-                'verified'           => false,
+                'fase' => null,
+                'verified' => false,
                 'needs_verification' => true,
-                'message'            => 'Umur tepat 3 tahun — bisa TBM atau TM. Perlu verifikasi pengguna.',
-                'phase_conflict'     => false,
+                'message' => 'Umur tepat 3 tahun — bisa TBM atau TM. Perlu verifikasi pengguna.',
+                'phase_conflict' => false,
             ];
         }
 
         // Umur > 3 tahun
         return [
-            'fase'               => 'TM',
-            'verified'           => false,
+            'fase' => 'TM',
+            'verified' => false,
             'needs_verification' => false,
-            'message'            => "Umur {$umur} tahun — otomatis dikategorikan TM.",
-            'phase_conflict'     => false,
+            'message' => "Umur {$umur} tahun — otomatis dikategorikan TM.",
+            'phase_conflict' => false,
         ];
     }
 

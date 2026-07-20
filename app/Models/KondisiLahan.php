@@ -34,13 +34,13 @@ class KondisiLahan extends Model
     protected function casts(): array
     {
         return [
-            'tanggal_observasi'          => 'date',
+            'tanggal_observasi' => 'date',
             'tanggal_pemupukan_terakhir' => 'date',
-            'gejala_defisiensi'          => 'array',
-            'ada_gulma_dominan'          => 'boolean',
-            'ada_serangan_hama'          => 'boolean',
-            'ph_tanah'                   => 'decimal:2',
-            'curah_hujan_mm_bulanan'     => 'decimal:1',
+            'gejala_defisiensi' => 'array',
+            'ada_gulma_dominan' => 'boolean',
+            'ada_serangan_hama' => 'boolean',
+            'ph_tanah' => 'decimal:2',
+            'curah_hujan_mm_bulanan' => 'decimal:1',
         ];
     }
 
@@ -58,13 +58,16 @@ class KondisiLahan extends Model
     // Accessor: label pH
     public function getLabelPhAttribute(): string
     {
-        if (is_null($this->ph_tanah)) return '-';
-        return match(true) {
-            $this->ph_tanah < 4.0  => 'Sangat Masam',
-            $this->ph_tanah < 5.5  => 'Masam',
-            $this->ph_tanah < 6.5  => 'Agak Masam (Optimal)',
-            $this->ph_tanah < 7.5  => 'Netral',
-            default                => 'Basa',
+        if (is_null($this->ph_tanah)) {
+            return '-';
+        }
+
+        return match (true) {
+            $this->ph_tanah < 4.0 => 'Sangat Masam',
+            $this->ph_tanah < 5.5 => 'Masam',
+            $this->ph_tanah < 6.5 => 'Agak Masam (Optimal)',
+            $this->ph_tanah < 7.5 => 'Netral',
+            default => 'Basa',
         };
     }
 }

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('rule_bases_lanjutan', function (Blueprint $table) {
             $table->id();
-            
+
             // Kondisi (IF) — kombinasi parameter
             $table->string('kondisi_warna_daun', 100)->nullable();
             $table->decimal('kondisi_ph_min', 4, 2)->nullable();
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('kondisi_drainase', 50)->nullable();
             $table->string('kondisi_defisiensi', 50)->nullable()->comment('satu nilai defisiensi target');
             $table->string('kondisi_kategori_umur', 50)->nullable()->comment('boleh NULL = berlaku semua umur');
-            
+
             // Hasil Diagnosa (THEN)
             $table->string('indikasi_masalah', 255);
             $table->string('jenis_pupuk_utama', 100);
@@ -29,12 +29,12 @@ return new class extends Migration
             $table->string('metode_aplikasi', 255)->nullable();
             $table->string('waktu_aplikasi', 150)->nullable();
             $table->text('saran_tindakan');
-            $table->enum('status_kebutuhan', ['Darurat','Segera','Normal','Tunda'])->default('Normal');
+            $table->enum('status_kebutuhan', ['Darurat', 'Segera', 'Normal', 'Tunda'])->default('Normal');
             $table->tinyInteger('prioritas')->unsigned()->default(5)->comment('1 (tertinggi) – 10 (terendah)');
-            
+
             $table->boolean('aktif')->default(true);
             $table->text('keterangan_rule')->nullable();
-            
+
             $table->timestamps();
         });
     }

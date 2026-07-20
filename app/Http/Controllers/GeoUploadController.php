@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Shapefile\ShapefileReader;
 
@@ -17,11 +18,11 @@ class GeoUploadController extends Controller
             'geo_file' => ['required', 'file', 'max:10240'], // max 10MB
         ], [
             'geo_file.required' => 'File wajib dipilih.',
-            'geo_file.max'      => 'Ukuran file maksimal 10 MB.',
+            'geo_file.max' => 'Ukuran file maksimal 10 MB.',
         ]);
 
         $file = $request->file('geo_file');
-        $ext  = strtolower($file->getClientOriginalExtension());
+        $ext = strtolower($file->getClientOriginalExtension());
 
         try {
             if ($ext === 'geojson' || $ext === 'json') {
@@ -42,7 +43,7 @@ class GeoUploadController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memproses file: ' . $e->getMessage(),
+                'message' => 'Gagal memproses file: '.$e->getMessage(),
             ], 422);
         }
     }
@@ -50,7 +51,7 @@ class GeoUploadController extends Controller
     /**
      * Handle file GeoJSON (.geojson / .json)
      */
-    private function handleGeoJson($file): \Illuminate\Http\JsonResponse
+    private function handleGeoJson($file): JsonResponse
     {
         $content = file_get_contents($file->getRealPath());
         $geojson = json_decode($content, true);
@@ -65,7 +66,7 @@ class GeoUploadController extends Controller
         // Extract polygon from various GeoJSON structures
         $polygon = $this->extractPolygon($geojson);
 
-        if (!$polygon) {
+        if (! $polygon) {
             return response()->json([
                 'success' => false,
                 'message' => 'Tidak ditemukan Polygon dalam file GeoJSON. Pastikan file berisi data polygon.',
@@ -82,14 +83,14 @@ class GeoUploadController extends Controller
     /**
      * Handle file ZIP berisi Shapefile (.shp, .shx, .dbf)
      */
-    private function handleShpZip($file): \Illuminate\Http\JsonResponse
+    private function handleShpZip($file): JsonResponse
     {
-        $tempDir = storage_path('app/temp_shp_' . uniqid());
+        $tempDir = storage_path('app/temp_shp_'.uniqid());
         mkdir($tempDir, 0755, true);
 
         try {
             // Extract ZIP
-            $zip = new \ZipArchive();
+            $zip = new \ZipArchive;
             if ($zip->open($file->getRealPath()) !== true) {
                 throw new \Exception('Gagal membuka file ZIP.');
             }
@@ -98,18 +99,18 @@ class GeoUploadController extends Controller
 
             // Find .shp file in extracted contents
             $shpFile = $this->findFileWithExtension($tempDir, 'shp');
-            if (!$shpFile) {
+            if (! $shpFile) {
                 throw new \Exception('File .shp tidak ditemukan dalam ZIP. Pastikan ZIP berisi file .shp, .shx, dan .dbf.');
             }
 
             // Check for required companion files
             $baseName = pathinfo($shpFile, PATHINFO_FILENAME);
             $dir = pathinfo($shpFile, PATHINFO_DIRNAME);
-            
+
             $shxFile = $this->findCompanionFile($dir, $baseName, 'shx');
             $dbfFile = $this->findCompanionFile($dir, $baseName, 'dbf');
 
-            if (!$shxFile || !$dbfFile) {
+            if (! $shxFile || ! $dbfFile) {
                 throw new \Exception('File .shx atau .dbf tidak ditemukan. Shapefile membutuhkan minimal 3 file: .shp, .shx, dan .dbf.');
             }
 
@@ -130,7 +131,7 @@ class GeoUploadController extends Controller
 
                 $geoArray = json_decode($geometry->getGeoJSON(false), true);
 
-                if (!$geoArray) {
+                if (! $geoArray) {
                     continue;
                 }
 
@@ -157,17 +158,17 @@ class GeoUploadController extends Controller
             $polygon = $polygons[0];
             if ($polygon['type'] === 'MultiPolygon') {
                 $polygon = [
-                    'type'        => 'Polygon',
+                    'type' => 'Polygon',
                     'coordinates' => $polygon['coordinates'][0],
                 ];
             }
 
             return response()->json([
-                'success'      => true,
-                'geojson'      => $polygon,
+                'success' => true,
+                'geojson' => $polygon,
                 'total_shapes' => count($polygons),
-                'message'      => count($polygons) > 1
-                    ? 'Shapefile berisi ' . count($polygons) . ' polygon. Polygon pertama ditampilkan. Anda dapat mengedit titik-titiknya di peta.'
+                'message' => count($polygons) > 1
+                    ? 'Shapefile berisi '.count($polygons).' polygon. Polygon pertama ditampilkan. Anda dapat mengedit titik-titiknya di peta.'
                     : 'Shapefile berhasil diproses.',
             ]);
         } finally {
@@ -190,9 +191,10 @@ class GeoUploadController extends Controller
 
         if ($type === 'MultiPolygon') {
             $polygon = [
-                'type'        => 'Polygon',
+                'type' => 'Polygon',
                 'coordinates' => $geojson['coordinates'][0],
             ];
+
             return $this->validatePolygon($polygon);
         }
 
@@ -200,10 +202,12 @@ class GeoUploadController extends Controller
             return $this->extractPolygon($geojson['geometry']);
         }
 
-        if ($type === 'FeatureCollection' && !empty($geojson['features'])) {
+        if ($type === 'FeatureCollection' && ! empty($geojson['features'])) {
             foreach ($geojson['features'] as $feature) {
                 $polygon = $this->extractPolygon($feature);
-                if ($polygon) return $polygon;
+                if ($polygon) {
+                    return $polygon;
+                }
             }
         }
 
@@ -219,7 +223,7 @@ class GeoUploadController extends Controller
      */
     private function validatePolygon(array $polygon): ?array
     {
-        if (empty($polygon['coordinates']) || !is_array($polygon['coordinates'])) {
+        if (empty($polygon['coordinates']) || ! is_array($polygon['coordinates'])) {
             return null;
         }
 
@@ -227,19 +231,23 @@ class GeoUploadController extends Controller
         $validatedRings = [];
 
         foreach ($rings as $ring) {
-            if (!is_array($ring) || count($ring) < 3) {
+            if (! is_array($ring) || count($ring) < 3) {
                 return null; // Need at least 3 unique points
             }
 
             // Validate each coordinate
             foreach ($ring as $point) {
-                if (!is_array($point) || count($point) < 2) {
+                if (! is_array($point) || count($point) < 2) {
                     return null;
                 }
                 $lng = $point[0];
                 $lat = $point[1];
-                if (!is_numeric($lng) || !is_numeric($lat)) return null;
-                if ($lng < -180 || $lng > 180 || $lat < -90 || $lat > 90) return null;
+                if (! is_numeric($lng) || ! is_numeric($lat)) {
+                    return null;
+                }
+                if ($lng < -180 || $lng > 180 || $lat < -90 || $lat > 90) {
+                    return null;
+                }
             }
 
             // Auto-close ring if not closed
@@ -258,7 +266,7 @@ class GeoUploadController extends Controller
         }
 
         return [
-            'type'        => 'Polygon',
+            'type' => 'Polygon',
             'coordinates' => $validatedRings,
         ];
     }
@@ -287,19 +295,23 @@ class GeoUploadController extends Controller
     private function findCompanionFile(string $dir, string $baseName, string $ext): ?string
     {
         // Try exact case match first
-        $path = $dir . DIRECTORY_SEPARATOR . $baseName . '.' . $ext;
-        if (file_exists($path)) return $path;
+        $path = $dir.DIRECTORY_SEPARATOR.$baseName.'.'.$ext;
+        if (file_exists($path)) {
+            return $path;
+        }
 
         // Try uppercase extension
-        $path = $dir . DIRECTORY_SEPARATOR . $baseName . '.' . strtoupper($ext);
-        if (file_exists($path)) return $path;
+        $path = $dir.DIRECTORY_SEPARATOR.$baseName.'.'.strtoupper($ext);
+        if (file_exists($path)) {
+            return $path;
+        }
 
         // Scan directory for case-insensitive match
         $files = scandir($dir);
         foreach ($files as $file) {
             if (strtolower(pathinfo($file, PATHINFO_EXTENSION)) === strtolower($ext) &&
                 strtolower(pathinfo($file, PATHINFO_FILENAME)) === strtolower($baseName)) {
-                return $dir . DIRECTORY_SEPARATOR . $file;
+                return $dir.DIRECTORY_SEPARATOR.$file;
             }
         }
 
@@ -311,11 +323,13 @@ class GeoUploadController extends Controller
      */
     private function deleteDirectory(string $dir): void
     {
-        if (!is_dir($dir)) return;
+        if (! is_dir($dir)) {
+            return;
+        }
 
         $files = array_diff(scandir($dir), ['.', '..']);
         foreach ($files as $file) {
-            $path = $dir . DIRECTORY_SEPARATOR . $file;
+            $path = $dir.DIRECTORY_SEPARATOR.$file;
             if (is_dir($path)) {
                 $this->deleteDirectory($path);
             } else {

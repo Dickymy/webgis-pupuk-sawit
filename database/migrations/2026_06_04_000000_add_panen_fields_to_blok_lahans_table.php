@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::table('blok_lahans', function (Blueprint $table) {
             $table->decimal('total_tonase_panen', 10, 2)->nullable()->default(null)->after('koordinat_geojson')
-                  ->comment('Total tonase hasil panen (ton)');
+                ->comment('Total tonase hasil panen (ton)');
             $table->decimal('yield_per_hektar', 10, 2)->nullable()->default(null)->after('total_tonase_panen')
-                  ->comment('Produktivitas: tonase panen / luas lahan (ton/ha)');
+                ->comment('Produktivitas: tonase panen / luas lahan (ton/ha)');
         });
     }
 

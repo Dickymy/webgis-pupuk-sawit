@@ -3,7 +3,9 @@
 use App\Http\Controllers\AnggotaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BlokLahanController;
+use App\Http\Controllers\CuacaController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GeoUploadController;
 use App\Http\Controllers\KondisiLahanController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\RbsController;
@@ -13,7 +15,7 @@ use App\Http\Middleware\AdminAuthenticated;
 use Illuminate\Support\Facades\Route;
 
 // Root redirect
-Route::get('/', fn() => redirect()->route('dashboard'));
+Route::get('/', fn () => redirect()->route('dashboard'));
 
 // Authentication routes (guest only)
 Route::middleware('guest:admin')->group(function () {
@@ -62,10 +64,10 @@ Route::middleware(AdminAuthenticated::class)->group(function () {
     Route::get('/api/rbs-popup/{blokLahan}', [RbsController::class, 'apiPopup'])->name('api.rbs.popup');
 
     // API endpoint — Cuaca otomatis dari Open-Meteo
-    Route::post('/api/cuaca/fetch', [\App\Http\Controllers\CuacaController::class, 'fetch'])->name('api.cuaca.fetch');
+    Route::post('/api/cuaca/fetch', [CuacaController::class, 'fetch'])->name('api.cuaca.fetch');
 
     // API endpoint — Upload SHP/GeoJSON ke GeoJSON polygon
-    Route::post('/api/geo-upload', [\App\Http\Controllers\GeoUploadController::class, 'upload'])->name('api.geo.upload');
+    Route::post('/api/geo-upload', [GeoUploadController::class, 'upload'])->name('api.geo.upload');
 
     // Pengaturan (Ganti Password & Mode Tampilan)
     Route::prefix('settings')->name('settings.')->group(function () {
@@ -74,5 +76,3 @@ Route::middleware(AdminAuthenticated::class)->group(function () {
         Route::put('/theme', [SettingController::class, 'updateTheme'])->name('theme.update');
     });
 });
-
-

@@ -40,6 +40,7 @@ enum PlantConditionStatus: string
         }
 
         $status = self::tryFrom($value);
+
         return $status?->label() ?? $value;
     }
 

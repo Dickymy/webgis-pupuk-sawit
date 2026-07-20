@@ -64,8 +64,8 @@ class SecurityTest extends TestCase
     public function test_login_with_valid_credentials(): void
     {
         Admin::create([
-            'username'     => 'testadmin',
-            'password'     => 'password123',
+            'username' => 'testadmin',
+            'password' => 'password123',
             'nama_lengkap' => 'Test Admin',
         ]);
 
@@ -84,8 +84,8 @@ class SecurityTest extends TestCase
     public function test_login_with_wrong_password(): void
     {
         Admin::create([
-            'username'     => 'testadmin',
-            'password'     => 'password123',
+            'username' => 'testadmin',
+            'password' => 'password123',
             'nama_lengkap' => 'Test Admin',
         ]);
 

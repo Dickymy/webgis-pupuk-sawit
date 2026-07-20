@@ -13,14 +13,15 @@ class PlantPhaseResolverTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->resolver = new PlantPhaseResolver();
+        $this->resolver = new PlantPhaseResolver;
     }
 
     private function makeBlok(array $attrs = []): BlokLahan
     {
-        $blok = new BlokLahan();
+        $blok = new BlokLahan;
         $blok->tahun_tanam = $attrs['tahun_tanam'] ?? (now()->year - 10);
         $blok->fase_tanaman = $attrs['fase_tanaman'] ?? null;
+
         return $blok;
     }
 
@@ -76,7 +77,7 @@ class PlantPhaseResolverTest extends TestCase
 
     public function test_tahun_tanam_null_needs_verification(): void
     {
-        $blok = new BlokLahan();
+        $blok = new BlokLahan;
         $blok->tahun_tanam = null;
         $blok->fase_tanaman = null;
 

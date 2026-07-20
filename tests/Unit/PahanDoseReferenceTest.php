@@ -3,8 +3,10 @@
 namespace Tests\Unit;
 
 use App\Models\BlokLahan;
+use App\Models\KondisiLahan;
+use App\Services\FertilizationCalculationService;
+use App\Services\FertilizationWindowService;
 use App\Services\PahanDoseReferenceService;
-use App\Services\PlantPhaseResolver;
 use Tests\TestCase;
 
 class PahanDoseReferenceTest extends TestCase
@@ -19,11 +21,12 @@ class PahanDoseReferenceTest extends TestCase
 
     private function makeBlok(array $attrs = []): BlokLahan
     {
-        $blok = new BlokLahan();
+        $blok = new BlokLahan;
         $blok->luas_ha = $attrs['luas_ha'] ?? 5.0;
         $blok->sph = $attrs['sph'] ?? 136;
         $blok->tahun_tanam = $attrs['tahun_tanam'] ?? (now()->year - 10);
         $blok->fase_tanaman = $attrs['fase_tanaman'] ?? null;
+
         return $blok;
     }
 
@@ -149,13 +152,13 @@ class PahanDoseReferenceTest extends TestCase
 
     public function test_curah_hujan_99_mm_tunda(): void
     {
-        $kondisi = new \App\Models\KondisiLahan();
+        $kondisi = new KondisiLahan;
         $kondisi->curah_hujan_mm_bulanan = 99;
         $kondisi->tanggal_pemupukan_terakhir = null;
         $kondisi->kondisi_drainase = 'Baik';
         $kondisi->curah_hujan_kategori = null;
 
-        $windowService = app(\App\Services\FertilizationWindowService::class);
+        $windowService = app(FertilizationWindowService::class);
         $result = $windowService->evaluate($kondisi);
 
         $this->assertFalse($result['layak']);
@@ -164,13 +167,13 @@ class PahanDoseReferenceTest extends TestCase
 
     public function test_curah_hujan_100_mm_layak(): void
     {
-        $kondisi = new \App\Models\KondisiLahan();
+        $kondisi = new KondisiLahan;
         $kondisi->curah_hujan_mm_bulanan = 100;
         $kondisi->tanggal_pemupukan_terakhir = null;
         $kondisi->kondisi_drainase = 'Baik';
         $kondisi->curah_hujan_kategori = null;
 
-        $windowService = app(\App\Services\FertilizationWindowService::class);
+        $windowService = app(FertilizationWindowService::class);
         $result = $windowService->evaluate($kondisi);
 
         $this->assertTrue($result['layak']);
@@ -178,13 +181,13 @@ class PahanDoseReferenceTest extends TestCase
 
     public function test_curah_hujan_250_mm_layak(): void
     {
-        $kondisi = new \App\Models\KondisiLahan();
+        $kondisi = new KondisiLahan;
         $kondisi->curah_hujan_mm_bulanan = 250;
         $kondisi->tanggal_pemupukan_terakhir = null;
         $kondisi->kondisi_drainase = 'Baik';
         $kondisi->curah_hujan_kategori = null;
 
-        $windowService = app(\App\Services\FertilizationWindowService::class);
+        $windowService = app(FertilizationWindowService::class);
         $result = $windowService->evaluate($kondisi);
 
         $this->assertTrue($result['layak']);
@@ -192,13 +195,13 @@ class PahanDoseReferenceTest extends TestCase
 
     public function test_curah_hujan_251_mm_tunda(): void
     {
-        $kondisi = new \App\Models\KondisiLahan();
+        $kondisi = new KondisiLahan;
         $kondisi->curah_hujan_mm_bulanan = 251;
         $kondisi->tanggal_pemupukan_terakhir = null;
         $kondisi->kondisi_drainase = 'Baik';
         $kondisi->curah_hujan_kategori = null;
 
-        $windowService = app(\App\Services\FertilizationWindowService::class);
+        $windowService = app(FertilizationWindowService::class);
         $result = $windowService->evaluate($kondisi);
 
         $this->assertFalse($result['layak']);
@@ -207,13 +210,13 @@ class PahanDoseReferenceTest extends TestCase
 
     public function test_curah_hujan_kosong_perlu_verifikasi(): void
     {
-        $kondisi = new \App\Models\KondisiLahan();
+        $kondisi = new KondisiLahan;
         $kondisi->curah_hujan_mm_bulanan = null;
         $kondisi->curah_hujan_kategori = null;
         $kondisi->tanggal_pemupukan_terakhir = null;
         $kondisi->kondisi_drainase = 'Baik';
 
-        $windowService = app(\App\Services\FertilizationWindowService::class);
+        $windowService = app(FertilizationWindowService::class);
         $result = $windowService->evaluate($kondisi);
 
         $this->assertEquals('PERLU_VERIFIKASI_DATA', $result['status']);
@@ -225,13 +228,13 @@ class PahanDoseReferenceTest extends TestCase
 
     public function test_interval_59_hari_tunda(): void
     {
-        $kondisi = new \App\Models\KondisiLahan();
+        $kondisi = new KondisiLahan;
         $kondisi->curah_hujan_mm_bulanan = 150;
         $kondisi->curah_hujan_kategori = null;
         $kondisi->tanggal_pemupukan_terakhir = now()->subDays(59);
         $kondisi->kondisi_drainase = 'Baik';
 
-        $windowService = app(\App\Services\FertilizationWindowService::class);
+        $windowService = app(FertilizationWindowService::class);
         $result = $windowService->evaluate($kondisi);
 
         $this->assertFalse($result['layak']);
@@ -240,13 +243,13 @@ class PahanDoseReferenceTest extends TestCase
 
     public function test_interval_60_hari_layak(): void
     {
-        $kondisi = new \App\Models\KondisiLahan();
+        $kondisi = new KondisiLahan;
         $kondisi->curah_hujan_mm_bulanan = 150;
         $kondisi->curah_hujan_kategori = null;
         $kondisi->tanggal_pemupukan_terakhir = now()->subDays(60);
         $kondisi->kondisi_drainase = 'Baik';
 
-        $windowService = app(\App\Services\FertilizationWindowService::class);
+        $windowService = app(FertilizationWindowService::class);
         $result = $windowService->evaluate($kondisi);
 
         $this->assertTrue($result['layak']);
@@ -254,13 +257,13 @@ class PahanDoseReferenceTest extends TestCase
 
     public function test_interval_lebih_120_hari_terlambat_tanpa_multiplier(): void
     {
-        $kondisi = new \App\Models\KondisiLahan();
+        $kondisi = new KondisiLahan;
         $kondisi->curah_hujan_mm_bulanan = 150;
         $kondisi->curah_hujan_kategori = null;
         $kondisi->tanggal_pemupukan_terakhir = now()->subDays(130);
         $kondisi->kondisi_drainase = 'Baik';
 
-        $windowService = app(\App\Services\FertilizationWindowService::class);
+        $windowService = app(FertilizationWindowService::class);
         $result = $windowService->evaluate($kondisi);
 
         // Masih layak (terlambat tapi layak dijadwalkan)
@@ -278,7 +281,7 @@ class PahanDoseReferenceTest extends TestCase
     {
         $blok = $this->makeBlok(['luas_ha' => 5.0, 'sph' => 136, 'tahun_tanam' => now()->year - 10, 'fase_tanaman' => 'TM']);
         $doseRef = $this->service->getDoseReference($blok);
-        $calcService = app(\App\Services\FertilizationCalculationService::class);
+        $calcService = app(FertilizationCalculationService::class);
         $result = $calcService->calculate($blok, $doseRef);
 
         $this->assertEquals(680, $result['jumlah_pokok']); // 5 * 136
@@ -288,7 +291,7 @@ class PahanDoseReferenceTest extends TestCase
     {
         $blok = $this->makeBlok(['luas_ha' => 5.0, 'sph' => 136, 'tahun_tanam' => now()->year - 10, 'fase_tanaman' => 'TM']);
         $doseRef = $this->service->getDoseReference($blok);
-        $calcService = app(\App\Services\FertilizationCalculationService::class);
+        $calcService = app(FertilizationCalculationService::class);
         $result = $calcService->calculate($blok, $doseRef);
 
         // 6-15 range: urea 1.00-3.00, midpoint 2.00
@@ -302,7 +305,7 @@ class PahanDoseReferenceTest extends TestCase
     {
         $blok = $this->makeBlok(['luas_ha' => 5.0, 'sph' => 136, 'tahun_tanam' => now()->year - 10, 'fase_tanaman' => 'TM']);
         $doseRef = $this->service->getDoseReference($blok);
-        $calcService = app(\App\Services\FertilizationCalculationService::class);
+        $calcService = app(FertilizationCalculationService::class);
         $result = $calcService->calculate($blok, $doseRef);
 
         // 1360 kg / 50 = 27.2 → bulat 28

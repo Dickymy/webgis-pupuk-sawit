@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('blok_lahans', function (Blueprint $table) {
             $table->enum('fase_tanaman', ['TBM', 'TM'])->nullable()->after('topografi')
-                  ->comment('Fase tanaman: TBM (Tanaman Belum Menghasilkan) atau TM (Tanaman Menghasilkan)');
+                ->comment('Fase tanaman: TBM (Tanaman Belum Menghasilkan) atau TM (Tanaman Menghasilkan)');
         });
     }
 

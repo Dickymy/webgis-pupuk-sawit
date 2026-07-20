@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Artisan;
 class MaintenanceClearCache extends Command
 {
     protected $signature = 'sawit:clear-cache';
+
     protected $description = 'Bersihkan config, cache, route, dan view cache';
 
     public function handle(): int

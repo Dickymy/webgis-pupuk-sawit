@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Anggota;
 use App\Models\BlokLahan;
 use App\Models\RekomendasiRbs;
-use App\Models\RuleBaseLanjutan;
 use App\Services\RbsService;
 use Illuminate\Http\Request;
 
@@ -42,25 +42,27 @@ class RbsController extends Controller
             $latestActivity = $bloks->max(function ($b) {
                 $blokTime = $b->updated_at?->timestamp ?? 0;
                 $kondisiTime = $b->kondisiTerbaru?->created_at?->timestamp ?? 0;
+
                 return max($blokTime, $kondisiTime);
             });
+
             return [
-                'anggota'         => $anggota,
-                'bloks'           => $bloks,
+                'anggota' => $anggota,
+                'bloks' => $bloks,
                 'latest_activity' => $latestActivity,
             ];
         })->sortByDesc('latest_activity')->values();
 
-        $anggotas = \App\Models\Anggota::orderBy('nama')->get();
+        $anggotas = Anggota::orderBy('nama')->get();
 
         // Stats (global)
         $allBloks = BlokLahan::with('rekomendasiRbsTerbaru', 'kondisiTerbaru')->get();
         $stats = [
-            'total'          => $allBloks->count(),
-            'sudah_analisis' => $allBloks->filter(fn($b) => $b->rekomendasiRbsTerbaru)->count(),
-            'darurat'        => $allBloks->filter(fn($b) => $b->rekomendasiRbsTerbaru?->status_kebutuhan_dominan === 'Darurat')->count(),
-            'segera'         => $allBloks->filter(fn($b) => $b->rekomendasiRbsTerbaru?->status_kebutuhan_dominan === 'Segera')->count(),
-            'belum_kondisi'  => $allBloks->filter(fn($b) => !$b->kondisiTerbaru)->count(),
+            'total' => $allBloks->count(),
+            'sudah_analisis' => $allBloks->filter(fn ($b) => $b->rekomendasiRbsTerbaru)->count(),
+            'darurat' => $allBloks->filter(fn ($b) => $b->rekomendasiRbsTerbaru?->status_kebutuhan_dominan === 'Darurat')->count(),
+            'segera' => $allBloks->filter(fn ($b) => $b->rekomendasiRbsTerbaru?->status_kebutuhan_dominan === 'Segera')->count(),
+            'belum_kondisi' => $allBloks->filter(fn ($b) => ! $b->kondisiTerbaru)->count(),
         ];
 
         // Blok options for filter
@@ -78,6 +80,7 @@ class RbsController extends Controller
     {
         try {
             $hasil = $this->rbsService->analisis($blokLahan);
+
             return redirect()
                 ->route('rbs.detail', $blokLahan)
                 ->with('success', "Analisis RBS blok '{$blokLahan->nama_blok}' berhasil. Status: {$hasil['rekomendasi']->status_kebutuhan_dominan}.");
@@ -92,13 +95,13 @@ class RbsController extends Controller
      */
     public function analisisSemua()
     {
-        $hasil    = $this->rbsService->analisisSemua();
+        $hasil = $this->rbsService->analisisSemua();
         $berhasil = count($hasil['results']);
-        $gagal    = count($hasil['errors']);
+        $gagal = count($hasil['errors']);
 
         $message = "Analisis selesai: {$berhasil} blok berhasil dianalisis.";
         if ($gagal > 0) {
-            $message .= " {$gagal} blok gagal: " . implode('; ', $hasil['errors']);
+            $message .= " {$gagal} blok gagal: ".implode('; ', $hasil['errors']);
         }
 
         return redirect()->route('rbs.index')
@@ -112,7 +115,7 @@ class RbsController extends Controller
     {
         $blokLahan->load([
             'kondisiTerbaru',
-            'kondisiLahans' => fn($q) => $q->latest('tanggal_observasi')->limit(5),
+            'kondisiLahans' => fn ($q) => $q->latest('tanggal_observasi')->limit(5),
             'rekomendasiRbsTerbaru.kondisiLahan',
             'rekomendasiRbsTerbaru.admin',
         ]);
@@ -133,32 +136,32 @@ class RbsController extends Controller
     public function apiPopup(BlokLahan $blokLahan)
     {
         $rbs = $blokLahan->rekomendasiRbsTerbaru;
-        if (!$rbs) {
+        if (! $rbs) {
             return response()->json([
-                'status'  => 'Belum Dianalisis',
+                'status' => 'Belum Dianalisis',
                 'masalah' => [],
-                'pupuk'   => [],
-                'saran'   => '',
+                'pupuk' => [],
+                'saran' => '',
             ]);
         }
 
         return response()->json([
-            'status'            => $rbs->status_kebutuhan_dominan,
-            'warna_badge'       => $rbs->warna_badge,
-            'tanggal'           => $rbs->tanggal_analisis->format('d/m/Y'),
-            'masalah'           => $rbs->masalah_teridentifikasi,
-            'pupuk'             => $rbs->rekomendasi_pupuk,
-            'saran'             => $rbs->saran_tindakan_utama,
-            'jumlah_rule'       => $rbs->jumlah_rule_terpicu,
+            'status' => $rbs->status_kebutuhan_dominan,
+            'warna_badge' => $rbs->warna_badge,
+            'tanggal' => $rbs->tanggal_analisis->format('d/m/Y'),
+            'masalah' => $rbs->masalah_teridentifikasi,
+            'pupuk' => $rbs->rekomendasi_pupuk,
+            'saran' => $rbs->saran_tindakan_utama,
+            'jumlah_rule' => $rbs->jumlah_rule_terpicu,
             // Pahan-v2.2 — gunakan label lengkap
-            'fase'              => $rbs->label_fase,
-            'umur'              => $rbs->umur_tanaman_snapshot,
-            'urea_estimasi'     => $rbs->urea_estimasi_kg_per_pokok_tahun,
-            'kcl_estimasi'      => $rbs->kcl_estimasi_kg_per_pokok_tahun,
-            'skor_keandalan'    => $rbs->kelengkapan_data_score,
+            'fase' => $rbs->label_fase,
+            'umur' => $rbs->umur_tanaman_snapshot,
+            'urea_estimasi' => $rbs->urea_estimasi_kg_per_pokok_tahun,
+            'kcl_estimasi' => $rbs->kcl_estimasi_kg_per_pokok_tahun,
+            'skor_keandalan' => $rbs->kelengkapan_data_score,
             'kategori_keandalan' => $rbs->kategori_keandalan,
-            'status_kondisi'    => $rbs->label_kondisi_tanaman,
-            'status_kelayakan'  => $rbs->label_kelayakan,
+            'status_kondisi' => $rbs->label_kondisi_tanaman,
+            'status_kelayakan' => $rbs->label_kelayakan,
         ]);
     }
 
@@ -170,10 +173,10 @@ class RbsController extends Controller
         $bloks = BlokLahan::whereHas('kondisiLahans')
             ->with('anggota')
             ->get()
-            ->map(fn($b) => [
-                'id'        => $b->id,
+            ->map(fn ($b) => [
+                'id' => $b->id,
                 'nama_blok' => $b->nama_blok,
-                'pemilik'   => $b->nama_pemilik,
+                'pemilik' => $b->nama_pemilik,
             ]);
 
         return response()->json($bloks->values());

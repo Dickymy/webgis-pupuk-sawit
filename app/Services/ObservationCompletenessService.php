@@ -19,12 +19,12 @@ class ObservationCompletenessService
      * Parameter penting untuk diagnosis RBS.
      */
     private const PARAMETER_PENTING = [
-        'warna_daun'                 => 'Warna daun',
-        'ph_tanah'                   => 'pH tanah',
-        'kondisi_drainase'           => 'Kondisi drainase',
-        'curah_hujan'                => 'Data curah hujan',
-        'kelembaban_tanah'           => 'Kelembaban tanah',
-        'musim_saat_ini'             => 'Musim saat ini',
+        'warna_daun' => 'Warna daun',
+        'ph_tanah' => 'pH tanah',
+        'kondisi_drainase' => 'Kondisi drainase',
+        'curah_hujan' => 'Data curah hujan',
+        'kelembaban_tanah' => 'Kelembaban tanah',
+        'musim_saat_ini' => 'Musim saat ini',
         'tanggal_pemupukan_terakhir' => 'Tanggal pemupukan terakhir',
     ];
 
@@ -112,30 +112,30 @@ class ObservationCompletenessService
 
         // Alasan jika tidak bisa diagnosis
         $reason = '';
-        if (!$canRunDiagnosis) {
+        if (! $canRunDiagnosis) {
             $reasons = [];
             if ($filledCount < self::MIN_FIELDS_REQUIRED) {
-                $reasons[] = "Hanya {$filledCount} dari {$totalFields} parameter terisi (minimal " . self::MIN_FIELDS_REQUIRED . ")";
+                $reasons[] = "Hanya {$filledCount} dari {$totalFields} parameter terisi (minimal ".self::MIN_FIELDS_REQUIRED.')';
             }
-            if (!$hasWarnaDaun) {
+            if (! $hasWarnaDaun) {
                 $reasons[] = 'Data warna daun belum diisi (wajib untuk diagnosis)';
             }
-            if (!$hasPhOrDrainase) {
+            if (! $hasPhOrDrainase) {
                 $reasons[] = 'pH tanah atau kondisi drainase belum diisi (minimal salah satu wajib)';
             }
-            $reason = implode('. ', $reasons) . '.';
+            $reason = implode('. ', $reasons).'.';
         } else {
             $reason = 'Data observasi cukup untuk menjalankan diagnosis RBS.';
         }
 
         return [
             'can_calculate_base_dose' => true, // Selalu bisa jika blok punya data dasar
-            'can_run_diagnosis'       => $canRunDiagnosis,
-            'filled_fields'           => $filledFields,
-            'missing_fields'          => $missingFields,
-            'filled_count'            => $filledCount,
-            'total_fields'            => $totalFields,
-            'reason'                  => $reason,
+            'can_run_diagnosis' => $canRunDiagnosis,
+            'filled_fields' => $filledFields,
+            'missing_fields' => $missingFields,
+            'filled_count' => $filledCount,
+            'total_fields' => $totalFields,
+            'reason' => $reason,
         ];
     }
 }

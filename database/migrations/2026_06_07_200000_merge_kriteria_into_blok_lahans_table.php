@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -22,7 +22,7 @@ return new class extends Migration
             DB::table('blok_lahans')->where('id', $k->blok_lahan_id)->update([
                 'tahun_tanam' => $k->tahun_tanam,
                 'jenis_tanah' => $k->jenis_tanah,
-                'topografi'   => $k->topografi,
+                'topografi' => $k->topografi,
             ]);
         }
     }

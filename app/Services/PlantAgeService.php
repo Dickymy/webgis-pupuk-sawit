@@ -29,10 +29,10 @@ class PlantAgeService
         // Jika tidak ada data tahun tanam sama sekali
         if ($blok->tahun_tanam === null) {
             return [
-                'umur'                  => null,
-                'tanggal_referensi'     => $referenceDate->toDateString(),
-                'metode_perhitungan'    => 'tidak_tersedia',
-                'is_estimate'           => true,
+                'umur' => null,
+                'tanggal_referensi' => $referenceDate->toDateString(),
+                'metode_perhitungan' => 'tidak_tersedia',
+                'is_estimate' => true,
             ];
         }
 
@@ -45,10 +45,10 @@ class PlantAgeService
         }
 
         return [
-            'umur'                  => $umur,
-            'tanggal_referensi'     => $referenceDate->toDateString(),
-            'metode_perhitungan'    => 'tahun_tanam',
-            'is_estimate'           => true,
+            'umur' => $umur,
+            'tanggal_referensi' => $referenceDate->toDateString(),
+            'metode_perhitungan' => 'tahun_tanam',
+            'is_estimate' => true,
         ];
     }
 

@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\BlokLahan;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -16,9 +18,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Share notifikasi blok kritis (E3) dan admin ke semua view yang pakai layout app
         View::composer('layouts.app', function ($view) {
-            $admin = \Illuminate\Support\Facades\Auth::guard('admin')->user();
+            $admin = Auth::guard('admin')->user();
 
-            $blokDarurat = \App\Models\BlokLahan::whereHas('rekomendasiRbsTerbaru', function ($q) {
+            $blokDarurat = BlokLahan::whereHas('rekomendasiRbsTerbaru', function ($q) {
                 $q->where('status_kebutuhan_dominan', 'Darurat');
             })->with(['anggota', 'kondisiTerbaru', 'rekomendasiRbsTerbaru'])->get();
 
@@ -26,8 +28,11 @@ class AppServiceProvider extends ServiceProvider
             $blokDarurat = $blokDarurat->filter(function ($blok) {
                 $kondisi = $blok->kondisiTerbaru;
                 $rbs = $blok->rekomendasiRbsTerbaru;
-                if (!$kondisi || !$rbs) return false;
-                return !$kondisi->updated_at->gt($rbs->updated_at);
+                if (! $kondisi || ! $rbs) {
+                    return false;
+                }
+
+                return ! $kondisi->updated_at->gt($rbs->updated_at);
             });
 
             $jumlahDarurat = $blokDarurat->count();

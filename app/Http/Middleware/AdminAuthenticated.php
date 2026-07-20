@@ -11,7 +11,7 @@ class AdminAuthenticated
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::guard('admin')->check()) {
+        if (! Auth::guard('admin')->check()) {
             return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
         }
 

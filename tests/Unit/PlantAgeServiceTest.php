@@ -17,13 +17,14 @@ class PlantAgeServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new PlantAgeService();
+        $this->service = new PlantAgeService;
     }
 
     private function makeBlok(array $attrs = []): BlokLahan
     {
-        $blok = new BlokLahan();
+        $blok = new BlokLahan;
         $blok->tahun_tanam = $attrs['tahun_tanam'] ?? null;
+
         return $blok;
     }
 

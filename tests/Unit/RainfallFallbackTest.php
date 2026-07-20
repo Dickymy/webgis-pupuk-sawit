@@ -17,18 +17,19 @@ class RainfallFallbackTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new FertilizationWindowService();
+        $this->service = new FertilizationWindowService;
     }
 
     private function makeKondisi(array $attrs = []): KondisiLahan
     {
-        $kondisi = new KondisiLahan();
+        $kondisi = new KondisiLahan;
         $kondisi->curah_hujan_mm_bulanan = $attrs['curah_hujan_mm_bulanan'] ?? null;
         $kondisi->curah_hujan_kategori = $attrs['curah_hujan_kategori'] ?? null;
         $kondisi->tanggal_pemupukan_terakhir = isset($attrs['tanggal_pemupukan_terakhir'])
             ? Carbon::parse($attrs['tanggal_pemupukan_terakhir'])
             : null;
         $kondisi->kondisi_drainase = $attrs['kondisi_drainase'] ?? null;
+
         return $kondisi;
     }
 

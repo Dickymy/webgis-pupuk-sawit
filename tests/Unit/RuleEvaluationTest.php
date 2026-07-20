@@ -2,17 +2,9 @@
 
 namespace Tests\Unit;
 
-use App\Models\BlokLahan;
 use App\Models\KondisiLahan;
 use App\Models\RuleBaseLanjutan;
-use App\Services\FertilizationCalculationService;
-use App\Services\FertilizationWindowService;
-use App\Services\ObservationCompletenessService;
-use App\Services\PahanDoseReferenceService;
-use App\Services\PlantAgeService;
-use App\Services\PlantPhaseResolver;
 use App\Services\RbsService;
-use App\Services\RecommendationReliabilityService;
 use Tests\TestCase;
 
 /**
@@ -33,7 +25,7 @@ class RuleEvaluationTest extends TestCase
      */
     private function makeRule(array $attrs = []): RuleBaseLanjutan
     {
-        $rule = new RuleBaseLanjutan();
+        $rule = new RuleBaseLanjutan;
         $rule->kondisi_warna_daun = $attrs['kondisi_warna_daun'] ?? null;
         $rule->kondisi_defisiensi = $attrs['kondisi_defisiensi'] ?? null;
         $rule->kondisi_ph_min = $attrs['kondisi_ph_min'] ?? null;
@@ -49,6 +41,7 @@ class RuleEvaluationTest extends TestCase
         $rule->ada_gulma_dominan = $attrs['ada_gulma_dominan'] ?? null;
         $rule->kondisi_intermediate = $attrs['kondisi_intermediate'] ?? null;
         $rule->prasyarat_intermediate = $attrs['prasyarat_intermediate'] ?? null;
+
         return $rule;
     }
 
@@ -57,7 +50,7 @@ class RuleEvaluationTest extends TestCase
      */
     private function makeKondisi(array $attrs = []): KondisiLahan
     {
-        $kondisi = new KondisiLahan();
+        $kondisi = new KondisiLahan;
         $kondisi->warna_daun = $attrs['warna_daun'] ?? null;
         $kondisi->gejala_defisiensi = $attrs['gejala_defisiensi'] ?? null;
         $kondisi->ph_tanah = $attrs['ph_tanah'] ?? null;
@@ -69,6 +62,7 @@ class RuleEvaluationTest extends TestCase
         $kondisi->kondisi_tandan = $attrs['kondisi_tandan'] ?? null;
         $kondisi->ada_serangan_hama = $attrs['ada_serangan_hama'] ?? false;
         $kondisi->ada_gulma_dominan = $attrs['ada_gulma_dominan'] ?? false;
+
         return $kondisi;
     }
 
@@ -79,6 +73,7 @@ class RuleEvaluationTest extends TestCase
     {
         $reflection = new \ReflectionMethod($this->service, 'evaluasiRule');
         $reflection->setAccessible(true);
+
         return $reflection->invoke($this->service, $rule, $kondisi, $kategoriUmur);
     }
 

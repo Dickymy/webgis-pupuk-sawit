@@ -15,29 +15,29 @@ class UpdateBlokLahanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'anggota_id'        => ['required', 'exists:anggotas,id'],
-            'nama_blok'         => ['required', 'string', 'max:100'],
-            'luas_ha'           => ['required', 'numeric', 'min:0.01'],
-            'sph'               => ['required', 'integer', 'min:1'],
+            'anggota_id' => ['required', 'exists:anggotas,id'],
+            'nama_blok' => ['required', 'string', 'max:100'],
+            'luas_ha' => ['required', 'numeric', 'min:0.01'],
+            'sph' => ['required', 'integer', 'min:1'],
             'koordinat_geojson' => ['required', 'string'],
-            'tahun_tanam'       => ['required', 'integer', 'min:1990', 'max:' . now()->year],
-            'jenis_tanah'       => ['required', 'in:Tanah Lempung,Tanah Lempung Berpasir,Tanah Berpasir,Tanah Liat,Tanah Gambut,Tanah Aluvial,Tanah Podsolik Merah Kuning (PMK),Tanah Laterit,Tanah Berbatu,Lainnya'],
-            'topografi'         => ['required', 'in:Datar 0-15°,Bergelombang 15-30°,Curam >30°'],
-            'fase_tanaman'      => ['nullable', 'in:TBM,TM'],
+            'tahun_tanam' => ['required', 'integer', 'min:1990', 'max:'.now()->year],
+            'jenis_tanah' => ['required', 'in:Tanah Lempung,Tanah Lempung Berpasir,Tanah Berpasir,Tanah Liat,Tanah Gambut,Tanah Aluvial,Tanah Podsolik Merah Kuning (PMK),Tanah Laterit,Tanah Berbatu,Lainnya'],
+            'topografi' => ['required', 'in:Datar 0-15°,Bergelombang 15-30°,Curam >30°'],
+            'fase_tanaman' => ['nullable', 'in:TBM,TM'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'anggota_id.required'        => 'Pemilik lahan wajib dipilih.',
-            'nama_blok.required'         => 'Nama blok wajib diisi.',
-            'luas_ha.required'           => 'Luas lahan wajib diisi.',
-            'sph.required'               => 'SPH wajib diisi.',
+            'anggota_id.required' => 'Pemilik lahan wajib dipilih.',
+            'nama_blok.required' => 'Nama blok wajib diisi.',
+            'luas_ha.required' => 'Luas lahan wajib diisi.',
+            'sph.required' => 'SPH wajib diisi.',
             'koordinat_geojson.required' => 'Koordinat GeoJSON wajib diisi.',
-            'tahun_tanam.required'       => 'Tahun tanam wajib diisi.',
-            'jenis_tanah.required'       => 'Jenis tanah wajib dipilih.',
-            'topografi.required'         => 'Topografi wajib dipilih.',
+            'tahun_tanam.required' => 'Tahun tanam wajib diisi.',
+            'jenis_tanah.required' => 'Jenis tanah wajib dipilih.',
+            'topografi.required' => 'Topografi wajib dipilih.',
         ];
     }
 
@@ -54,7 +54,7 @@ class UpdateBlokLahanRequest extends FormRequest
         $tahunTanam = $this->input('tahun_tanam');
         $fase = $this->input('fase_tanaman');
 
-        if (!$tahunTanam) {
+        if (! $tahunTanam) {
             return;
         }
 
@@ -85,18 +85,19 @@ class UpdateBlokLahanRequest extends FormRequest
     private function validateGeoJson($validator): void
     {
         $geojson = $this->input('koordinat_geojson');
-        if (!$geojson) {
+        if (! $geojson) {
             return;
         }
 
         $decoded = json_decode($geojson, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             $validator->errors()->add('koordinat_geojson', 'Format GeoJSON tidak valid.');
+
             return;
         }
 
         $type = $decoded['type'] ?? null;
-        if (!in_array($type, ['Polygon', 'MultiPolygon', 'Feature', 'FeatureCollection'])) {
+        if (! in_array($type, ['Polygon', 'MultiPolygon', 'Feature', 'FeatureCollection'])) {
             $validator->errors()->add('koordinat_geojson', 'GeoJSON harus berupa Polygon, MultiPolygon, Feature, atau FeatureCollection.');
         }
     }

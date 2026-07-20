@@ -6,7 +6,6 @@ use App\Models\BlokLahan;
 use App\Models\RekomendasiRbs;
 use App\Models\RuleBaseLanjutan;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Command untuk migrasi data lama ke format Pahan-v2.
@@ -17,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 class MigratePahanV2 extends Command
 {
     protected $signature = 'sawit:migrate-pahan-v2 {--dry-run : Tampilkan perubahan tanpa mengeksekusi}';
+
     protected $description = 'Migrasi data lama ke format Pahan-v2 (fase tanaman, label rekomendasi lama)';
 
     public function handle(): int
@@ -24,14 +24,14 @@ class MigratePahanV2 extends Command
         $dryRun = $this->option('dry-run');
         $prefix = $dryRun ? '[DRY-RUN] ' : '';
 
-        $this->info($prefix . '═══════════════════════════════════════════');
-        $this->info($prefix . ' MIGRASI DATA KE PAHAN-V2');
-        $this->info($prefix . '═══════════════════════════════════════════');
+        $this->info($prefix.'═══════════════════════════════════════════');
+        $this->info($prefix.' MIGRASI DATA KE PAHAN-V2');
+        $this->info($prefix.'═══════════════════════════════════════════');
         $this->newLine();
 
         // ─── 1. Identifikasi blok tanpa fase ───
         $blokTanpaFase = BlokLahan::whereNull('fase_tanaman')->get();
-        $this->info($prefix . "Blok tanpa fase_tanaman: {$blokTanpaFase->count()}");
+        $this->info($prefix."Blok tanpa fase_tanaman: {$blokTanpaFase->count()}");
 
         $autoTBM = 0;
         $autoTM = 0;
@@ -44,7 +44,7 @@ class MigratePahanV2 extends Command
                 $this->line("  - {$blok->nama_blok}: tahun_tanam kosong → PERLU VERIFIKASI");
             } elseif ($umur < 3) {
                 $autoTBM++;
-                if (!$dryRun) {
+                if (! $dryRun) {
                     $blok->update(['fase_tanaman' => 'TBM']);
                 }
                 $this->line("  - {$blok->nama_blok}: umur {$umur} → TBM");
@@ -53,7 +53,7 @@ class MigratePahanV2 extends Command
                 $this->line("  - {$blok->nama_blok}: umur 3 → PERLU VERIFIKASI (bisa TBM/TM)");
             } else {
                 $autoTM++;
-                if (!$dryRun) {
+                if (! $dryRun) {
                     $blok->update(['fase_tanaman' => 'TM']);
                 }
                 $this->line("  - {$blok->nama_blok}: umur {$umur} → TM");
@@ -61,7 +61,7 @@ class MigratePahanV2 extends Command
         }
 
         $this->newLine();
-        $this->info($prefix . "Auto-set TBM: {$autoTBM} | Auto-set TM: {$autoTM} | Perlu verifikasi: {$perluVerifikasi}");
+        $this->info($prefix."Auto-set TBM: {$autoTBM} | Auto-set TM: {$autoTM} | Perlu verifikasi: {$perluVerifikasi}");
         $this->newLine();
 
         // ─── 2. Label rekomendasi lama sebagai legacy-v1 ───
@@ -71,39 +71,39 @@ class MigratePahanV2 extends Command
 
         $rekTanpaVersi = RekomendasiRbs::whereNull('versi_mesin_rekomendasi')->count();
 
-        $this->info($prefix . "Rekomendasi tanpa versi mesin: {$rekTanpaVersi}");
+        $this->info($prefix."Rekomendasi tanpa versi mesin: {$rekTanpaVersi}");
 
-        if (!$dryRun && $rekTanpaVersi > 0) {
+        if (! $dryRun && $rekTanpaVersi > 0) {
             RekomendasiRbs::whereNull('versi_mesin_rekomendasi')
                 ->update(['versi_mesin_rekomendasi' => 'legacy-v1']);
-            $this->info($prefix . "  → Ditandai sebagai legacy-v1");
+            $this->info($prefix.'  → Ditandai sebagai legacy-v1');
         }
 
         $this->newLine();
 
         // ─── 3. Rule tanpa kode ───
         $ruleTanpaKode = RuleBaseLanjutan::whereNull('kode_rule')->count();
-        $this->info($prefix . "Rule tanpa kode_rule: {$ruleTanpaKode}");
+        $this->info($prefix."Rule tanpa kode_rule: {$ruleTanpaKode}");
 
-        if (!$dryRun && $ruleTanpaKode > 0) {
+        if (! $dryRun && $ruleTanpaKode > 0) {
             // Assign auto-kode untuk yang belum punya
             $rules = RuleBaseLanjutan::whereNull('kode_rule')->get();
             foreach ($rules as $i => $rule) {
                 $prefix_code = 'LEGACY';
                 $rule->update([
-                    'kode_rule' => $prefix_code . '-' . str_pad($rule->id, 3, '0', STR_PAD_LEFT),
+                    'kode_rule' => $prefix_code.'-'.str_pad($rule->id, 3, '0', STR_PAD_LEFT),
                     'status_validasi' => 'PERLU_VALIDASI_AHLI',
                 ]);
             }
-            $this->info("  → Auto-assigned kode LEGACY-xxx");
+            $this->info('  → Auto-assigned kode LEGACY-xxx');
         }
 
         $this->newLine();
 
         // ─── 4. Statistik akhir ───
-        $this->info($prefix . '═══════════════════════════════════════════');
-        $this->info($prefix . ' RINGKASAN');
-        $this->info($prefix . '═══════════════════════════════════════════');
+        $this->info($prefix.'═══════════════════════════════════════════');
+        $this->info($prefix.' RINGKASAN');
+        $this->info($prefix.'═══════════════════════════════════════════');
         $this->table(['Metrik', 'Jumlah'], [
             ['Total blok', BlokLahan::count()],
             ['Blok dengan fase', BlokLahan::whereNotNull('fase_tanaman')->count()],

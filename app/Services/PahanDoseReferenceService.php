@@ -26,10 +26,8 @@ class PahanDoseReferenceService
      * Dapatkan referensi dosis berdasarkan umur dan fase eksplisit.
      * Gunakan method ini untuk analisis dengan tanggal observasi tertentu.
      *
-     * @param BlokLahan $blok
-     * @param int $umurSaatObservasi Umur tanaman pada tanggal observasi
-     * @param string $faseSaatObservasi Fase tanaman (TBM/TM) pada saat observasi
-     * @return array
+     * @param  int  $umurSaatObservasi  Umur tanaman pada tanggal observasi
+     * @param  string  $faseSaatObservasi  Fase tanaman (TBM/TM) pada saat observasi
      */
     public function getDoseReferenceForContext(BlokLahan $blok, int $umurSaatObservasi, string $faseSaatObservasi): array
     {
@@ -41,6 +39,7 @@ class PahanDoseReferenceService
 
         if ($ageGroup === null) {
             $warnings[] = "Kombinasi fase {$faseSaatObservasi} dan umur {$umurSaatObservasi} tahun tidak ditemukan dalam tabel referensi.";
+
             return $this->emptyResult($strategy, false, $warnings);
         }
 
@@ -50,6 +49,7 @@ class PahanDoseReferenceService
 
         if ($entry === null) {
             $warnings[] = "Entry dosis untuk {$faseSaatObservasi}/{$ageGroup} tidak ditemukan di konfigurasi.";
+
             return $this->emptyResult($strategy, false, $warnings);
         }
 
@@ -57,24 +57,24 @@ class PahanDoseReferenceService
         $kclEstimate = $this->calculateEstimate($entry['kcl_min'], $entry['kcl_max'], $strategy);
 
         return [
-            'phase'     => $faseSaatObservasi,
+            'phase' => $faseSaatObservasi,
             'age_group' => $ageGroup,
             'age_label' => $entry['label'],
             'urea' => [
-                'min'      => $entry['urea_min'],
-                'max'      => $entry['urea_max'],
+                'min' => $entry['urea_min'],
+                'max' => $entry['urea_max'],
                 'estimate' => $ureaEstimate,
             ],
             'kcl' => [
-                'min'      => $entry['kcl_min'],
-                'max'      => $entry['kcl_max'],
+                'min' => $entry['kcl_min'],
+                'max' => $entry['kcl_max'],
                 'estimate' => $kclEstimate,
             ],
-            'unit'      => 'kg/pokok/tahun',
-            'strategy'  => $strategy,
+            'unit' => 'kg/pokok/tahun',
+            'strategy' => $strategy,
             'reference' => config('fertilization.reference_source'),
             'needs_phase_verification' => false,
-            'warnings'  => $warnings,
+            'warnings' => $warnings,
         ];
     }
 
@@ -127,16 +127,29 @@ class PahanDoseReferenceService
     private function resolveAgeGroup(string $fase, int $umur): ?string
     {
         if ($fase === 'TBM') {
-            if ($umur <= 1) return '1';
-            if ($umur === 2) return '2';
-            if ($umur >= 3) return '3';
+            if ($umur <= 1) {
+                return '1';
+            }
+            if ($umur === 2) {
+                return '2';
+            }
+            if ($umur >= 3) {
+                return '3';
+            }
+
             return null;
         }
 
         // TM
-        if ($umur >= 3 && $umur <= 5) return '3-5';
-        if ($umur >= 6 && $umur <= 15) return '6-15';
-        if ($umur >= 16) return '16+';
+        if ($umur >= 3 && $umur <= 5) {
+            return '3-5';
+        }
+        if ($umur >= 6 && $umur <= 15) {
+            return '6-15';
+        }
+        if ($umur >= 16) {
+            return '16+';
+        }
 
         return null;
     }
@@ -147,10 +160,10 @@ class PahanDoseReferenceService
     private function calculateEstimate(float $min, float $max, string $strategy): float
     {
         return match ($strategy) {
-            'minimum'  => $min,
-            'maximum'  => $max,
+            'minimum' => $min,
+            'maximum' => $max,
             'midpoint' => round(($min + $max) / 2, 2),
-            default    => round(($min + $max) / 2, 2),
+            default => round(($min + $max) / 2, 2),
         };
     }
 
@@ -160,16 +173,16 @@ class PahanDoseReferenceService
     private function emptyResult(string $strategy, bool $needsVerification, array $warnings): array
     {
         return [
-            'phase'     => null,
+            'phase' => null,
             'age_group' => null,
             'age_label' => null,
-            'urea'      => ['min' => null, 'max' => null, 'estimate' => null],
-            'kcl'       => ['min' => null, 'max' => null, 'estimate' => null],
-            'unit'      => 'kg/pokok/tahun',
-            'strategy'  => $strategy,
+            'urea' => ['min' => null, 'max' => null, 'estimate' => null],
+            'kcl' => ['min' => null, 'max' => null, 'estimate' => null],
+            'unit' => 'kg/pokok/tahun',
+            'strategy' => $strategy,
             'reference' => config('fertilization.reference_source'),
             'needs_phase_verification' => $needsVerification,
-            'warnings'  => $warnings,
+            'warnings' => $warnings,
         ];
     }
 }

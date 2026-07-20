@@ -16,7 +16,7 @@ class LaporanController extends Controller
             ->latest('tanggal_analisis');
 
         // Filter histori: default hanya latest
-        if (!$request->filled('histori') || $request->histori !== 'semua') {
+        if (! $request->filled('histori') || $request->histori !== 'semua') {
             $query->where('is_latest', true);
         }
 
@@ -53,17 +53,17 @@ class LaporanController extends Controller
                 return in_array($r->status_kebutuhan_dominan, ['Normal', 'Segera']);
             });
 
-            $latestAnalisis = $items->max(fn($r) => $r->tanggal_analisis?->timestamp ?? 0);
+            $latestAnalisis = $items->max(fn ($r) => $r->tanggal_analisis?->timestamp ?? 0);
 
             return [
-                'anggota'          => $anggota,
-                'items'            => $items,
-                'jumlah_blok'      => $items->count(),
-                'total_luas'       => $items->sum(fn($r) => $r->blokLahan->luas_ha),
-                'subtotal_urea'    => $blokLayak->sum('total_urea'),
-                'subtotal_kcl'     => $blokLayak->sum('total_kcl'),
-                'blok_layak'       => $blokLayak->count(),
-                'latest_analisis'  => $latestAnalisis,
+                'anggota' => $anggota,
+                'items' => $items,
+                'jumlah_blok' => $items->count(),
+                'total_luas' => $items->sum(fn ($r) => $r->blokLahan->luas_ha),
+                'subtotal_urea' => $blokLayak->sum('total_urea'),
+                'subtotal_kcl' => $blokLayak->sum('total_kcl'),
+                'blok_layak' => $blokLayak->count(),
+                'latest_analisis' => $latestAnalisis,
             ];
         })->sortByDesc('latest_analisis')->values();
 
@@ -71,10 +71,10 @@ class LaporanController extends Controller
         $rekapLayak = $rekap->filter(function ($r) {
             return in_array($r->status_kebutuhan_dominan, ['Normal', 'Segera']);
         });
-        $totalUrea    = $rekapLayak->sum('total_urea');
-        $totalKcl     = $rekapLayak->sum('total_kcl');
-        $karungUrea   = $totalUrea > 0 ? (int) ceil($totalUrea / 50) : 0;
-        $karungKcl    = $totalKcl > 0 ? (int) ceil($totalKcl / 50) : 0;
+        $totalUrea = $rekapLayak->sum('total_urea');
+        $totalKcl = $rekapLayak->sum('total_kcl');
+        $karungUrea = $totalUrea > 0 ? (int) ceil($totalUrea / 50) : 0;
+        $karungKcl = $totalKcl > 0 ? (int) ceil($totalKcl / 50) : 0;
         $blokLayakTotal = $rekapLayak->count();
 
         // Dropdown data
@@ -92,6 +92,7 @@ class LaporanController extends Controller
     public function show(RekomendasiRbs $rekomendasiRbs)
     {
         $rekomendasiRbs->load(['blokLahan.anggota', 'kondisiLahan', 'admin']);
+
         return view('laporan.show', compact('rekomendasiRbs'));
     }
 
@@ -102,9 +103,8 @@ class LaporanController extends Controller
         $pdf = Pdf::loadView('laporan.pdf', compact('rekomendasiRbs'));
         $pdf->setPaper('a4', 'portrait');
 
-        $filename = 'Laporan_' . str_replace(' ', '_', $rekomendasiRbs->blokLahan->nama_blok) . '_' . $rekomendasiRbs->tanggal_analisis->format('Y-m-d') . '.pdf';
+        $filename = 'Laporan_'.str_replace(' ', '_', $rekomendasiRbs->blokLahan->nama_blok).'_'.$rekomendasiRbs->tanggal_analisis->format('Y-m-d').'.pdf';
 
         return $pdf->download($filename);
     }
-
 }
