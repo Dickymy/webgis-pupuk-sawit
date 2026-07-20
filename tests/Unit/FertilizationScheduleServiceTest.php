@@ -82,7 +82,7 @@ class FertilizationScheduleServiceTest extends TestCase
         $this->assertStringContainsString('60 hari', $jadwal[1]['estimasi_waktu']);
     }
 
-    public function test_not_feasible_returns_ditunda(): void
+    public function test_not_feasible_returns_empty_array(): void
     {
         $kondisi = new KondisiLahan([
             'curah_hujan_mm_bulanan' => 300,
@@ -99,12 +99,10 @@ class FertilizationScheduleServiceTest extends TestCase
             ['umur' => 10, 'fase' => 'TM', 'fase_label' => 'Tanaman Menghasilkan', 'tanggal_referensi' => '2026-07-20', 'metode_perhitungan_umur' => 'tahun_tanam', 'needs_phase_verification' => false, 'phase_conflict' => false]
         );
 
-        $this->assertCount(1, $jadwal);
-        $this->assertEquals('Ditunda', $jadwal[0]['status_tahap']);
-        $this->assertEquals(0, $jadwal[0]['urea_kg']);
+        $this->assertEmpty($jadwal);
     }
 
-    public function test_no_numeric_rainfall_returns_waiting(): void
+    public function test_no_numeric_rainfall_returns_empty_array(): void
     {
         $kondisi = new KondisiLahan([
             'curah_hujan_mm_bulanan' => null,
@@ -121,8 +119,7 @@ class FertilizationScheduleServiceTest extends TestCase
             ['umur' => 10, 'fase' => 'TM', 'fase_label' => 'Tanaman Menghasilkan', 'tanggal_referensi' => '2026-07-20', 'metode_perhitungan_umur' => 'tahun_tanam', 'needs_phase_verification' => false, 'phase_conflict' => false]
         );
 
-        $this->assertCount(1, $jadwal);
-        $this->assertEquals('Menunggu Data', $jadwal[0]['status_tahap']);
+        $this->assertEmpty($jadwal);
     }
 
     public function test_no_fase_abbreviation_in_schedule(): void

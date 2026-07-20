@@ -326,19 +326,25 @@
         <p style="font-size: 9px; color: #334155; font-weight: 600;">Nomor Dokumen: LHP-RBS/{{ $rekomendasiRbs->blokLahan->id }}/{{ $rekomendasiRbs->id }}/{{ $rekomendasiRbs->tanggal_analisis->format('Y') }}</p>
     </div>
 
-    {{-- ═══ 2. STATUS — besar & jelas ═══ --}}
-    @php
-        $statusClass = match($rekomendasiRbs->status_kebutuhan_dominan) {
-            'Darurat' => 'status-darurat',
-            'Segera' => 'status-segera',
-            'Normal' => 'status-normal',
-            default => 'status-tunda',
-        };
-    @endphp
-    <div class="status-banner {{ $statusClass }}">
-        <div class="label">Status Kebutuhan Pemupukan</div>
-        <div class="value">{{ \App\Models\RekomendasiRbs::labelStatus($rekomendasiRbs->status_kebutuhan_dominan) }}</div>
+    {{-- ═══ 2. STATUS — Dua Status Terpisah (v2.4) ═══ --}}
+    <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+        {{-- Status Kondisi Tanaman --}}
+        <div class="status-banner" style="flex: 1;">
+            <div class="label">Kondisi Tanaman</div>
+            <div class="value">{{ $rekomendasiRbs->label_kondisi_tanaman }}</div>
+        </div>
+        {{-- Status Kelayakan Aplikasi --}}
+        <div class="status-banner" style="flex: 1;">
+            <div class="label">Kelayakan Aplikasi Pemupukan</div>
+            <div class="value">{{ $rekomendasiRbs->label_kelayakan }}</div>
+        </div>
     </div>
+
+    @if($rekomendasiRbs->alasan_kelayakan)
+    <div style="font-size: 9px; color: #475569; margin-bottom: 12px; padding: 4px 8px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 3px;">
+        <strong>Alasan Kelayakan:</strong> {{ $rekomendasiRbs->alasan_kelayakan }}
+    </div>
+    @endif
 
     {{-- ═══ 3. INFO LAHAN — ringkas ═══ --}}
     <div class="section">
@@ -358,23 +364,22 @@
             </tr>
             @if($rekomendasiRbs->blokLahan->tahun_tanam)
             <tr>
-                <td class="label">Umur Tanaman</td>
-                <td class="value">{{ $rekomendasiRbs->blokLahan->umur_tanaman }} tahun ({{ $rekomendasiRbs->blokLahan->kategori_umur }})</td>
-                <td class="label">Jenis Tanah</td>
-                <td class="value">{{ $rekomendasiRbs->blokLahan->jenis_tanah }}</td>
+                <td class="label">Umur saat Observasi</td>
+                <td class="value">{{ $rekomendasiRbs->umur_tanaman_snapshot ?? $rekomendasiRbs->blokLahan->umur_tanaman }} tahun</td>
+                <td class="label">Fase Tanaman</td>
+                <td class="value">{{ $rekomendasiRbs->label_fase }}</td>
             </tr>
             <tr>
-                <td class="label">Topografi</td>
-                <td class="value">{{ $rekomendasiRbs->blokLahan->topografi }}</td>
+                <td class="label">Jenis Tanah</td>
+                <td class="value">{{ $rekomendasiRbs->blokLahan->jenis_tanah }}</td>
                 <td class="label">Total Pohon</td>
-                <td class="value">{{ number_format($rekomendasiRbs->blokLahan->sph * $rekomendasiRbs->blokLahan->luas_ha) }} pohon</td>
+                <td class="value">{{ number_format($rekomendasiRbs->jumlah_pokok_snapshot ?? ($rekomendasiRbs->blokLahan->sph * $rekomendasiRbs->blokLahan->luas_ha)) }} pohon</td>
             </tr>
             @endif
         </table>
     </div>
 
-    {{-- ═══ 4. KEBUTUHAN PUPUK — yang paling dicari petani ═══ --}}
-    @if($rekomendasiRbs->urea_estimasi_kg_per_pokok_tahun !== null || $rekomendasiRbs->kcl_estimasi_kg_per_pokok_tahun !== null || $rekomendasiRbs->total_urea || $rekomendasiRbs->total_kcl)
+    {{-- ═══ 4. KEBUTUHAN PUPUK — Tahunan & Aplikasi Saat Ini (v2.4) ═══ --}}
     <div class="section">
         <div class="section-title">Kebutuhan Pupuk</div>
 
@@ -393,59 +398,85 @@
         </div>
         @endif
 
-        <p style="font-size: 8.5px; color: #6b7280; font-weight: 600; margin-bottom: 4px;">ESTIMASI DOSIS KERJA SISTEM:</p>
+        {{-- Kebutuhan Tahunan (selalu tampil jika data tersedia) --}}
+        @if($rekomendasiRbs->urea_total_estimasi_tahunan || $rekomendasiRbs->kcl_total_estimasi_tahunan)
+        <p style="font-size: 8.5px; color: #6b7280; font-weight: 600; margin-bottom: 4px;">KEBUTUHAN TAHUNAN (TOTAL):</p>
         <table class="logistik-table">
             <thead>
                 <tr>
                     <th>Jenis Pupuk</th>
-                    <th>Dosis / Pokok</th>
-                    <th>Total Kebutuhan</th>
-                    <th>Jumlah Karung</th>
+                    <th>Dosis / Pokok / Tahun</th>
+                    <th>Total Min</th>
+                    <th>Total Estimasi</th>
+                    <th>Total Max</th>
+                    <th>Karung (50 kg)</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td class="urea">Urea</td>
-                    <td class="urea">{{ $rekomendasiRbs->dosis_urea ?? '-' }} kg</td>
-                    <td class="urea">{{ $rekomendasiRbs->total_urea ? number_format($rekomendasiRbs->total_urea, 1) . ' kg' : '-' }}</td>
-                    <td class="urea">{{ $rekomendasiRbs->karung_urea ?? '-' }} karung</td>
+                    <td>Urea</td>
+                    <td>{{ $rekomendasiRbs->urea_estimasi_kg_per_pokok_tahun ? number_format($rekomendasiRbs->urea_estimasi_kg_per_pokok_tahun, 2) . ' kg' : '-' }}</td>
+                    <td>{{ $rekomendasiRbs->urea_total_min_tahunan ? number_format($rekomendasiRbs->urea_total_min_tahunan, 1) . ' kg' : '-' }}</td>
+                    <td style="font-weight: 800;">{{ $rekomendasiRbs->urea_total_estimasi_tahunan ? number_format($rekomendasiRbs->urea_total_estimasi_tahunan, 1) . ' kg' : '-' }}</td>
+                    <td>{{ $rekomendasiRbs->urea_total_max_tahunan ? number_format($rekomendasiRbs->urea_total_max_tahunan, 1) . ' kg' : '-' }}</td>
+                    <td>{{ $rekomendasiRbs->urea_karung_estimasi_tahunan ?? '-' }} karung</td>
                 </tr>
                 <tr>
-                    <td class="kcl">KCl</td>
-                    <td class="kcl">{{ $rekomendasiRbs->dosis_kcl ?? '-' }} kg</td>
-                    <td class="kcl">{{ $rekomendasiRbs->total_kcl ? number_format($rekomendasiRbs->total_kcl, 1) . ' kg' : '-' }}</td>
-                    <td class="kcl">{{ $rekomendasiRbs->karung_kcl ?? '-' }} karung</td>
+                    <td>KCl</td>
+                    <td>{{ $rekomendasiRbs->kcl_estimasi_kg_per_pokok_tahun ? number_format($rekomendasiRbs->kcl_estimasi_kg_per_pokok_tahun, 2) . ' kg' : '-' }}</td>
+                    <td>{{ $rekomendasiRbs->kcl_total_min_tahunan ? number_format($rekomendasiRbs->kcl_total_min_tahunan, 1) . ' kg' : '-' }}</td>
+                    <td style="font-weight: 800;">{{ $rekomendasiRbs->kcl_total_estimasi_tahunan ? number_format($rekomendasiRbs->kcl_total_estimasi_tahunan, 1) . ' kg' : '-' }}</td>
+                    <td>{{ $rekomendasiRbs->kcl_total_max_tahunan ? number_format($rekomendasiRbs->kcl_total_max_tahunan, 1) . ' kg' : '-' }}</td>
+                    <td>{{ $rekomendasiRbs->kcl_karung_estimasi_tahunan ?? '-' }} karung</td>
                 </tr>
             </tbody>
         </table>
-        <p style="font-size: 9px; color: #6b7280; text-align: right;">*1 karung = 50 kg</p>
-    </div>
-    @else
-    <div class="section">
-        <div class="section-title">Kebutuhan Pupuk</div>
-        <div class="saran-box" style="border-left: 3px solid #475569; background-color: #f8fafc; padding: 10px;">
-            <div class="title" style="color: #0f172a; font-weight: 700; font-size: 9px;">APLIKASI PUPUK KIMIA DITUNDA</div>
-            <div class="text" style="color: #334155; font-size: 9.5px; line-height: 1.5; margin-top: 4px;">
-                @if($rekomendasiRbs->status_kebutuhan_dominan === 'Darurat')
-                    Rekomendasi pemupukan Urea &amp; KCl ditangguhkan sementara karena status lahan <strong>Defisiensi Berat / Darurat</strong>. Sangat disarankan untuk memprioritaskan tindakan korektif (seperti pengapuran dengan Dolomit) terlebih dahulu sebelum mengaplikasikan pupuk kimia guna memastikan penyerapan unsur hara optimal.
-                @else
-                    @php
-                        $masalahStr = implode(' ', $rekomendasiRbs->masalah_teridentifikasi ?? []);
-                        $pesanTunda = 'Kondisi pembatas lahan saat ini (genangan air atau kekeringan ekstrem) tidak ideal untuk pemupukan. Pemupukan kimia standar ditunda sementara waktu guna mencegah pemborosan pupuk akibat pencucian (leaching) atau penguapan (volatilisasi).';
-                        if (str_contains($masalahStr, 'Waterlogging') || str_contains($masalahStr, 'tergenang') || str_contains($masalahStr, 'drainase') || str_contains($masalahStr, 'Drainase')) {
-                            $pesanTunda = '<strong>Lahan Tergenang (Waterlogging)</strong>: Pemupukan tanah ditunda sementara. Air tergenang akan mencuci bersih pupuk (leaching) dan membuat akar kelapa sawit kekurangan oksigen untuk menyerap hara secara efektif. Disarankan untuk memprioritaskan perbaikan parit drainase terlebih dahulu.';
-                        } elseif (str_contains($masalahStr, 'Kekeringan') || str_contains($masalahStr, 'kering') || str_contains($masalahStr, 'Kemarau')) {
-                            $pesanTunda = '<strong>Cekaman Kekeringan</strong>: Pemupukan ditunda sementara. Tanah yang terlalu kering membuat pupuk tidak dapat larut untuk diserap akar, serta berisiko membakar akar rambut kelapa sawit. Disarankan fokus pada pemberian mulsing organik (seperti janjang kosong) untuk menjaga kelembaban dan menunggu hingga curah hujan cukup.';
-                        } elseif (str_contains($masalahStr, 'Tua Renta') || str_contains($masalahStr, 'Tua')) {
-                            $pesanTunda = '<strong>Tanaman Tua Renta</strong>: Pemupukan standar ditangguhkan untuk analisis ekonomi. Pohon berusia di atas 25 tahun memiliki efisiensi penyerapan hara yang sangat rendah. Disarankan mengevaluasi kelayakan replanting (peremajaan lahan) dibandingkan biaya pemeliharaan pupuk.';
-                        }
-                    @endphp
-                    {!! $pesanTunda !!}
+        @endif
+
+        {{-- Aplikasi Saat Ini --}}
+        @php
+            $ureaAplikasi = $rekomendasiRbs->urea_aplikasi_saat_ini ?? 0;
+            $kclAplikasi = $rekomendasiRbs->kcl_aplikasi_saat_ini ?? 0;
+            $isDitunda = ($ureaAplikasi == 0 && $kclAplikasi == 0 && ($rekomendasiRbs->urea_total_estimasi_tahunan > 0 || $rekomendasiRbs->kcl_total_estimasi_tahunan > 0));
+        @endphp
+
+        @if($isDitunda)
+        <div class="saran-box" style="border-left: 3px solid #d97706; background-color: #fffbeb; margin-top: 8px;">
+            <div class="title" style="color: #b45309;">APLIKASI SAAT INI: DITUNDA (0 kg)</div>
+            <div class="text" style="color: #92400e; font-size: 9px;">
+                Kebutuhan tahunan tetap tercatat di atas. Aplikasi saat ini ditunda karena kondisi kelayakan belum terpenuhi.
+                @if($rekomendasiRbs->alasan_kelayakan)
+                <br><strong>Alasan:</strong> {{ $rekomendasiRbs->alasan_kelayakan }}
                 @endif
             </div>
         </div>
+        @elseif($ureaAplikasi > 0 || $kclAplikasi > 0)
+        <p style="font-size: 8.5px; color: #6b7280; font-weight: 600; margin-top: 8px; margin-bottom: 4px;">APLIKASI SAAT INI:</p>
+        <table class="logistik-table">
+            <thead>
+                <tr>
+                    <th>Jenis Pupuk</th>
+                    <th>Total Aplikasi</th>
+                    <th>Karung (50 kg)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Urea</td>
+                    <td style="font-weight: 800;">{{ number_format($ureaAplikasi, 1) }} kg</td>
+                    <td>{{ $ureaAplikasi > 0 ? (int) ceil($ureaAplikasi / 50) : 0 }} karung</td>
+                </tr>
+                <tr>
+                    <td>KCl</td>
+                    <td style="font-weight: 800;">{{ number_format($kclAplikasi, 1) }} kg</td>
+                    <td>{{ $kclAplikasi > 0 ? (int) ceil($kclAplikasi / 50) : 0 }} karung</td>
+                </tr>
+            </tbody>
+        </table>
+        @endif
+
+        <p style="font-size: 9px; color: #6b7280; text-align: right;">*1 karung = 50 kg · Pembulatan karung ke atas (ceil)</p>
     </div>
-    @endif
 
     {{-- ═══ 5. JADWAL PEMUPUKAN — kapan harus bertindak ═══ --}}
     @if($rekomendasiRbs->jadwal_pemupukan && count($rekomendasiRbs->jadwal_pemupukan) > 0)
@@ -602,11 +633,11 @@
     </div>
     @endif
 
-    {{-- ═══ 11. META INFO — validitas & confidence ═══ --}}
+    {{-- ═══ 11. META INFO — validitas & keandalan ═══ --}}
     <div class="meta-info">
         <strong>Validitas:</strong> {{ $rekomendasiRbs->validitas_rekomendasi ?? 'Estimasi Visual' }}
         &nbsp;·&nbsp;
-        <strong>Tingkat Keandalan Data:</strong> {{ $rekomendasiRbs->confidence_label ?? 'Rendah' }} ({{ $rekomendasiRbs->confidence_score ?? 0 }}%)
+        <strong>Tingkat Kelengkapan & Keandalan Data:</strong> {{ $rekomendasiRbs->kategori_keandalan ?? 'Data Tidak Cukup' }} ({{ $rekomendasiRbs->kelengkapan_data_score ?? 0 }}%)
         @if(!$rekomendasiRbs->data_cukup)
         &nbsp;·&nbsp; <span style="color: #dc2626;">Data observasi belum lengkap</span>
         @endif
@@ -614,12 +645,12 @@
 
     {{-- ═══ 12. DISCLAIMER ═══ --}}
     <div class="disclaimer">
-        <strong>Catatan:</strong> Rekomendasi ini dihasilkan oleh sistem berbasis aturan (Rule-Based System) berdasarkan data observasi lapangan. Hasil ini bersifat rekomendasi dan bukan pengganti analisis laboratorium tanah/daun. Untuk keputusan yang lebih akurat, disarankan melengkapi dengan hasil uji lab.
+        <strong>Disclaimer:</strong> Estimasi sistem merupakan nilai kerja dari rentang referensi Pahan (2013) dan bukan pengganti analisis laboratorium atau rekomendasi agronomis lapangan. Perhitungan kuantitatif dibatasi pada Urea dan MOP/KCl. Unsur P, Mg, B, dan unsur lain tetap dapat diperlukan sesuai kondisi tanaman dan hasil evaluasi ahli.
     </div>
 
-    {{-- ═══ DISCLAIMER ═══ --}}
+    {{-- ═══ DISCLAIMER TAMBAHAN ═══ --}}
     <div style="margin-top: 12px; padding: 8px 10px; background: #fefce8; border: 1px solid #fde047; border-radius: 6px; font-size: 8.5px; color: #713f12; line-height: 1.5;">
-        <strong>⚠️ Disclaimer:</strong> Rekomendasi ini merupakan estimasi awal berbasis data blok, observasi visual, dan basis aturan (Rule-Based System). Hasil ini bukan pengganti analisis laboratorium tanah/daun atau keputusan ahli agronomi. Perhitungan kuantitatif dibatasi pada Urea dan MOP/KCl. Unsur P, Mg, B, dan unsur lain tetap dapat diperlukan sesuai kondisi tanaman dan hasil evaluasi ahli.
+        <strong>⚠️ Catatan Teknis:</strong> Estimasi sistem merupakan nilai kerja dari rentang referensi Pahan (2013) dan bukan pengganti analisis laboratorium atau rekomendasi agronomis lapangan. Perhitungan kuantitatif dibatasi pada Urea dan MOP/KCl. Unsur P, Mg, B, dan unsur lain tetap dapat diperlukan sesuai kondisi tanaman dan hasil evaluasi ahli.
     </div>
 
 

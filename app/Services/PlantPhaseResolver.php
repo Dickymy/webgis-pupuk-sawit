@@ -72,7 +72,7 @@ class PlantPhaseResolver
                 'fase' => 'TBM',
                 'verified' => false,
                 'needs_verification' => false,
-                'message' => "Umur {$umur} tahun — otomatis dikategorikan TBM.",
+                'message' => "Umur {$umur} tahun — otomatis dikategorikan sebagai Tanaman Belum Menghasilkan.",
                 'phase_conflict' => false,
             ];
         }
@@ -82,7 +82,7 @@ class PlantPhaseResolver
                 'fase' => null,
                 'verified' => false,
                 'needs_verification' => true,
-                'message' => 'Umur tepat 3 tahun — bisa TBM atau TM. Perlu verifikasi pengguna.',
+                'message' => 'Umur tepat 3 tahun — bisa Tanaman Belum Menghasilkan atau Tanaman Menghasilkan. Perlu verifikasi pengguna.',
                 'phase_conflict' => false,
             ];
         }
@@ -92,7 +92,7 @@ class PlantPhaseResolver
             'fase' => 'TM',
             'verified' => false,
             'needs_verification' => false,
-            'message' => "Umur {$umur} tahun — otomatis dikategorikan TM.",
+            'message' => "Umur {$umur} tahun — otomatis dikategorikan sebagai Tanaman Menghasilkan.",
             'phase_conflict' => false,
         ];
     }
@@ -104,11 +104,11 @@ class PlantPhaseResolver
     public function detectPhaseConflict(string $fase, int $umur): ?string
     {
         if ($umur < 3 && $fase === 'TM') {
-            return "Konflik: Umur {$umur} tahun tidak dapat dikategorikan sebagai TM (Tanaman Menghasilkan). Umur < 3 tahun hanya valid untuk TBM.";
+            return "Konflik: Umur {$umur} tahun tidak dapat dikategorikan sebagai Tanaman Menghasilkan. Umur < 3 tahun hanya valid untuk Tanaman Belum Menghasilkan.";
         }
 
         if ($umur > 3 && $fase === 'TBM') {
-            return "Konflik: Umur {$umur} tahun tidak dapat dikategorikan sebagai TBM (Tanaman Belum Menghasilkan). Umur > 3 tahun hanya valid untuk TM.";
+            return "Konflik: Umur {$umur} tahun tidak dapat dikategorikan sebagai Tanaman Belum Menghasilkan. Umur > 3 tahun hanya valid untuk Tanaman Menghasilkan.";
         }
 
         // Umur = 3: keduanya valid

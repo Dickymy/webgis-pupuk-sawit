@@ -63,28 +63,7 @@ jobs:
         run: php artisan key:generate
 
       - name: Configure testing database
-        run: |
-          php artisan config:clear
-        env:
-          DB_CONNECTION: mysql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_DATABASE: testing
-          DB_USERNAME: root
-          DB_PASSWORD: password
-
-      - name: Run migrations
-        run: php artisan migrate --env=testing --force
-        env:
-          DB_CONNECTION: mysql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_DATABASE: testing
-          DB_USERNAME: root
-          DB_PASSWORD: password
-
-      - name: Run tests
-        run: php artisan test
+        run: php artisan config:clear
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -95,3 +74,63 @@ jobs:
 
       - name: Run Pint (code style)
         run: vendor/bin/pint --test
+
+      - name: Fresh migration
+        run: php artisan migrate:fresh --env=testing --force
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: password
+
+      - name: Run tests (first pass)
+        run: php artisan test
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: password
+
+      - name: Rollback last migration
+        run: php artisan migrate:rollback --step=1 --env=testing --force
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: password
+
+      - name: Re-migrate after rollback
+        run: php artisan migrate --env=testing --force
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: password
+
+      - name: Run tests (second pass after rollback+migrate)
+        run: php artisan test
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: password
+
+      - name: Run finalize audit (dry-run)
+        run: php artisan sawit:finalize-pahan-v2-4 --dry-run || true
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: password
