@@ -67,7 +67,7 @@ class RbsHistoricalDoseIntegrationTest extends TestCase
         $this->assertEquals(2.0, $rbs->luas_ha_snapshot);
         $this->assertEquals(136, $rbs->sph_snapshot);
         // Versi mesin
-        $this->assertEquals('pahan-v2.5', $rbs->versi_mesin_rekomendasi);
+        $this->assertEquals(config('fertilization.engine_version'), $rbs->versi_mesin_rekomendasi);
         // Aplikasi saat ini = 50% dari tahunan (bukan 100%)
         if ($rbs->urea_total_estimasi_tahunan > 0) {
             $this->assertLessThanOrEqual(

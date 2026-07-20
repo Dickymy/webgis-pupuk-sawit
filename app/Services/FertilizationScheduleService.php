@@ -30,9 +30,9 @@ class FertilizationScheduleService
     /**
      * Generate jadwal pemupukan berdasarkan konteks tanaman dan kelayakan.
      *
-     * Pahan v2.5: Jadwal KOSONG ([]) jika belum layak.
-     * Tahap persiapan (gulma/hama) menjadi prasyarat_persiapan, bukan tahap pemupukan bernomor.
-     * total_urea/total_kcl berasal dari CurrentApplicationCalculator (tahap aktif saat ini).
+     * Pahan v2.6: Jadwal menggunakan active_stage dari CurrentApplicationCalculator.
+     * Jadwal KOSONG jika status_stage = MENUNGGU_INTERVAL, MENUNGGU_KELAYAKAN, SELESAI_TAHUNAN, PERLU_VERIFIKASI_REALISASI
+     * Tahap pada jadwal = active_stage (bukan selalu 1).
      *
      * @param  array  $doseData  ['dosis_urea', 'dosis_kcl', 'total_urea', 'total_kcl']
      * @param  array  $windowResult  Output dari FertilizationWindowService::evaluate()
@@ -64,6 +64,21 @@ class FertilizationScheduleService
             return [];
         }
 
+        // Pahan v2.6: Tentukan tahap aktif dari doseData (diisi oleh CurrentApplicationCalculator)
+        $activeStage = $doseData['active_stage'] ?? 1;
+        $statusStage = $doseData['status_stage'] ?? null;
+
+        // Jadwal harus KOSONG jika status menunggu atau selesai
+        $statusKosong = [
+            CurrentApplicationCalculator::MENUNGGU_INTERVAL,
+            CurrentApplicationCalculator::MENUNGGU_KELAYAKAN,
+            CurrentApplicationCalculator::SELESAI_TAHUNAN,
+            CurrentApplicationCalculator::PERLU_VERIFIKASI_REALISASI,
+        ];
+        if ($statusStage && in_array($statusStage, $statusKosong)) {
+            return [];
+        }
+
         $faseLabel = $plantContext['fase_label'] ?? 'Belum Ditentukan';
         $umur = $plantContext['umur'] ?? null;
 
@@ -73,25 +88,40 @@ class FertilizationScheduleService
 
         $jadwal = [];
 
-        // Pahan v2.5: Persiapan gulma/hama menjadi prasyarat, bukan tahap pemupukan bernomor
+        // Pahan v2.6: Persiapan gulma/hama menjadi prasyarat, bukan tahap pemupukan bernomor
         $prasyaratPersiapan = null;
         if ($kondisi->ada_gulma_dominan || $kondisi->ada_serangan_hama) {
             $prasyaratPersiapan = $this->tahapPersiapan($kondisi);
         }
 
-        // Pahan v2.5: Karena total_urea/total_kcl sudah dari CurrentApplicationCalculator
-        // (yaitu jumlah tahap aktif saat ini), jadwal cukup satu entry operasional.
+        // Pahan v2.6: Nama tahap mengikuti active_stage
+        $namaTahap = match (true) {
+            $statusStage === CurrentApplicationCalculator::TAHAP_1_SEBAGIAN => 'Lanjutan Realisasi Tahap 1',
+            $activeStage === 2 => 'Aplikasi Urea dan KCl — Tahap 2',
+            default => 'Aplikasi Urea dan KCl — Tahap 1',
+        };
+
+        $statusTahapLabel = match ($statusStage) {
+            CurrentApplicationCalculator::TAHAP_1_SIAP => 'Siap Diaplikasikan',
+            CurrentApplicationCalculator::TAHAP_1_SEBAGIAN => 'Direalisasikan Sebagian',
+            CurrentApplicationCalculator::TAHAP_2_SIAP => 'Siap Diaplikasikan',
+            default => 'Rencana',
+        };
+
+        // Gunakan jumlah pokok dari snapshot (bukan data blok terkini)
+        $jumlahPokokSnapshot = $doseData['jumlah_pokok_snapshot'] ?? (int) ($blok->luas_ha * $blok->sph);
+
         $jadwal[] = [
-            'tahap' => 1,
-            'nama_tahap' => 'Aplikasi Urea + KCl — Tahap Aktif',
+            'tahap' => $activeStage,
+            'nama_tahap' => $namaTahap,
             'estimasi_waktu' => 'Saat curah hujan dalam rentang 100-250 mm/bulan',
             'urea_kg' => round($totalUrea, 2),
             'kcl_kg' => round($totalKcl, 2),
-            'urea_per_pokok' => $dosisUrea > 0 ? round($totalUrea / max(1, (int) ($blok->luas_ha * $blok->sph)), 3) : 0,
-            'kcl_per_pokok' => $dosisKcl > 0 ? round($totalKcl / max(1, (int) ($blok->luas_ha * $blok->sph)), 3) : 0,
+            'urea_per_pokok' => $jumlahPokokSnapshot > 0 ? round($totalUrea / $jumlahPokokSnapshot, 3) : 0,
+            'kcl_per_pokok' => $jumlahPokokSnapshot > 0 ? round($totalKcl / $jumlahPokokSnapshot, 3) : 0,
             'metode_aplikasi' => $metodeUrea.' '.$metodeKcl,
             'catatan' => "Fase: {$faseLabel}. Aplikasi dilakukan saat curah hujan sesuai (100-250 mm/bulan). Pastikan piringan bersih sebelum pemupukan.",
-            'status_tahap' => 'Rencana',
+            'status_tahap' => $statusTahapLabel,
             'prasyarat_persiapan' => $prasyaratPersiapan,
         ];
 

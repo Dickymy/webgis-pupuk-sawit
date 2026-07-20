@@ -64,7 +64,7 @@ class RbsService
     /**
      * Jalankan analisis RBS untuk satu blok lahan berdasarkan kondisi terbaru.
      *
-     * Versi: pahan-v2.5
+     * Versi: pahan-v2.6
      * Perubahan utama dari v2.4:
      * - Aplikasi saat ini = tahap aktif (50% Tahap 1, sisa aktual Tahap 2)
      * - Integrasi realisasi pemupukan
@@ -561,7 +561,7 @@ class RbsService
 
         // Jadwal pemupukan via FertilizationScheduleService (v2.5: menggunakan aplikasi saat ini dari CurrentApplicationCalculator)
         $jadwal = $this->scheduleService->generate(
-            ['dosis_urea' => $dosisRef['dosis_urea'] ?? 0, 'dosis_kcl' => $dosisRef['dosis_kcl'] ?? 0, 'total_urea' => $currentApp['urea_aplikasi_saat_ini'], 'total_kcl' => $currentApp['kcl_aplikasi_saat_ini']],
+            ['dosis_urea' => $dosisRef['dosis_urea'] ?? 0, 'dosis_kcl' => $dosisRef['dosis_kcl'] ?? 0, 'total_urea' => $currentApp['urea_aplikasi_saat_ini'], 'total_kcl' => $currentApp['kcl_aplikasi_saat_ini'], 'active_stage' => $currentApp['active_stage'], 'status_stage' => $currentApp['status_stage'], 'jumlah_pokok_snapshot' => $annualSnapshot['jumlah_pokok'] ?? null],
             $kondisi,
             $blok,
             $window ?? ['layak' => false, 'alasan' => ['Data kelayakan tidak tersedia']],
@@ -1038,7 +1038,7 @@ class RbsService
 
         // Jadwal via FertilizationScheduleService (v2.5: menggunakan currentApp)
         $jadwal = $this->scheduleService->generate(
-            ['dosis_urea' => $dosisRef['dosis_urea'] ?? 0, 'dosis_kcl' => $dosisRef['dosis_kcl'] ?? 0, 'total_urea' => $currentApp['urea_aplikasi_saat_ini'], 'total_kcl' => $currentApp['kcl_aplikasi_saat_ini']],
+            ['dosis_urea' => $dosisRef['dosis_urea'] ?? 0, 'dosis_kcl' => $dosisRef['dosis_kcl'] ?? 0, 'total_urea' => $currentApp['urea_aplikasi_saat_ini'], 'total_kcl' => $currentApp['kcl_aplikasi_saat_ini'], 'active_stage' => $currentApp['active_stage'], 'status_stage' => $currentApp['status_stage'], 'jumlah_pokok_snapshot' => $annualSnapshot['jumlah_pokok'] ?? null],
             $kondisi,
             $blok,
             $window ?? ['layak' => true, 'alasan' => []],

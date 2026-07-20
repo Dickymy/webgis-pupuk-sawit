@@ -153,23 +153,28 @@
         <div>
             <p class="text-xs font-bold text-amber-800">Aplikasi Pupuk Kimia Ditunda</p>
             <p class="text-[11px] text-amber-700 mt-0.5 leading-relaxed">
-                @if($rbs->status_kebutuhan_dominan === 'Darurat')
-                    Status <strong>Defisiensi Berat / Darurat</strong> terdeteksi pada lahan ini. Pemupukan Urea &amp; KCl ditangguhkan sementara. Sangat disarankan untuk memprioritaskan tindakan koreksi (seperti pengapuran dengan Dolomit) sesuai petunjuk jadwal di bawah sebelum mengaplikasikan pupuk kimia utama.
-                @else
-                    @php
-                        $masalahStr = implode(' ', $rbs->masalah_teridentifikasi ?? []);
-                        $pesanTunda = 'Kondisi pembatas lahan saat ini (genangan air atau kekeringan ekstrem) tidak ideal untuk pemupukan. Pemupukan kimia standar ditunda sementara waktu guna mencegah pemborosan pupuk akibat pencucian (leaching) atau penguapan (volatilisasi).';
-                        if (str_contains($masalahStr, 'Waterlogging') || str_contains($masalahStr, 'tergenang') || str_contains($masalahStr, 'drainase') || str_contains($masalahStr, 'Drainase')) {
-                            $pesanTunda = '<strong>Lahan Tergenang (Waterlogging)</strong>: Pemupukan tanah ditunda sementara. Air tergenang akan mencuci bersih pupuk (leaching) dan membuat akar kelapa sawit kekurangan oksigen untuk menyerap hara secara efektif. Disarankan untuk memprioritaskan perbaikan parit drainase terlebih dahulu.';
-                        } elseif (str_contains($masalahStr, 'Kekeringan') || str_contains($masalahStr, 'kering') || str_contains($masalahStr, 'Kemarau')) {
-                            $pesanTunda = '<strong>Cekaman Kekeringan</strong>: Pemupukan ditunda sementara. Tanah yang terlalu kering membuat pupuk tidak dapat larut untuk diserap akar, serta berisiko membakar akar rambut kelapa sawit. Disarankan fokus pada pemberian mulsing organik (seperti janjang kosong) untuk menjaga kelembaban dan menunggu hingga curah hujan cukup.';
-                        } elseif (str_contains($masalahStr, 'Tua Renta') || str_contains($masalahStr, 'Tua')) {
-                            $pesanTunda = '<strong>Tanaman Tua Renta</strong>: Pemupukan standar ditangguhkan untuk analisis ekonomi. Pohon berusia di atas 25 tahun memiliki efisiensi penyerapan hara yang sangat rendah. Disarankan mengevaluasi kelayakan replanting (peremajaan lahan) dibandingkan biaya pemeliharaan pupuk.';
-                        }
-                    @endphp
-                    {!! $pesanTunda !!}
-                @endif
+                @php
+                    // Pahan v2.6: Penundaan berdasarkan status_kelayakan_aplikasi, BUKAN status_kebutuhan_dominan
+                    $masalahStr = implode(' ', $rbs->masalah_teridentifikasi ?? []);
+                    $pesanTunda = 'Kondisi kelayakan belum terpenuhi untuk aplikasi pemupukan. Kebutuhan tahunan tetap tercatat.';
+
+                    if ($rbs->status_kelayakan_aplikasi === 'PERLU_PERBAIKAN_DRAINASE' || str_contains($masalahStr, 'Waterlogging') || str_contains($masalahStr, 'tergenang') || str_contains($masalahStr, 'drainase') || str_contains($masalahStr, 'Drainase')) {
+                        $pesanTunda = '<strong>Lahan Tergenang (Waterlogging)</strong>: Pemupukan tanah ditunda sementara. Air tergenang akan mencuci bersih pupuk (leaching) dan membuat akar kelapa sawit kekurangan oksigen untuk menyerap hara secara efektif. Disarankan untuk memprioritaskan perbaikan parit drainase terlebih dahulu.';
+                    } elseif ($rbs->status_kelayakan_aplikasi === 'TUNDA_HUJAN_RENDAH' || str_contains($masalahStr, 'Kekeringan') || str_contains($masalahStr, 'kering') || str_contains($masalahStr, 'Kemarau')) {
+                        $pesanTunda = '<strong>Curah Hujan Rendah</strong>: Pemupukan ditunda sementara. Tanah yang terlalu kering membuat pupuk tidak dapat larut untuk diserap akar. Tunggu curah hujan dalam rentang 100-250 mm/bulan.';
+                    } elseif ($rbs->status_kelayakan_aplikasi === 'TUNDA_HUJAN_TINGGI') {
+                        $pesanTunda = '<strong>Curah Hujan Tinggi</strong>: Pemupukan ditunda sementara karena risiko pencucian hara. Tunggu curah hujan kembali ke rentang 100-250 mm/bulan.';
+                    } elseif ($rbs->status_kelayakan_aplikasi === 'TUNDA_INTERVAL') {
+                        $pesanTunda = '<strong>Interval Terlalu Pendek</strong>: Tunggu minimal 60 hari antar aplikasi pupuk sejenis. Kebutuhan tahunan tetap tercatat.';
+                    } elseif (str_contains($masalahStr, 'Tua Renta') || str_contains($masalahStr, 'Tua')) {
+                        $pesanTunda = '<strong>Tanaman Tua Renta</strong>: Pemupukan standar ditangguhkan untuk analisis ekonomi. Disarankan mengevaluasi kelayakan replanting dibandingkan biaya pemeliharaan pupuk.';
+                    }
+                @endphp
+                {!! $pesanTunda !!}
             </p>
+            @if($rbs->alasan_kelayakan)
+            <p class="text-[10px] text-amber-600 mt-1 italic">{{ $rbs->alasan_kelayakan }}</p>
+            @endif
         </div>
     </div>
 </div>
@@ -436,7 +441,39 @@
         </button>
     </form>
     @endif
-    <a href="{{ route('laporan.show', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50 transition-colors">
+
+    {{-- Tombol Realisasi Pemupukan (Pahan v2.6) --}}
+    @php
+        $statusStage = $rbs->status_stage ?? null;
+        $activeStage = $rbs->active_stage ?? 0;
+        $showRealisasi = in_array($statusStage, ['TAHAP_1_SIAP', 'TAHAP_1_SEBAGIAN', 'TAHAP_2_SIAP']);
+    @endphp
+    @if($showRealisasi)
+        @if($statusStage === 'TAHAP_1_SIAP')
+        <a href="{{ route('realisasi-pemupukan.create', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
+            📝 Catat Realisasi Tahap 1
+        </a>
+        @elseif($statusStage === 'TAHAP_1_SEBAGIAN')
+        <a href="{{ route('realisasi-pemupukan.create', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
+            📝 Lanjutkan Realisasi Tahap 1
+        </a>
+        @elseif($statusStage === 'TAHAP_2_SIAP')
+        <a href="{{ route('realisasi-pemupukan.create', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
+            📝 Catat Realisasi Tahap 2
+        </a>
+        @endif
+    @elseif($statusStage === 'SELESAI_TAHUNAN')
+        <span class="inline-flex items-center gap-2 px-4 py-2.5 bg-green-100 text-green-800 text-sm font-medium rounded-xl border border-green-200">
+            ✅ Kebutuhan Tahunan Selesai
+        </span>
+    @endif
+
+    {{-- Tombol Histori Realisasi --}}
+    <a href="{{ route('realisasi-pemupukan.index', ['blok_lahan_id' => $blokLahan->id]) }}" class="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+        📋 Lihat Histori Realisasi
+    </a>
+
+    <a href="{{ route('laporan.show', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
         📄 Lihat Laporan
     </a>
     <a href="{{ route('laporan.pdf', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 border border-red-200 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 transition-colors">

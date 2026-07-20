@@ -358,9 +358,9 @@
             </tr>
             <tr>
                 <td class="label">Luas</td>
-                <td class="value">{{ number_format($rekomendasiRbs->blokLahan->luas_ha, 2) }} Ha</td>
+                <td class="value">{{ number_format($rekomendasiRbs->luas_ha_snapshot ?? $rekomendasiRbs->blokLahan->luas_ha, 2) }} Ha</td>
                 <td class="label">SPH</td>
-                <td class="value">{{ number_format($rekomendasiRbs->blokLahan->sph) }} pohon/Ha</td>
+                <td class="value">{{ number_format($rekomendasiRbs->sph_snapshot ?? $rekomendasiRbs->blokLahan->sph) }} pohon/Ha</td>
             </tr>
             @if($rekomendasiRbs->blokLahan->tahun_tanam)
             <tr>
@@ -518,20 +518,23 @@
                     $hasKcl = isset($jadwal['kcl_kg']) && $jadwal['kcl_kg'] > 0;
                     $isCombined = $hasUrea && $hasKcl;
                     
+                    // Pahan v2.6: Gunakan jumlah_pokok_snapshot untuk dosis per pokok
+                    $jumlahPokokPdf = $rekomendasiRbs->jumlah_pokok_snapshot ?? (($rekomendasiRbs->sph_snapshot ?? $rekomendasiRbs->blokLahan->sph) * ($rekomendasiRbs->luas_ha_snapshot ?? $rekomendasiRbs->blokLahan->luas_ha));
+                    
                     $dosisPokok = '-';
                     $totalKg = '-';
                     
                     if ($isCombined) {
-                        $dosisU = isset($jadwal['urea_per_pokok']) ? $jadwal['urea_per_pokok'] : ($jadwal['urea_kg'] / max(1, ($rekomendasiRbs->blokLahan->sph * $rekomendasiRbs->blokLahan->luas_ha)));
-                        $dosisK = isset($jadwal['kcl_per_pokok']) ? $jadwal['kcl_per_pokok'] : ($jadwal['kcl_kg'] / max(1, ($rekomendasiRbs->blokLahan->sph * $rekomendasiRbs->blokLahan->luas_ha)));
+                        $dosisU = isset($jadwal['urea_per_pokok']) ? $jadwal['urea_per_pokok'] : ($jadwal['urea_kg'] / max(1, $jumlahPokokPdf));
+                        $dosisK = isset($jadwal['kcl_per_pokok']) ? $jadwal['kcl_per_pokok'] : ($jadwal['kcl_kg'] / max(1, $jumlahPokokPdf));
                         $dosisPokok = 'U: ' . number_format($dosisU, 1) . ' | K: ' . number_format($dosisK, 1);
                         $totalKg = 'U: ' . number_format($jadwal['urea_kg'], 0) . ' | K: ' . number_format($jadwal['kcl_kg'], 0);
                     } elseif ($hasUrea) {
-                        $dosisU = isset($jadwal['urea_per_pokok']) ? $jadwal['urea_per_pokok'] : ($jadwal['urea_kg'] / max(1, ($rekomendasiRbs->blokLahan->sph * $rekomendasiRbs->blokLahan->luas_ha)));
+                        $dosisU = isset($jadwal['urea_per_pokok']) ? $jadwal['urea_per_pokok'] : ($jadwal['urea_kg'] / max(1, $jumlahPokokPdf));
                         $dosisPokok = number_format($dosisU, 2) . ' kg';
                         $totalKg = number_format($jadwal['urea_kg'], 1) . ' kg';
                     } elseif ($hasKcl) {
-                        $dosisK = isset($jadwal['kcl_per_pokok']) ? $jadwal['kcl_per_pokok'] : ($jadwal['kcl_kg'] / max(1, ($rekomendasiRbs->blokLahan->sph * $rekomendasiRbs->blokLahan->luas_ha)));
+                        $dosisK = isset($jadwal['kcl_per_pokok']) ? $jadwal['kcl_per_pokok'] : ($jadwal['kcl_kg'] / max(1, $jumlahPokokPdf));
                         $dosisPokok = number_format($dosisK, 2) . ' kg';
                         $totalKg = number_format($jadwal['kcl_kg'], 1) . ' kg';
                     }

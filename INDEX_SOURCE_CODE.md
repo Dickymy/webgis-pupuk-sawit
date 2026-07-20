@@ -2,8 +2,8 @@
 
 > **Proyek:** Rancang Bangun WebGIS Sistem Pemupukan Kelapa Sawit Menggunakan Metode Rule-Based System  
 > **Framework:** Laravel 11 + Blade + Tailwind CSS 4 + Leaflet.js  
-> **Mesin Rekomendasi:** Pahan-v2.2 (Forward Chaining Rule-Based System)  
-> **Tanggal Generate:** 20 Juli 2026
+> **Mesin Rekomendasi:** Pahan-v2.6 (Forward Chaining Rule-Based System)  
+> **Tanggal Generate:** 21 Juli 2026
 
 ---
 
@@ -105,6 +105,7 @@
 | 10 | `app/Http/Controllers/CuacaController.php` | Auto-fetch cuaca dari Open-Meteo API — presipitasi, ET0, water balance, deteksi musim dinamis |
 | 11 | `app/Http/Controllers/GeoUploadController.php` | Upload SHP (ZIP) atau GeoJSON — parse, validasi polygon, ekstrak koordinat |
 | 12 | `app/Http/Controllers/SettingController.php` | Pengaturan admin — ganti password (verifikasi current_password), preferensi tema (light/dark/system) |
+| 13 | `app/Http/Controllers/RealisasiPemupukanController.php` | CRUD realisasi pemupukan — index, create (dari rekomendasi), store, show, edit, update, cancel (soft-delete via status BATAL). Integrasi RecommendationOperationalRefreshService. |
 
 ---
 
@@ -133,6 +134,13 @@
 | 6 | `app/Services/PlantPhaseResolver.php` | Resolusi fase TBM/TM — validasi override manual, deteksi konflik (umur vs fase), auto-suggest dari umur |
 | 7 | `app/Services/PlantAgeService.php` | Kalkulasi umur tanaman — calculateAgeAt(blok, referenceDate) untuk analisis historikal, currentAge untuk dashboard |
 | 8 | `app/Services/RecommendationReliabilityService.php` | Skor keandalan data (0-100) — 9 kriteria berbobot: identitas, fase, pH, curah hujan, tgl pemupukan, visual, drainase, rule bersumber, validasi ahli |
+| 9 | `app/Services/PlantContextService.php` | Resolve konteks tanaman (umur, fase) pada tanggal observasi — historis, bukan saat ini |
+| 10 | `app/Services/FertilizationScheduleService.php` | Jadwal pemupukan — nama tahap sesuai active_stage, jadwal kosong jika menunggu/selesai, dosis per pokok dari snapshot |
+| 11 | `app/Services/AnnualFertilizerSnapshotBuilder.php` | Build snapshot kebutuhan tahunan — luas, SPH, jumlah pokok, total min/max/estimasi, karung |
+| 12 | `app/Services/FertilizationRealizationService.php` | Ringkasan realisasi — status Tahap 1 (selesai/sebagian/batal), interval 60 hari, filter tahun_program/rekomendasi_rbs_id |
+| 13 | `app/Services/CurrentApplicationCalculator.php` | Tahap aktif saat ini — TAHAP_1_SIAP/SEBAGIAN, MENUNGGU_INTERVAL/KELAYAKAN, TAHAP_2_SIAP, SELESAI_TAHUNAN |
+| 14 | `app/Services/SupportingFertilizerSanitizer.php` | Sanitasi pupuk pendukung — sembunyikan angka tanpa metadata lengkap |
+| 15 | `app/Services/RecommendationOperationalRefreshService.php` | (v2.6) Refresh operasional rekomendasi setelah realisasi berubah — update tahap, sisa, jadwal, fingerprint tanpa re-diagnosis |
 
 ---
 
@@ -162,6 +170,8 @@
 | 2 | `app/Http/Requests/UpdateBlokLahanRequest.php` | Validasi update blok lahan — aturan sama dengan Store |
 | 3 | `app/Http/Requests/StoreKondisiLahanRequest.php` | Validasi pembuatan kondisi lahan — logika tanggal (pemupukan <= observasi, observasi >= tahun_tanam) |
 | 4 | `app/Http/Requests/UpdateKondisiLahanRequest.php` | Validasi update kondisi lahan — aturan sama dengan Store |
+| 5 | `app/Http/Requests/StoreRealisasiPemupukanRequest.php` | (v2.6) Validasi pencatatan realisasi — cek tahap, interval 60 hari, over-plan konfirmasi, override kebutuhan tahunan |
+| 6 | `app/Http/Requests/UpdateRealisasiPemupukanRequest.php` | (v2.6) Validasi update realisasi — cek over-plan, override batas tahunan dengan konteks existing |
 
 ---
 
@@ -181,6 +191,10 @@
 | 2 | `app/Console/Commands/MigratePahanV2.php` | `sawit:migrate-pahan-v2` | Migrasi data lama: auto-set fase TBM/TM dari umur, label rekomendasi lama sebagai legacy-v1 |
 | 3 | `app/Console/Commands/FinalizePahanV2_2.php` | `sawit:finalize-pahan-v2-2` | Audit v2.2: konflik fase, umur snapshot hilang, dosis belum tervalidasi |
 | 4 | `app/Console/Commands/MaintenanceClearCache.php` | `sawit:clear-cache` | Bersihkan semua cache (config, app, route, view) via terminal |
+| 5 | `app/Console/Commands/FinalizePahanV2_3.php` | `sawit:finalize-pahan-v2-3` | Audit v2.3: annual snapshot, jadwal, sanitizer |
+| 6 | `app/Console/Commands/FinalizePahanV2_4.php` | `sawit:finalize-pahan-v2-4` | Audit v2.4: fase historis, jadwal kosong |
+| 7 | `app/Console/Commands/FinalizePahanV2_5.php` | `sawit:finalize-pahan-v2-5` | Audit v2.5: snapshot luas/SPH, tahap aktif, fingerprint |
+| 8 | `app/Console/Commands/FinalizePahanV2_6.php` | `sawit:finalize-pahan-v2-6` | (v2.6) Audit menyeluruh: schema v2.6, versi mesin, snapshot, tahap, realisasi, jadwal, pupuk pendukung, status legacy, fingerprint |
 
 ---
 

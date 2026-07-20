@@ -6,34 +6,35 @@
 @if($rbs = $blokLahan->rekomendasiRbsTerbaru)
 
 @php
-$warna = match($rbs->status_kebutuhan_dominan) {
-    'Darurat' => [
+// Pahan v2.6: Banner utama berdasarkan Kondisi Tanaman dan Kelayakan Aplikasi, BUKAN status_kebutuhan_dominan
+$warna = match($rbs->status_kondisi_tanaman) {
+    'GEJALA_BERAT' => [
         'bg'     => 'bg-red-50',
         'border' => 'border-red-200',
         'badge'  => 'bg-red-100 text-red-800 ring-1 ring-red-300',
-        'icon'   => '🚨',
+        'icon'   => '🔴',
         'title'  => 'text-red-800',
     ],
-    'Segera' => [
+    'TERINDIKASI_DEFISIENSI' => [
         'bg'     => 'bg-orange-50',
         'border' => 'border-orange-200',
         'badge'  => 'bg-orange-100 text-orange-800 ring-1 ring-orange-300',
-        'icon'   => '⚠️',
+        'icon'   => '🟠',
         'title'  => 'text-orange-800',
     ],
-    'Normal' => [
+    'NORMAL_VISUAL' => [
         'bg'     => 'bg-emerald-50',
         'border' => 'border-emerald-200',
         'badge'  => 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-300',
         'icon'   => '✅',
         'title'  => 'text-emerald-800',
     ],
-    'Tunda' => [
-        'bg'     => 'bg-slate-50',
-        'border' => 'border-slate-200',
-        'badge'  => 'bg-slate-100 text-slate-700 ring-1 ring-slate-300',
-        'icon'   => '⏸️',
-        'title'  => 'text-slate-700',
+    'PERLU_VERIFIKASI' => [
+        'bg'     => 'bg-yellow-50',
+        'border' => 'border-yellow-200',
+        'badge'  => 'bg-yellow-100 text-yellow-800 ring-1 ring-yellow-300',
+        'icon'   => '🟡',
+        'title'  => 'text-yellow-800',
     ],
     default => [
         'bg'     => 'bg-blue-50',
@@ -55,7 +56,7 @@ $warna = match($rbs->status_kebutuhan_dominan) {
         </h3>
         <div class="flex items-center gap-2 flex-shrink-0">
             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $warna['badge'] }}">
-                {{ $rbs->label_status }}
+                {{ $rbs->label_kondisi_tanaman }}
             </span>
             <span class="text-xs text-slate-400">{{ $rbs->tanggal_analisis->format('d M Y') }}</span>
         </div>
@@ -226,11 +227,12 @@ $warna = match($rbs->status_kebutuhan_dominan) {
     {{-- Catatan Dosis Kontekstual --}}
     @if($rbs->catatan_dosis)
     @php
-        $catatanStyle = match($rbs->status_kebutuhan_dominan) {
-            'Darurat' => 'bg-red-50 border-red-200 text-red-800',
-            'Tunda'   => 'bg-amber-50 border-amber-200 text-amber-800',
-            'Segera'  => 'bg-blue-50 border-blue-200 text-blue-800',
-            default   => 'bg-emerald-50 border-emerald-200 text-emerald-800',
+        // Pahan v2.6: Warna catatan berdasarkan kelayakan, bukan status legacy
+        $catatanStyle = match(true) {
+            in_array($rbs->status_kelayakan_aplikasi, ['LAYAK_DIJADWALKAN', 'TERLAMBAT_PERLU_DIJADWALKAN']) => 'bg-emerald-50 border-emerald-200 text-emerald-800',
+            $rbs->status_kondisi_tanaman === 'GEJALA_BERAT' => 'bg-red-50 border-red-200 text-red-800',
+            $rbs->status_kondisi_tanaman === 'TERINDIKASI_DEFISIENSI' => 'bg-blue-50 border-blue-200 text-blue-800',
+            default => 'bg-amber-50 border-amber-200 text-amber-800',
         };
     @endphp
     <div class="{{ $catatanStyle }} border rounded-xl p-3">
