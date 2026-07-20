@@ -639,6 +639,77 @@
     </div>
     @endif
 
+    {{-- ═══ RIWAYAT REALISASI PEMUPUKAN (Pahan v2.7) ═══ --}}
+    @if(isset($realisasis) && $realisasis->count() > 0)
+    <div class="section" style="page-break-inside: avoid;">
+        <div class="section-title" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 8px;">RIWAYAT REALISASI PEMUPUKAN</div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 9px;">
+            <thead>
+                <tr style="background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
+                    <th style="padding: 4px 6px; text-align: left; font-weight: 700;">Tahap</th>
+                    <th style="padding: 4px 6px; text-align: left; font-weight: 700;">Tanggal</th>
+                    <th style="padding: 4px 6px; text-align: right; font-weight: 700;">Urea Rencana</th>
+                    <th style="padding: 4px 6px; text-align: right; font-weight: 700;">Urea Realisasi</th>
+                    <th style="padding: 4px 6px; text-align: right; font-weight: 700;">KCl Rencana</th>
+                    <th style="padding: 4px 6px; text-align: right; font-weight: 700;">KCl Realisasi</th>
+                    <th style="padding: 4px 6px; text-align: center; font-weight: 700;">Status</th>
+                    <th style="padding: 4px 6px; text-align: left; font-weight: 700;">Catatan</th>
+                    <th style="padding: 4px 6px; text-align: center; font-weight: 700;">Override</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php
+                    $totalUreaRealisasi = 0;
+                    $totalKclRealisasi = 0;
+                @endphp
+                @foreach($realisasis as $r)
+                @php
+                    $isBatal = $r->status_realisasi === 'BATAL';
+                    $rowStyle = $isBatal ? 'color: #94a3b8; text-decoration: line-through;' : '';
+                    if (!$isBatal) {
+                        $totalUreaRealisasi += (float) $r->urea_realisasi_kg;
+                        $totalKclRealisasi += (float) $r->kcl_realisasi_kg;
+                    }
+                @endphp
+                <tr style="border-bottom: 1px solid #f1f5f9; {{ $rowStyle }}">
+                    <td style="padding: 3px 6px;">Tahap {{ $r->tahap }}</td>
+                    <td style="padding: 3px 6px;">{{ $r->tanggal_realisasi?->format('d/m/Y') }}</td>
+                    <td style="padding: 3px 6px; text-align: right;">{{ number_format($r->urea_rencana_kg, 1) }}</td>
+                    <td style="padding: 3px 6px; text-align: right; font-weight: 600;">{{ number_format($r->urea_realisasi_kg, 1) }}</td>
+                    <td style="padding: 3px 6px; text-align: right;">{{ number_format($r->kcl_rencana_kg, 1) }}</td>
+                    <td style="padding: 3px 6px; text-align: right; font-weight: 600;">{{ number_format($r->kcl_realisasi_kg, 1) }}</td>
+                    <td style="padding: 3px 6px; text-align: center;">{{ $isBatal ? 'Dibatalkan' : ($r->status_realisasi === 'SELESAI' ? 'Selesai' : 'Sebagian') }}</td>
+                    <td style="padding: 3px 6px; font-size: 8px;">{{ \Illuminate\Support\Str::limit($r->catatan_pelaksana, 40) }}</td>
+                    <td style="padding: 3px 6px; text-align: center;">{{ $r->override_annual_limit ? '✓' : '-' }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+            <tfoot>
+                <tr style="border-top: 2px solid #334155; font-weight: 700;">
+                    <td colspan="3" style="padding: 4px 6px;">Total Realisasi Aktif</td>
+                    <td style="padding: 4px 6px; text-align: right;">{{ number_format($totalUreaRealisasi, 1) }} kg</td>
+                    <td style="padding: 4px 6px;"></td>
+                    <td style="padding: 4px 6px; text-align: right;">{{ number_format($totalKclRealisasi, 1) }} kg</td>
+                    <td colspan="3"></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        {{-- Info Program --}}
+        <div style="margin-top: 8px; font-size: 9px; color: #475569;">
+            @if($rekomendasiRbs->urea_sisa_tahunan !== null)
+            <p><strong>Sisa kebutuhan tahunan:</strong> Urea {{ number_format($rekomendasiRbs->urea_sisa_tahunan, 1) }} kg · KCl {{ number_format($rekomendasiRbs->kcl_sisa_tahunan ?? 0, 1) }} kg</p>
+            @endif
+            @if($rekomendasiRbs->status_stage)
+            <p><strong>Status program:</strong> {{ \App\Services\CurrentApplicationCalculator::labelStatusStage($rekomendasiRbs->status_stage) }}</p>
+            @endif
+            @if($rekomendasiRbs->tanggal_minimum_tahap_berikutnya)
+            <p><strong>Tanggal minimum tahap berikutnya:</strong> {{ $rekomendasiRbs->tanggal_minimum_tahap_berikutnya->format('d/m/Y') }}</p>
+            @endif
+        </div>
+    </div>
+    @endif
+
     {{-- ═══ 11. META INFO — validitas & keandalan ═══ --}}
     <div class="meta-info">
         <strong>Validitas:</strong> {{ $rekomendasiRbs->validitas_rekomendasi ?? 'Estimasi Visual' }}

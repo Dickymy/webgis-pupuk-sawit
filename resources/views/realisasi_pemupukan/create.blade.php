@@ -30,8 +30,8 @@
             <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $rekomendasiRbs->umur_tanaman_snapshot ?? '-' }} tahun</span>
         </div>
         <div>
-            <span class="text-slate-400 block">Tahap Aktif</span>
-            <span class="font-semibold text-slate-800 dark:text-slate-200">{{ \App\Services\CurrentApplicationCalculator::labelStatusStage($currentApp['status_stage'] ?? '') }}</span>
+            <span class="text-slate-400 block">Tahap Aktif Sistem</span>
+            <span class="font-semibold text-emerald-700 dark:text-emerald-400">Tahap {{ $eligibility['active_stage'] }}</span>
         </div>
     </div>
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
@@ -52,8 +52,17 @@
             <span class="font-semibold text-slate-700 dark:text-slate-300">{{ number_format($realizationSummary['total_kcl_realisasi'], 1) }} kg</span>
         </div>
     </div>
+
+    {{-- Status Tahap & Kelayakan --}}
+    <div class="mt-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+        <p class="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold">
+            ✅ Status: {{ \App\Services\CurrentApplicationCalculator::labelStatusStage($eligibility['status_stage']) }}
+        </p>
+        <p class="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5">{{ $eligibility['reason'] }}</p>
+    </div>
+
     @if($currentApp['tanggal_minimum_tahap_berikutnya'])
-    <div class="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+    <div class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
         <p class="text-[11px] text-blue-700 dark:text-blue-300">🕐 Tanggal minimum tahap berikutnya: <strong>{{ \Carbon\Carbon::parse($currentApp['tanggal_minimum_tahap_berikutnya'])->format('d/m/Y') }}</strong></p>
     </div>
     @endif
@@ -66,41 +75,40 @@
     <form method="POST" action="{{ route('realisasi-pemupukan.store') }}">
         @csrf
         <input type="hidden" name="rekomendasi_rbs_id" value="{{ $rekomendasiRbs->id }}">
-        <input type="hidden" name="tahun_program" value="{{ now()->year }}">
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {{-- Tahap --}}
+            {{-- Tahap Aktif Sistem (TEKS, bukan pilihan) --}}
             <div>
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tahap Pemupukan</label>
-                <select name="tahap" class="w-full text-sm border-slate-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg @error('tahap') border-red-500 @enderror">
-                    <option value="1" {{ old('tahap', $tahapDefault) == 1 ? 'selected' : '' }}>Tahap 1</option>
-                    <option value="2" {{ old('tahap', $tahapDefault) == 2 ? 'selected' : '' }}>Tahap 2</option>
-                </select>
-                @error('tahap')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tahap Aktif Sistem</label>
+                <div class="w-full text-sm bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 font-semibold text-slate-800 dark:text-slate-200">
+                    Tahap {{ $tahapDefault }}
+                </div>
+                <p class="text-[10px] text-slate-400 mt-0.5">Ditentukan oleh sistem berdasarkan status realisasi.</p>
             </div>
 
             {{-- Tanggal Realisasi --}}
             <div>
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tanggal Realisasi</label>
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tanggal Realisasi <span class="text-red-500">*</span></label>
                 <input type="date" name="tanggal_realisasi" value="{{ old('tanggal_realisasi', now()->toDateString()) }}" max="{{ now()->toDateString() }}"
                     class="w-full text-sm border-slate-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg @error('tanggal_realisasi') border-red-500 @enderror">
                 @error('tanggal_realisasi')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
             </div>
 
-            {{-- Urea Rencana --}}
+            {{-- Rencana Resmi Sistem (TEKS, tidak bisa diedit) --}}
             <div>
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Urea Rencana (kg)</label>
-                <input type="number" name="urea_rencana_kg" value="{{ old('urea_rencana_kg', number_format($ureaRencana, 2, '.', '')) }}" step="0.01" min="0"
-                    class="w-full text-sm border-slate-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg @error('urea_rencana_kg') border-red-500 @enderror" readonly>
-                @error('urea_rencana_kg')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Urea Rencana Resmi (kg)</label>
+                <div class="w-full text-sm bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 font-bold text-amber-700">
+                    {{ number_format($ureaRencana, 2) }} kg
+                </div>
+                <p class="text-[10px] text-slate-400 mt-0.5">Dihitung server dari kebutuhan tahunan dan realisasi sebelumnya.</p>
             </div>
 
-            {{-- KCl Rencana --}}
             <div>
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">KCl Rencana (kg)</label>
-                <input type="number" name="kcl_rencana_kg" value="{{ old('kcl_rencana_kg', number_format($kclRencana, 2, '.', '')) }}" step="0.01" min="0"
-                    class="w-full text-sm border-slate-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg @error('kcl_rencana_kg') border-red-500 @enderror" readonly>
-                @error('kcl_rencana_kg')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">KCl Rencana Resmi (kg)</label>
+                <div class="w-full text-sm bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 font-bold text-cyan-700">
+                    {{ number_format($kclRencana, 2) }} kg
+                </div>
+                <p class="text-[10px] text-slate-400 mt-0.5">Dihitung server dari kebutuhan tahunan dan realisasi sebelumnya.</p>
             </div>
 
             {{-- Urea Realisasi --}}
@@ -126,6 +134,7 @@
                     <option value="SELESAI" {{ old('status_realisasi') === 'SELESAI' ? 'selected' : '' }}>Selesai</option>
                     <option value="SEBAGIAN" {{ old('status_realisasi') === 'SEBAGIAN' ? 'selected' : '' }}>Sebagian</option>
                 </select>
+                <p class="text-[10px] text-slate-400 mt-0.5">Status Selesai hanya diterima jika jumlah memenuhi rencana tahap.</p>
                 @error('status_realisasi')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
             </div>
 
@@ -174,8 +183,8 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const ureaRencana = parseFloat(document.querySelector('[name="urea_rencana_kg"]').value) || 0;
-    const kclRencana = parseFloat(document.querySelector('[name="kcl_rencana_kg"]').value) || 0;
+    const ureaRencana = {{ $ureaRencana }};
+    const kclRencana = {{ $kclRencana }};
     const totalTahunanUrea = {{ $rekomendasiRbs->urea_total_estimasi_tahunan ?? 0 }};
     const totalTahunanKcl = {{ $rekomendasiRbs->kcl_total_estimasi_tahunan ?? 0 }};
     const existingUrea = {{ $realizationSummary['total_urea_realisasi'] }};
@@ -190,11 +199,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const ureaVal = parseFloat(ureaInput.value) || 0;
         const kclVal = parseFloat(kclInput.value) || 0;
 
-        // Check over plan
         const overPlan = (ureaVal > ureaRencana && ureaRencana > 0) || (kclVal > kclRencana && kclRencana > 0);
         overPlanSection.classList.toggle('hidden', !overPlan);
 
-        // Check over annual
         const totalUreaAfter = existingUrea + ureaVal;
         const totalKclAfter = existingKcl + kclVal;
         const overAnnual = (totalUreaAfter > totalTahunanUrea && totalTahunanUrea > 0) || (totalKclAfter > totalTahunanKcl && totalTahunanKcl > 0);

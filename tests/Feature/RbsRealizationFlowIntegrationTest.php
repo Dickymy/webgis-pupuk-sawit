@@ -91,7 +91,7 @@ class RbsRealizationFlowIntegrationTest extends TestCase
         $calculator = app(CurrentApplicationCalculator::class);
         $realizationService = app(FertilizationRealizationService::class);
 
-        // Simulasi realisasi Tahap 1, 30 hari lalu
+        // Simulasi realisasi Tahap 1, 30 hari lalu (jumlah memenuhi rencana)
         RealisasiPemupukan::create([
             'rekomendasi_rbs_id' => $this->createRbs()->id,
             'blok_lahan_id' => $this->blok->id,
@@ -100,8 +100,8 @@ class RbsRealizationFlowIntegrationTest extends TestCase
             'tanggal_realisasi' => now()->subDays(30)->toDateString(),
             'urea_rencana_kg' => 272.0,
             'kcl_rencana_kg' => 340.0,
-            'urea_realisasi_kg' => 250.0,
-            'kcl_realisasi_kg' => 300.0,
+            'urea_realisasi_kg' => 272.0,
+            'kcl_realisasi_kg' => 340.0,
             'status_realisasi' => 'SELESAI',
         ]);
 
@@ -126,7 +126,7 @@ class RbsRealizationFlowIntegrationTest extends TestCase
         $calculator = app(CurrentApplicationCalculator::class);
         $realizationService = app(FertilizationRealizationService::class);
 
-        // Simulasi realisasi Tahap 1, 70 hari lalu (kurang dari rencana)
+        // Simulasi realisasi Tahap 1, 70 hari lalu (jumlah memenuhi rencana)
         RealisasiPemupukan::create([
             'rekomendasi_rbs_id' => $this->createRbs()->id,
             'blok_lahan_id' => $this->blok->id,
@@ -135,8 +135,8 @@ class RbsRealizationFlowIntegrationTest extends TestCase
             'tanggal_realisasi' => now()->subDays(70)->toDateString(),
             'urea_rencana_kg' => 272.0,
             'kcl_rencana_kg' => 340.0,
-            'urea_realisasi_kg' => 250.0,
-            'kcl_realisasi_kg' => 300.0,
+            'urea_realisasi_kg' => 272.0,
+            'kcl_realisasi_kg' => 340.0,
             'status_realisasi' => 'SELESAI',
         ]);
 
@@ -152,10 +152,10 @@ class RbsRealizationFlowIntegrationTest extends TestCase
 
         $this->assertEquals(2, $result['active_stage']);
         $this->assertEquals('TAHAP_2_SIAP', $result['status_stage']);
-        // Sisa aktual: 544 - 250 = 294
-        $this->assertEquals(294.0, $result['urea_aplikasi_saat_ini']);
-        // Sisa aktual: 680 - 300 = 380
-        $this->assertEquals(380.0, $result['kcl_aplikasi_saat_ini']);
+        // Sisa aktual: 544 - 272 = 272
+        $this->assertEquals(272.0, $result['urea_aplikasi_saat_ini']);
+        // Sisa aktual: 680 - 340 = 340
+        $this->assertEquals(340.0, $result['kcl_aplikasi_saat_ini']);
     }
 
     public function test_selesai_tahunan_after_full_realization(): void

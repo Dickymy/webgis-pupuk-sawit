@@ -162,18 +162,20 @@ $warna = match($rbs->status_kondisi_tanaman) {
 
                 if (str_contains(strtolower($pupuk['jenis_utama']), 'urea') && $ureaPerPokok) {
                     $dosisDisplay = number_format($ureaPerPokok, 2) . ' kg/pokok/tahun (Total Blok: ' . number_format($ureaTotalTahunan, 1) . ' kg)';
-                    $umurTanaman = $blokLahan->umur_tanaman;
-                    $kategoriUmur = $blokLahan->kategori_umur;
-                    if ($kategoriUmur === 'Belum Menghasilkan' || ($umurTanaman !== null && $umurTanaman < 3)) {
+                    // Pahan v2.7: Metode aplikasi memakai umur/fase snapshot
+                    $umurTanaman = $rbs->umur_tanaman_snapshot ?? $blokLahan->umur_tanaman;
+                    $faseSnapshot = $rbs->fase_tanaman_snapshot ?? $blokLahan->fase_tanaman;
+                    if ($faseSnapshot === 'TBM' || ($umurTanaman !== null && $umurTanaman < 3)) {
                         $metodeDisplay = 'Ditabur melingkar merata (lebar band 10-20 cm) sekitar 30-50 cm dari pangkal batang sawit (Tanaman Belum Menghasilkan).';
                     } else {
                         $metodeDisplay = 'Ditabur melingkar merata pada piringan bersih berjarak 1.5 - 2.0 meter dari pangkal batang (di bawah proyeksi tajuk terluar pelepah).';
                     }
                 } elseif (str_contains(strtolower($pupuk['jenis_utama']), 'kcl') && $kclPerPokok) {
                     $dosisDisplay = number_format($kclPerPokok, 2) . ' kg/pokok/tahun (Total Blok: ' . number_format($kclTotalTahunan, 1) . ' kg)';
-                    $umurTanaman = $blokLahan->umur_tanaman;
-                    $kategoriUmur = $blokLahan->kategori_umur;
-                    if ($kategoriUmur === 'Belum Menghasilkan' || ($umurTanaman !== null && $umurTanaman < 3)) {
+                    // Pahan v2.7: Metode aplikasi memakai umur/fase snapshot
+                    $umurTanaman = $rbs->umur_tanaman_snapshot ?? $blokLahan->umur_tanaman;
+                    $faseSnapshot = $rbs->fase_tanaman_snapshot ?? $blokLahan->fase_tanaman;
+                    if ($faseSnapshot === 'TBM' || ($umurTanaman !== null && $umurTanaman < 3)) {
                         $metodeDisplay = 'Ditabur melingkar merata sekitar 30-50 cm dari pangkal batang di atas piringan bersih.';
                     } else {
                         $metodeDisplay = 'Ditabur melingkar merata berjarak 1.5 - 2.0 meter dari pangkal batang (di bawah area akar rambut aktif).';

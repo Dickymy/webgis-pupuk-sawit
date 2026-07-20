@@ -87,10 +87,17 @@
 
         @if($rekomendasiRbs->blokLahan->tahun_tanam)
         <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-50 pb-2">Kriteria Agronomis</h3>
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-50 pb-2">Kriteria Agronomis <span class="text-[9px] text-slate-400 normal-case font-normal">(snapshot saat analisis)</span></h3>
+            @php
+                // Pahan v2.7: Gunakan snapshot umur/fase; fallback ke data blok terkini untuk legacy
+                $umurDisplay = $rekomendasiRbs->umur_tanaman_snapshot ?? $rekomendasiRbs->blokLahan->umur_tanaman;
+                $faseDisplay = $rekomendasiRbs->fase_tanaman_snapshot
+                    ? \App\Enums\PlantPhase::labelFromValue($rekomendasiRbs->fase_tanaman_snapshot)
+                    : ($rekomendasiRbs->blokLahan->fase_label ?? '-');
+            @endphp
             <div class="space-y-2.5 text-sm">
-                <div class="flex justify-between"><span class="text-slate-500">Umur</span><span class="text-emerald-700 font-bold">{{ $rekomendasiRbs->blokLahan->umur_tanaman }} tahun</span></div>
-                <div class="flex justify-between"><span class="text-slate-500">Kategori</span><span class="text-slate-800 font-semibold">{{ $rekomendasiRbs->blokLahan->kategori_umur }}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Umur (saat analisis)</span><span class="text-emerald-700 font-bold">{{ $umurDisplay ?? '-' }} tahun</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Fase</span><span class="text-slate-800 font-semibold">{{ $faseDisplay }}</span></div>
                 <div class="flex justify-between"><span class="text-slate-500">Jenis Tanah</span><span class="text-slate-800 font-medium text-xs">{{ $rekomendasiRbs->blokLahan->jenis_tanah }}</span></div>
                 <div class="flex justify-between"><span class="text-slate-500">Topografi</span><span class="text-slate-800 font-medium">{{ $rekomendasiRbs->blokLahan->topografi }}</span></div>
             </div>
@@ -185,11 +192,12 @@
     {{-- Catatan Dosis Kontekstual --}}
     @if($rekomendasiRbs->catatan_dosis)
     @php
-        $catatanStyle = match($rekomendasiRbs->status_kebutuhan_dominan) {
-            'Darurat' => 'bg-red-50 border-red-200 text-red-900',
-            'Tunda'   => 'bg-amber-50 border-amber-200 text-amber-900',
-            'Segera'  => 'bg-blue-50 border-blue-200 text-blue-900',
-            default   => 'bg-emerald-50 border-emerald-200 text-emerald-900',
+        // Pahan v2.7: Warna catatan berdasarkan status_kondisi_tanaman, BUKAN status_kebutuhan_dominan
+        $catatanStyle = match($rekomendasiRbs->status_kondisi_tanaman) {
+            'GEJALA_BERAT' => 'bg-red-50 border-red-200 text-red-900',
+            'TERINDIKASI_DEFISIENSI' => 'bg-amber-50 border-amber-200 text-amber-900',
+            'PERLU_VERIFIKASI' => 'bg-blue-50 border-blue-200 text-blue-900',
+            default => 'bg-emerald-50 border-emerald-200 text-emerald-900',
         };
     @endphp
     <div class="{{ $catatanStyle }} border rounded-2xl p-5 shadow-sm">

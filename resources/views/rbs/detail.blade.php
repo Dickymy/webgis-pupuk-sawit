@@ -466,6 +466,10 @@
         <span class="inline-flex items-center gap-2 px-4 py-2.5 bg-green-100 text-green-800 text-sm font-medium rounded-xl border border-green-200">
             ✅ Kebutuhan Tahunan Selesai
         </span>
+    @elseif(in_array($statusStage, ['MENUNGGU_INTERVAL', 'MENUNGGU_KELAYAKAN', 'PERLU_VERIFIKASI_REALISASI']))
+        <span class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-700 text-xs font-medium rounded-xl border border-amber-200">
+            ⏳ {{ \App\Services\CurrentApplicationCalculator::labelStatusStage($statusStage) }}
+        </span>
     @endif
 
     {{-- Tombol Histori Realisasi --}}

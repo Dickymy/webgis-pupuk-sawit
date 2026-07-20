@@ -155,11 +155,12 @@ class FertilizationRealizationService
     /**
      * Tentukan apakah Tahap 1 dianggap selesai.
      *
-     * Aturan Pahan v2.6:
-     * - Selesai jika ada record dengan status SELESAI
-     * - ATAU jika total realisasi >= rencana (dengan toleransi 0.01 kg) untuk KEDUA pupuk
-     * - Record SEBAGIAN saja = belum selesai
+     * Aturan Pahan v2.7:
+     * - JANGAN langsung selesai hanya karena ada record berstatus SELESAI
+     * - Gunakan total kumulatif terhadap rencana resmi
      * - Urea dan KCl dievaluasi independen
+     * - Jika salah satu pupuk belum memenuhi rencana, tahap belum selesai
+     * - Beberapa record SEBAGIAN yang totalnya memenuhi rencana boleh menyelesaikan tahap
      */
     private function isTahapSelesai(
         $records,
@@ -172,17 +173,13 @@ class FertilizationRealizationService
             return false;
         }
 
-        // Cek apakah ada record yang eksplisit status SELESAI
-        $adaSelesai = $records->contains(fn ($r) => $r->status_realisasi === RealisasiPemupukan::STATUS_SELESAI);
-        if ($adaSelesai) {
-            return true;
-        }
-
-        // Cek apakah total realisasi sudah memenuhi rencana (kedua pupuk)
+        // Jika tidak ada rencana, tidak bisa menentukan selesai
         if ($ureaRencana <= 0 && $kclRencana <= 0) {
             return false;
         }
 
+        // v2.7: Cek apakah total realisasi sudah memenuhi rencana (kedua pupuk)
+        // Status SELESAI pada record SAJA tidak cukup — harus dicek jumlah aktual
         $ureaTerpenuhi = $ureaRencana <= 0 || ($ureaTotalRealisasi >= ($ureaRencana - self::TOLERANCE_KG));
         $kclTerpenuhi = $kclRencana <= 0 || ($kclTotalRealisasi >= ($kclRencana - self::TOLERANCE_KG));
 

@@ -156,11 +156,35 @@ class RecommendationOperationalRefreshService
 
     /**
      * Generate fingerprint baru setelah refresh operasional.
+     *
+     * Pahan v2.7: Fingerprint memasukkan program_pemupukan_id, realisasi aktif,
+     * tanggal, tahap, status, jumlah, override, active_stage, status_stage,
+     * sisa tahunan, dan tanggal minimum tahap berikutnya.
      */
     private function generateRefreshedFingerprint(RekomendasiRbs $rekomendasi, array $currentApp): string
     {
+        // Ambil realisasi aktif terkait untuk di-hash
+        $realisasiAktif = RealisasiPemupukan::where('rekomendasi_rbs_id', $rekomendasi->id)
+            ->where('status_realisasi', '!=', RealisasiPemupukan::STATUS_BATAL)
+            ->orderBy('tahap')
+            ->orderBy('tanggal_realisasi')
+            ->orderBy('id')
+            ->get(['id', 'tahap', 'tanggal_realisasi', 'urea_realisasi_kg', 'kcl_realisasi_kg', 'status_realisasi', 'confirmed_over_plan', 'override_annual_limit']);
+
+        $realisasiData = $realisasiAktif->map(fn ($r) => [
+            'id' => $r->id,
+            'tahap' => $r->tahap,
+            'tanggal' => $r->tanggal_realisasi?->toDateString(),
+            'urea' => (float) $r->urea_realisasi_kg,
+            'kcl' => (float) $r->kcl_realisasi_kg,
+            'status' => $r->status_realisasi,
+            'over_plan' => (bool) $r->confirmed_over_plan,
+            'override' => (bool) $r->override_annual_limit,
+        ])->toArray();
+
         $fingerprintData = [
             'kondisi_lahan_id' => $rekomendasi->kondisi_lahan_id,
+            'program_pemupukan_id' => $rekomendasi->program_pemupukan_id,
             'versi_mesin' => $rekomendasi->versi_mesin_rekomendasi,
             'fase' => $rekomendasi->fase_tanaman_snapshot,
             'umur' => $rekomendasi->umur_tanaman_snapshot,
@@ -180,6 +204,8 @@ class RecommendationOperationalRefreshService
             'kcl_sisa_tahunan' => $currentApp['kcl_sisa_tahunan'],
             'active_stage' => $currentApp['active_stage'],
             'status_stage' => $currentApp['status_stage'],
+            'tanggal_minimum_tahap_berikutnya' => $currentApp['tanggal_minimum_tahap_berikutnya'],
+            'realisasi_aktif' => $realisasiData,
         ];
 
         ksort($fingerprintData);

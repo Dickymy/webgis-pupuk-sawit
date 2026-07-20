@@ -2,8 +2,8 @@
 
 > **Proyek:** Rancang Bangun WebGIS Sistem Pemupukan Kelapa Sawit Menggunakan Metode Rule-Based System  
 > **Framework:** Laravel 11 + Blade + Tailwind CSS 4 + Leaflet.js  
-> **Mesin Rekomendasi:** Pahan-v2.6 (Forward Chaining Rule-Based System)  
-> **Tanggal Generate:** 21 Juli 2026
+> **Mesin Rekomendasi:** Pahan-v2.7 (Forward Chaining Rule-Based System)  
+> **Tanggal Generate:** 22 Juli 2026
 
 ---
 
@@ -105,7 +105,7 @@
 | 10 | `app/Http/Controllers/CuacaController.php` | Auto-fetch cuaca dari Open-Meteo API — presipitasi, ET0, water balance, deteksi musim dinamis |
 | 11 | `app/Http/Controllers/GeoUploadController.php` | Upload SHP (ZIP) atau GeoJSON — parse, validasi polygon, ekstrak koordinat |
 | 12 | `app/Http/Controllers/SettingController.php` | Pengaturan admin — ganti password (verifikasi current_password), preferensi tema (light/dark/system) |
-| 13 | `app/Http/Controllers/RealisasiPemupukanController.php` | CRUD realisasi pemupukan — index, create (dari rekomendasi), store, show, edit, update, cancel (soft-delete via status BATAL). Integrasi RecommendationOperationalRefreshService. |
+| 13 | `app/Http/Controllers/RealisasiPemupukanController.php` | (v2.7) CRUD realisasi pemupukan — eligibility check, server-determined tahap/rencana/tahun, validasi status SELESAI vs jumlah kumulatif, program pemupukan, histori operasional |
 
 ---
 
@@ -119,6 +119,9 @@
 | 4 | `app/Models/KondisiLahan.php` | Model observasi kondisi lahan — pH, kelembaban, curah hujan, warna daun, pelepah, gejala defisiensi, drainase, gulma, hama |
 | 5 | `app/Models/RuleBaseLanjutan.php` | Model rule base RBS — kode_rule, conditions (warna daun, pH, kelembaban, curah hujan, musim, drainase, dll), outputs (indikasi, pupuk, dosis, saran), provenance metadata (sumber, versi, validasi) |
 | 6 | `app/Models/RekomendasiRbs.php` | Model hasil rekomendasi RBS — rules terpicu, masalah, pupuk, jadwal, dosis, confidence, status kondisi/kelayakan, histori fingerprint; many accessor untuk label tampilan |
+| 7 | `app/Models/RealisasiPemupukan.php` | (v2.6) Model realisasi pemupukan — rencana vs realisasi, status (SELESAI/SEBAGIAN/BATAL), tahap, tahun program, override, relasi program |
+| 8 | `app/Models/ProgramPemupukan.php` | (v2.7) Model program pemupukan tahunan — uuid, blok, tahun, status (AKTIF/SELESAI/DIBATALKAN/ARSIP), satu blok satu program aktif per tahun |
+| 9 | `app/Models/RekomendasiOperasionalHistory.php` | (v2.7) Model histori operasional — event_type, snapshot state tahap, sisa tahunan, fingerprint, tidak pernah dihapus |
 
 ---
 
@@ -141,6 +144,7 @@
 | 13 | `app/Services/CurrentApplicationCalculator.php` | Tahap aktif saat ini — TAHAP_1_SIAP/SEBAGIAN, MENUNGGU_INTERVAL/KELAYAKAN, TAHAP_2_SIAP, SELESAI_TAHUNAN |
 | 14 | `app/Services/SupportingFertilizerSanitizer.php` | Sanitasi pupuk pendukung — sembunyikan angka tanpa metadata lengkap |
 | 15 | `app/Services/RecommendationOperationalRefreshService.php` | (v2.6) Refresh operasional rekomendasi setelah realisasi berubah — update tahap, sisa, jadwal, fingerprint tanpa re-diagnosis |
+| 16 | `app/Services/RealisasiEligibilityService.php` | (v2.7) Validasi kelayakan pencatatan realisasi — server menentukan tahap, rencana, tahun program; form ditolak jika tidak layak |
 
 ---
 
@@ -195,6 +199,7 @@
 | 6 | `app/Console/Commands/FinalizePahanV2_4.php` | `sawit:finalize-pahan-v2-4` | Audit v2.4: fase historis, jadwal kosong |
 | 7 | `app/Console/Commands/FinalizePahanV2_5.php` | `sawit:finalize-pahan-v2-5` | Audit v2.5: snapshot luas/SPH, tahap aktif, fingerprint |
 | 8 | `app/Console/Commands/FinalizePahanV2_6.php` | `sawit:finalize-pahan-v2-6` | (v2.6) Audit menyeluruh: schema v2.6, versi mesin, snapshot, tahap, realisasi, jadwal, pupuk pendukung, status legacy, fingerprint |
+| 9 | `app/Console/Commands/FinalizePahanV2_7.php` | `sawit:finalize-pahan-v2-7` | (v2.7) Audit penutupan celah: eligibility, manipulasi request, status SELESAI, program pemupukan, histori operasional, fingerprint realisasi, status legacy, migration |
 
 ---
 
