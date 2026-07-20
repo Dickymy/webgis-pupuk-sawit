@@ -35,9 +35,12 @@ class AnnualFertilizerSnapshotBuilderTest extends TestCase
         $this->assertEquals(680.0, $result['kcl_total_estimasi_tahunan']);
         $this->assertEquals(11, $result['urea_karung_estimasi_tahunan']); // ceil(544/50)
         $this->assertEquals(14, $result['kcl_karung_estimasi_tahunan']); // ceil(680/50)
-        // Aplikasi saat ini = estimasi tahunan karena layak
-        $this->assertEquals(544.0, $result['urea_aplikasi_saat_ini']);
-        $this->assertEquals(680.0, $result['kcl_aplikasi_saat_ini']);
+        // Aplikasi saat ini = 50% estimasi tahunan karena layak (Pahan v2.5)
+        $this->assertEquals(272.0, $result['urea_aplikasi_saat_ini']);
+        $this->assertEquals(340.0, $result['kcl_aplikasi_saat_ini']);
+        // Snapshot luas dan SPH (Pahan v2.5)
+        $this->assertEquals(2.0, $result['luas_ha_snapshot']);
+        $this->assertEquals(136, $result['sph_snapshot']);
     }
 
     public function test_build_with_valid_dose_but_not_applicable(): void

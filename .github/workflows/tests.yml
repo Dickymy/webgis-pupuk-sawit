@@ -95,6 +95,16 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: password
 
+      - name: Run migration upgrade path test
+        run: php artisan test --filter=MigrationUpgradePathTest
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: password
+
       - name: Rollback last migration
         run: php artisan migrate:rollback --step=1 --env=testing --force
         env:
@@ -125,8 +135,8 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: password
 
-      - name: Run finalize audit (dry-run)
-        run: php artisan sawit:finalize-pahan-v2-4 --dry-run || true
+      - name: Run finalize audit v2.5 (dry-run)
+        run: php artisan sawit:finalize-pahan-v2-5 --dry-run
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
