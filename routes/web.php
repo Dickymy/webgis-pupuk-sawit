@@ -42,11 +42,6 @@ Route::middleware(AdminAuthenticated::class)->group(function () {
     Route::get('rule-base/info', [RuleBaseController::class, 'info'])->name('rule-base.info');
     Route::resource('rule-base', RuleBaseController::class)->except(['show']);
 
-    // Panduan Penggunaan (disembunyikan sementara — uncomment untuk menampilkan kembali)
-    // Route::get('/panduan', function () {
-    //     return view('panduan');
-    // })->name('panduan');
-
     // Analisis RBS (Rule-Based System) — Satu-satunya mesin analisis
     Route::prefix('rbs')->name('rbs.')->group(function () {
         Route::get('/', [RbsController::class, 'index'])->name('index');

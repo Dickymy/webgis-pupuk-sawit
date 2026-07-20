@@ -17,12 +17,4 @@ class Anggota extends Model
     {
         return $this->hasMany(BlokLahan::class, 'anggota_id');
     }
-
-    /**
-     * Jumlah blok lahan milik anggota ini.
-     */
-    public function getJumlahBlokAttribute(): int
-    {
-        return $this->blokLahans()->count();
-    }
 }

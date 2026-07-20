@@ -174,12 +174,6 @@ class RekomendasiRbs extends Model
         };
     }
 
-    // Scope: hanya rekomendasi terbaru
-    public function scopeLatest_only($query)
-    {
-        return $query->where('is_latest', true);
-    }
-
     // ─── Label Helpers (v2.2) ────────────────────────────────────
 
     /**

@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Enums\PlantPhase;
 use App\Models\BlokLahan;
 use App\Models\RekomendasiRbs;
 use App\Models\RuleBaseLanjutan;

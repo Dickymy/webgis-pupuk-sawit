@@ -100,12 +100,6 @@ class KondisiLahanController extends Controller
         return $redirect;
     }
 
-    public function show(KondisiLahan $kondisiLahan)
-    {
-        // Show tidak dipakai — data kondisi dilihat melalui rbs.detail
-        return redirect()->route('kondisi-lahan.index');
-    }
-
     public function edit(KondisiLahan $kondisiLahan)
     {
         $bloks = BlokLahan::with('anggota')->orderBy('nama_blok')->get();
