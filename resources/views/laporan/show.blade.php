@@ -108,7 +108,7 @@
     </div>
 
     {{-- Logistik --}}
-    @if($rekomendasiRbs->total_urea)
+    @if($rekomendasiRbs->urea_estimasi_kg_per_pokok_tahun !== null || $rekomendasiRbs->kcl_estimasi_kg_per_pokok_tahun !== null || $rekomendasiRbs->total_urea)
     <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
         <h3 class="text-sm font-extrabold text-slate-800 mb-4 flex items-center gap-1.5">
             <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>

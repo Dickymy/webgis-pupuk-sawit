@@ -60,13 +60,22 @@ class FertilizationWindowService
             }
         } else {
             // Fallback: cek kategori curah hujan lama
+            // PERBAIKAN: Kategori tanpa nilai numerik TIDAK boleh langsung menyatakan layak
             $kategori = $kondisi->curah_hujan_kategori;
             if ($kategori === 'Sangat Rendah') {
                 $statuses[] = self::TUNDA_HUJAN_RENDAH;
-                $alasan[] = "Curah hujan sangat rendah (kategori) — risiko efektivitas rendah.";
+                $alasan[] = "Curah hujan sangat rendah (kategori, tanpa data numerik) — indikasi tunda, verifikasi nilai aktual disarankan.";
             } elseif ($kategori === 'Sangat Tinggi') {
                 $statuses[] = self::TUNDA_HUJAN_TINGGI;
-                $alasan[] = "Curah hujan sangat tinggi (kategori) — risiko pencucian hara.";
+                $alasan[] = "Curah hujan sangat tinggi (kategori, tanpa data numerik) — indikasi tunda, verifikasi nilai aktual disarankan.";
+            } elseif ($kategori === 'Rendah' || $kategori === 'Tinggi') {
+                // Kategori Rendah/Tinggi tanpa numerik → tidak bisa memastikan layak
+                $statuses[] = self::PERLU_VERIFIKASI_DATA;
+                $alasan[] = "Curah hujan '{$kategori}' (hanya kategori, tanpa nilai numerik mm/bulan) — tidak dapat memastikan kelayakan waktu. Masukkan data numerik untuk presisi.";
+            } elseif ($kategori === 'Normal') {
+                // Kategori Normal tanpa numerik → perlu verifikasi karena range bisa luas
+                $statuses[] = self::PERLU_VERIFIKASI_DATA;
+                $alasan[] = "Curah hujan 'Normal' (hanya kategori, tanpa nilai numerik mm/bulan) — verifikasi apakah dalam rentang 100-250 mm.";
             }
 
             // Jika tidak ada data hujan sama sekali

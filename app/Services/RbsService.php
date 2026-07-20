@@ -29,19 +29,25 @@ class RbsService
     private FertilizationCalculationService $calcService;
     private RecommendationReliabilityService $reliabilityService;
     private PlantPhaseResolver $phaseResolver;
+    private ObservationCompletenessService $completenessService;
+    private PlantAgeService $ageService;
 
     public function __construct(
         PahanDoseReferenceService $doseService,
         FertilizationWindowService $windowService,
         FertilizationCalculationService $calcService,
         RecommendationReliabilityService $reliabilityService,
-        PlantPhaseResolver $phaseResolver
+        PlantPhaseResolver $phaseResolver,
+        ObservationCompletenessService $completenessService,
+        PlantAgeService $ageService
     ) {
         $this->doseService = $doseService;
         $this->windowService = $windowService;
         $this->calcService = $calcService;
         $this->reliabilityService = $reliabilityService;
         $this->phaseResolver = $phaseResolver;
+        $this->completenessService = $completenessService;
+        $this->ageService = $ageService;
     }
 
     /**
@@ -66,21 +72,34 @@ class RbsService
             throw new \Exception("Data kondisi lahan belum tersedia untuk blok '{$blok->nama_blok}'.");
         }
 
-        // 2. Cek kecukupan data
+        // 2. Hitung umur pada tanggal observasi (bukan now())
+        $tanggalObservasi = $kondisi->tanggal_observasi ?? now();
+        $ageInfo = $this->ageService->calculateAgeAt($blok, $tanggalObservasi);
+
+        // 3. Cek kecukupan data (legacy)
         $kecukupanData = $this->cekKecukupanData($kondisi);
 
-        // 3. Cek apakah data kondisi cukup untuk analisis (minimal 1 field terisi)
+        // 4. Evaluasi kelengkapan observasi (service baru)
+        $completeness = $this->completenessService->evaluate($kondisi);
+
+        // 5. Cek apakah data kondisi cukup untuk analisis (minimal 1 field terisi)
         if (!$this->kondisiCukup($kondisi)) {
-            return $this->hasilDataTidakCukup($blok, $kondisi, $kecukupanData);
+            return $this->hasilDataTidakCukup($blok, $kondisi, $kecukupanData, $ageInfo);
         }
 
-        // 4. Ambil kategori umur langsung dari blok (kriteria terintegrasi)
-        $kategoriUmur = $blok->kategori_umur;
+        // 6. Jika data tidak cukup untuk diagnosis spesifik, kembalikan dosis dasar saja
+        if (!$completeness['can_run_diagnosis']) {
+            return $this->hasilDosisBasarTanpaDiagnosis($blok, $kondisi, $kecukupanData, $completeness, $ageInfo);
+        }
 
-        // 5. Ambil semua rule aktif, urutkan dari prioritas tertinggi (nilai terkecil = lebih penting)
+        // 7. Ambil kategori umur berdasarkan umur saat observasi
+        $umurSaatObservasi = $ageInfo['umur'];
+        $kategoriUmur = $this->tentukanKategoriUmurDariNilai($umurSaatObservasi);
+
+        // 8. Ambil semua rule aktif, urutkan dari prioritas tertinggi (nilai terkecil = lebih penting)
         $rules = RuleBaseLanjutan::aktif()->orderBy('prioritas')->get();
 
-        // 6. Evaluasi setiap rule (Forward Chaining dengan Rule Chaining)
+        // 9. Evaluasi setiap rule (Forward Chaining dengan Rule Chaining)
         $rulesTerpicu = [];
         $intermediateFlags = [];
 
@@ -768,15 +787,24 @@ class RbsService
         }
 
         // Cek defisiensi (array contains check)
+        // PERBAIKAN: Jika rule mensyaratkan defisiensi tertentu,
+        // kondisi WAJIB memiliki data defisiensi yang cocok (AND logic ketat)
         if ($rule->kondisi_defisiensi !== null) {
+            $jumlahKondisiDiRule++;
+
             $defisiensiInput = $kondisi->gejala_defisiensi ?? [];
-            if (!empty($defisiensiInput)) {
-                $jumlahKondisiDiRule++;
-                if (!in_array($rule->kondisi_defisiensi, $defisiensiInput)) {
-                    return false;
-                }
-                $jumlahKondisiCocok++;
+
+            // Jika input defisiensi kosong, rule tidak boleh terpicu
+            if (empty($defisiensiInput)) {
+                return false;
             }
+
+            // Strict comparison untuk mencegah type juggling
+            if (!in_array($rule->kondisi_defisiensi, $defisiensiInput, true)) {
+                return false;
+            }
+
+            $jumlahKondisiCocok++;
         }
 
         // Cek kondisi pelepah
@@ -1161,7 +1189,7 @@ class RbsService
     /**
      * Return hasil ketika data kondisi tidak cukup untuk analisis.
      */
-    private function hasilDataTidakCukup(BlokLahan $blok, KondisiLahan $kondisi, array $kecukupanData): array
+    private function hasilDataTidakCukup(BlokLahan $blok, KondisiLahan $kondisi, array $kecukupanData, array $ageInfo = []): array
     {
         $dosisRef = $this->hitungDosisStandar($blok, $kondisi);
         $jadwal = $this->generateJadwalPemupukan(
@@ -1171,6 +1199,7 @@ class RbsService
         $reliability = $this->reliabilityService->calculate($blok, $kondisi, []);
         $phaseInfo = $this->phaseResolver->resolve($blok);
         $doseReference = $dosisRef['dose_reference'] ?? null;
+        $umurSnapshot = !empty($ageInfo) ? ($ageInfo['umur'] ?? $blok->umur_tanaman) : $blok->umur_tanaman;
 
         $hasil = $this->simpanDenganHistori($blok->id, [
             'kondisi_lahan_id'         => $kondisi->id,
@@ -1198,7 +1227,7 @@ class RbsService
             'notifikasi_data'          => $kecukupanData['pesan'],
             // Kolom baru Pahan-v2
             'fase_tanaman_snapshot'    => $phaseInfo['fase'],
-            'umur_tanaman_snapshot'    => $blok->umur_tanaman,
+            'umur_tanaman_snapshot'    => $umurSnapshot,
             'urea_min_kg_per_pokok_tahun'     => $doseReference['urea']['min'] ?? null,
             'urea_max_kg_per_pokok_tahun'     => $doseReference['urea']['max'] ?? null,
             'urea_estimasi_kg_per_pokok_tahun' => $doseReference['urea']['estimate'] ?? null,
@@ -1219,6 +1248,82 @@ class RbsService
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
+    }
+
+    /**
+     * Return hasil ketika data cukup untuk dosis dasar tapi TIDAK cukup untuk diagnosis RBS.
+     * Kebutuhan tahunan tetap dihitung, tapi tidak ada diagnosis spesifik.
+     */
+    private function hasilDosisBasarTanpaDiagnosis(BlokLahan $blok, KondisiLahan $kondisi, array $kecukupanData, array $completeness, array $ageInfo): array
+    {
+        $dosisRef = $this->hitungDosisStandar($blok, $kondisi);
+        $reliability = $this->reliabilityService->calculate($blok, $kondisi, []);
+        $phaseInfo = $this->phaseResolver->resolve($blok);
+        $doseReference = $dosisRef['dose_reference'] ?? null;
+
+        $saranLengkapi = 'Data observasi belum lengkap untuk diagnosis spesifik. Lengkapi: ' . implode(', ', $completeness['missing_fields']) . '.';
+
+        $hasil = $this->simpanDenganHistori($blok->id, [
+            'kondisi_lahan_id'         => $kondisi->id,
+            'admin_id'                 => Auth::guard('admin')->id(),
+            'tanggal_analisis'         => now()->toDateString(),
+            'rules_terpicu'            => [],
+            'masalah_teridentifikasi'  => ['Data belum cukup untuk diagnosis spesifik — kebutuhan tahunan tetap dihitung'],
+            'rekomendasi_pupuk'        => [['jenis_utama' => 'Pupuk Standar Rutin (Urea + KCl)', 'dosis' => 'Sesuai kebutuhan tahunan Pahan — lengkapi data untuk rekomendasi spesifik']],
+            'saran_tindakan_utama'     => $saranLengkapi,
+            'status_kebutuhan_dominan' => 'Normal',
+            'jumlah_rule_terpicu'      => 0,
+            'dosis_urea'               => $dosisRef['dosis_urea'],
+            'dosis_kcl'                => $dosisRef['dosis_kcl'],
+            'total_urea'               => $dosisRef['total_urea'],
+            'total_kcl'                => $dosisRef['total_kcl'],
+            'catatan_dosis'            => 'Estimasi dosis kerja dari rentang referensi Pahan (2013). Diagnosis spesifik tidak dijalankan karena data observasi belum memenuhi syarat minimum.',
+            'jadwal_pemupukan'         => [],
+            'validitas_rekomendasi'    => 'Estimasi Visual',
+            'catatan_validitas'        => $completeness['reason'],
+            'confidence_score'         => $reliability['score'],
+            'confidence_label'         => $this->mapReliabilityToLabel($reliability['score']),
+            'catatan_confidence'       => 'Tingkat Kelengkapan & Keandalan Data: ' . $reliability['kategori'],
+            'data_cukup'               => false,
+            'data_kurang'              => $completeness['missing_fields'],
+            'notifikasi_data'          => $completeness['reason'],
+            // Kolom baru Pahan-v2
+            'fase_tanaman_snapshot'    => $phaseInfo['fase'],
+            'umur_tanaman_snapshot'    => $ageInfo['umur'],
+            'urea_min_kg_per_pokok_tahun'     => $doseReference['urea']['min'] ?? null,
+            'urea_max_kg_per_pokok_tahun'     => $doseReference['urea']['max'] ?? null,
+            'urea_estimasi_kg_per_pokok_tahun' => $doseReference['urea']['estimate'] ?? null,
+            'kcl_min_kg_per_pokok_tahun'      => $doseReference['kcl']['min'] ?? null,
+            'kcl_max_kg_per_pokok_tahun'      => $doseReference['kcl']['max'] ?? null,
+            'kcl_estimasi_kg_per_pokok_tahun' => $doseReference['kcl']['estimate'] ?? null,
+            'strategi_estimasi_dosis'  => config('fertilization.reference_dose_strategy'),
+            'jumlah_pokok_snapshot'    => $dosisRef['calculation']['jumlah_pokok'] ?? (int)($blok->luas_ha * $blok->sph),
+            'dasar_perhitungan_json'   => ['strategy' => config('fertilization.reference_dose_strategy'), 'catatan' => 'Dosis dasar dihitung, diagnosis belum dijalankan.'],
+            'peringatan_json'          => $dosisRef['peringatan'] ?? [],
+            'kelengkapan_data_score'   => $reliability['score'],
+            'kategori_keandalan'       => $reliability['kategori'],
+            'rincian_skor_json'        => $reliability['rincian'],
+            'status_kondisi_tanaman'   => 'PERLU_VERIFIKASI',
+            'status_kelayakan_aplikasi' => FertilizationWindowService::PERLU_VERIFIKASI_DATA,
+            'alasan_kelayakan'         => $completeness['reason'],
+            'versi_mesin_rekomendasi'  => config('fertilization.engine_version', 'pahan-v2'),
+        ]);
+
+        return ['sukses' => true, 'rekomendasi' => $hasil];
+    }
+
+    /**
+     * Tentukan kategori umur dari nilai integer umur.
+     */
+    private function tentukanKategoriUmurDariNilai(?int $umur): ?string
+    {
+        if ($umur === null) return null;
+
+        if ($umur < 3) return 'Belum Menghasilkan';
+        if ($umur <= 8) return 'Remaja';
+        if ($umur <= 14) return 'Menghasilkan Muda';
+        if ($umur <= 25) return 'Menghasilkan Tua';
+        return 'Tua Renta';
     }
 
     /**

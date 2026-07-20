@@ -26,12 +26,25 @@ class PlantPhaseResolverTest extends TestCase
 
     public function test_manual_fase_is_used_when_set(): void
     {
-        $blok = $this->makeBlok(['fase_tanaman' => 'TBM']);
+        // Umur 3 + TBM = valid (tidak ada konflik)
+        $blok = $this->makeBlok(['fase_tanaman' => 'TBM', 'tahun_tanam' => now()->year - 3]);
         $result = $this->resolver->resolve($blok);
 
         $this->assertEquals('TBM', $result['fase']);
         $this->assertTrue($result['verified']);
         $this->assertFalse($result['needs_verification']);
+        $this->assertFalse($result['phase_conflict']);
+    }
+
+    public function test_manual_fase_rejected_when_conflict(): void
+    {
+        // Umur 10 + TBM = KONFLIK — fase ditolak
+        $blok = $this->makeBlok(['fase_tanaman' => 'TBM', 'tahun_tanam' => now()->year - 10]);
+        $result = $this->resolver->resolve($blok);
+
+        $this->assertNull($result['fase']);
+        $this->assertTrue($result['phase_conflict']);
+        $this->assertTrue($result['needs_verification']);
     }
 
     public function test_umur_kurang_3_auto_tbm(): void

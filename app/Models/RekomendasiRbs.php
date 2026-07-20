@@ -57,12 +57,15 @@ class RekomendasiRbs extends Model
         'alasan_kelayakan',
         'versi_mesin_rekomendasi',
         'analysis_fingerprint',
+        'metode_perhitungan_umur',
+        'tanggal_referensi_umur',
     ];
 
     protected function casts(): array
     {
         return [
             'tanggal_analisis'        => 'date',
+            'tanggal_referensi_umur'  => 'date',
             'rules_terpicu'           => 'array',
             'masalah_teridentifikasi' => 'array',
             'rekomendasi_pupuk'       => 'array',

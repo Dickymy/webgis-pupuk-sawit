@@ -68,6 +68,109 @@ class PahanRuleBaseV2Seeder extends Seeder
         $perluValidasi = RuleBaseLanjutan::where('status_validasi', 'PERLU_VALIDASI_AHLI')->count();
 
         $this->command->info("Total rule: {$total} | Terverifikasi: {$terverifikasi} | Perlu validasi: {$perluValidasi}");
+
+        // ═══════════════════════════════════════════════════════════════
+        // LANGKAH 5: Nonaktifkan rule Zn (PERLU_VALIDASI_AHLI)
+        // ═══════════════════════════════════════════════════════════════
+        $this->deactivateZnRule();
+
+        // ═══════════════════════════════════════════════════════════════
+        // LANGKAH 6: Perbaiki rule Tanaman Tua >25 tahun
+        // ═══════════════════════════════════════════════════════════════
+        $this->fixOldTreeRule();
+
+        // ═══════════════════════════════════════════════════════════════
+        // LANGKAH 7: Tambah field jenis_rule dan tingkat_keparahan
+        // ═══════════════════════════════════════════════════════════════
+        $this->assignRuleCategories();
+    }
+
+    /**
+     * Nonaktifkan rule Zn — belum memiliki sumber ilmiah yang cukup.
+     */
+    private function deactivateZnRule(): void
+    {
+        $znRule = RuleBaseLanjutan::where('kode_rule', 'VIS-ZN-01')
+            ->orWhere('indikasi_masalah', 'LIKE', '%Defisiensi Seng%')
+            ->first();
+
+        if ($znRule) {
+            $znRule->update([
+                'aktif'            => false,
+                'tingkat_bukti'    => 'ADAPTASI_PENELITI',
+                'status_validasi'  => 'PERLU_VALIDASI_AHLI',
+                'catatan_validasi' => 'Rule Zn dinonaktifkan — belum ada sumber ilmiah spesifik untuk kelapa sawit. Memerlukan validasi ahli atau sumber tambahan sebelum diaktifkan kembali.',
+            ]);
+            $this->command->info('Rule Zn (VIS-ZN-01) dinonaktifkan — PERLU_VALIDASI_AHLI.');
+        }
+    }
+
+    /**
+     * Perbaiki rule Tanaman Tua: jangan otomatis menghentikan pemupukan.
+     */
+    private function fixOldTreeRule(): void
+    {
+        $oldTreeRule = RuleBaseLanjutan::where('kode_rule', 'UMUR-TUA-01')
+            ->orWhere('indikasi_masalah', 'LIKE', '%Tanaman Tua Renta%')
+            ->first();
+
+        if ($oldTreeRule) {
+            $oldTreeRule->update([
+                'dosis_anjuran'     => 'Perlu evaluasi produktivitas dan kelayakan peremajaan. Besaran dosis perlu ditentukan berdasarkan analisis produktivitas aktual.',
+                'saran_tindakan'    => 'Tanaman > 25 tahun memerlukan evaluasi kelayakan ekonomis. Lakukan analisis: (1) produktivitas TBS aktual, (2) biaya pemeliharaan vs pendapatan, (3) kemungkinan peremajaan. Kebutuhan tahunan tetap dihitung dari tabel Pahan untuk kelompok TM >15 tahun.',
+                'status_kebutuhan'  => 'Normal', // Jangan otomatis Tunda
+                'catatan_validasi'  => 'PERBAIKAN: Rule tidak lagi otomatis menghentikan/mengurangi pemupukan. Evaluasi ekonomis diperlukan, bukan penghentian otomatis.',
+            ]);
+            $this->command->info('Rule Tanaman Tua (UMUR-TUA-01) diperbaiki — tidak lagi otomatis menunda pemupukan.');
+        }
+    }
+
+    /**
+     * Assign kategori jenis_rule dan tingkat_keparahan ke semua rule.
+     */
+    private function assignRuleCategories(): void
+    {
+        // DIAGNOSIS_VISUAL + mapping tingkat keparahan
+        $mappings = [
+            'VIS-N-01'     => ['jenis_rule' => 'DIAGNOSIS_VISUAL', 'tingkat_keparahan' => 'SEDANG'],
+            'VIS-N-02'     => ['jenis_rule' => 'DIAGNOSIS_VISUAL', 'tingkat_keparahan' => 'RINGAN'],
+            'VIS-K-01'     => ['jenis_rule' => 'DIAGNOSIS_VISUAL', 'tingkat_keparahan' => 'BERAT'],
+            'VIS-K-02'     => ['jenis_rule' => 'DIAGNOSIS_VISUAL', 'tingkat_keparahan' => 'SEDANG'],
+            'VIS-MG-01'    => ['jenis_rule' => 'DIAGNOSIS_VISUAL', 'tingkat_keparahan' => 'SEDANG'],
+            'VIS-B-01'     => ['jenis_rule' => 'DIAGNOSIS_VISUAL', 'tingkat_keparahan' => 'SEDANG'],
+            'VIS-P-01'     => ['jenis_rule' => 'DIAGNOSIS_VISUAL', 'tingkat_keparahan' => 'SEDANG'],
+            'VIS-FE-01'    => ['jenis_rule' => 'DIAGNOSIS_VISUAL', 'tingkat_keparahan' => 'SEDANG'],
+            'VIS-ZN-01'    => ['jenis_rule' => 'DIAGNOSIS_VISUAL', 'tingkat_keparahan' => 'RINGAN'],
+            'VIS-BK-01'    => ['jenis_rule' => 'DIAGNOSIS_VISUAL', 'tingkat_keparahan' => 'SEDANG'],
+            'TANAH-PH-01'  => ['jenis_rule' => 'PEMBATAS_APLIKASI', 'tingkat_keparahan' => 'BERAT'],
+            'TANAH-PH-02'  => ['jenis_rule' => 'PEMBATAS_APLIKASI', 'tingkat_keparahan' => 'RINGAN'],
+            'LINGK-DR-01'  => ['jenis_rule' => 'PEMBATAS_APLIKASI', 'tingkat_keparahan' => 'BERAT'],
+            'LINGK-KER-01' => ['jenis_rule' => 'PEMBATAS_APLIKASI', 'tingkat_keparahan' => 'BERAT'],
+            'LINGK-KER-02' => ['jenis_rule' => 'PEMBATAS_APLIKASI', 'tingkat_keparahan' => 'RINGAN'],
+            'LINGK-OPT-01' => ['jenis_rule' => 'NORMAL', 'tingkat_keparahan' => 'NORMAL'],
+            'UMUR-TBM-01'  => ['jenis_rule' => 'DIAGNOSIS_VISUAL', 'tingkat_keparahan' => 'SEDANG'],
+            'UMUR-TUA-01'  => ['jenis_rule' => 'PERINGATAN_DATA', 'tingkat_keparahan' => 'PERLU_VERIFIKASI'],
+            'NORMAL-01'    => ['jenis_rule' => 'NORMAL', 'tingkat_keparahan' => 'NORMAL'],
+        ];
+
+        $updated = 0;
+        foreach ($mappings as $kode => $data) {
+            $rule = RuleBaseLanjutan::where('kode_rule', $kode)->first();
+            if ($rule) {
+                $rule->update($data);
+                $updated++;
+            }
+        }
+
+        // Rule tanpa kode yang belum punya jenis_rule: tandai sebagai SARAN_PENDUKUNG
+        RuleBaseLanjutan::whereNull('kode_rule')
+            ->whereNull('jenis_rule')
+            ->update([
+                'jenis_rule'        => 'SARAN_PENDUKUNG',
+                'tingkat_keparahan' => 'PERLU_VERIFIKASI',
+            ]);
+
+        $this->command->info("Kategori jenis_rule/tingkat_keparahan diupdate: {$updated} rule berkode.");
     }
 
     /**
@@ -143,78 +246,78 @@ class PahanRuleBaseV2Seeder extends Seeder
             [
                 'match_indikasi'  => 'Defisiensi Nitrogen — Klorosis Umum',
                 'kode_rule'       => 'VIS-N-01',
-                'sumber_halaman'  => '145-148',
+                'sumber_halaman'  => '152-153',
                 'sumber_tabel'    => '9.5',
                 'tingkat_bukti'   => 'BUKU',
                 'status_validasi' => 'TERVERIFIKASI_SUMBER',
                 'versi_rule'      => '2.0',
                 'is_system_rule'  => true,
-                'catatan_validasi' => 'Gejala klorosis umum pada daun tua merupakan indikasi defisiensi N yang diakui luas (Pahan 2013, Tabel 9.5).',
+                'catatan_validasi' => 'Gejala klorosis umum pada daun tua merupakan indikasi defisiensi N yang diakui luas (Pahan 2013, Tabel 9.5, hal. 152-153).',
             ] + $sumberPahan,
 
             // ─── Defisiensi N ringan ─────────────────────────────────────
             [
                 'match_indikasi'  => 'Defisiensi Nitrogen Ringan — Pertumbuhan Lambat',
                 'kode_rule'       => 'VIS-N-02',
-                'sumber_halaman'  => '145-148',
+                'sumber_halaman'  => '152-153',
                 'sumber_tabel'    => '9.5',
                 'tingkat_bukti'   => 'BUKU',
                 'status_validasi' => 'TERVERIFIKASI_SUMBER',
                 'versi_rule'      => '2.0',
                 'is_system_rule'  => true,
-                'catatan_validasi' => 'Hijau pucat pada daun muda dan pertumbuhan lambat — indikasi N ringan (Pahan 2013, Tabel 9.5).',
+                'catatan_validasi' => 'Hijau pucat pada daun muda dan pertumbuhan lambat — indikasi N ringan (Pahan 2013, Tabel 9.5, hal. 152-153).',
             ] + $sumberPahan,
 
             // ─── Defisiensi K: Orange Frond ──────────────────────────────
             [
                 'match_indikasi'  => 'Defisiensi Kalium — Orange Frond (OF)',
                 'kode_rule'       => 'VIS-K-01',
-                'sumber_halaman'  => '145-148',
+                'sumber_halaman'  => '152-153',
                 'sumber_tabel'    => '9.5',
                 'tingkat_bukti'   => 'BUKU',
                 'status_validasi' => 'TERVERIFIKASI_SUMBER',
                 'versi_rule'      => '2.0',
                 'is_system_rule'  => true,
-                'catatan_validasi' => 'Orange Frond (OF) adalah gejala khas defisiensi K berat pada kelapa sawit (Pahan 2013, Tabel 9.5).',
+                'catatan_validasi' => 'Orange Frond (OF) adalah gejala khas defisiensi K berat pada kelapa sawit (Pahan 2013, Tabel 9.5, hal. 152-153).',
             ] + $sumberPahan,
 
             // ─── Defisiensi K sedang ─────────────────────────────────────
             [
                 'match_indikasi'  => 'Defisiensi Kalium Sedang — Marginal Chlorosis',
                 'kode_rule'       => 'VIS-K-02',
-                'sumber_halaman'  => '145-148',
+                'sumber_halaman'  => '152-153',
                 'sumber_tabel'    => '9.5',
                 'tingkat_bukti'   => 'BUKU',
                 'status_validasi' => 'TERVERIFIKASI_SUMBER',
                 'versi_rule'      => '2.0',
                 'is_system_rule'  => true,
-                'catatan_validasi' => 'Klorosis tepi daun (marginal chlorosis) indikasi defisiensi K sedang (Pahan 2013, Tabel 9.5).',
+                'catatan_validasi' => 'Klorosis tepi daun (marginal chlorosis) indikasi defisiensi K sedang (Pahan 2013, Tabel 9.5, hal. 152-153).',
             ] + $sumberPahan,
 
             // ─── Defisiensi Mg ───────────────────────────────────────────
             [
                 'match_indikasi'  => 'Defisiensi Magnesium — Interveinal Chlorosis',
                 'kode_rule'       => 'VIS-MG-01',
-                'sumber_halaman'  => '145-148',
+                'sumber_halaman'  => '152-153',
                 'sumber_tabel'    => '9.5',
                 'tingkat_bukti'   => 'BUKU',
                 'status_validasi' => 'TERVERIFIKASI_SUMBER',
                 'versi_rule'      => '2.0',
                 'is_system_rule'  => true,
-                'catatan_validasi' => 'Klorosis antar tulang daun pada daun tua — indikasi defisiensi Mg (Pahan 2013, Tabel 9.5).',
+                'catatan_validasi' => 'Klorosis antar tulang daun pada daun tua — indikasi defisiensi Mg (Pahan 2013, Tabel 9.5, hal. 152-153).',
             ] + $sumberPahan,
 
             // ─── Defisiensi B ────────────────────────────────────────────
             [
                 'match_indikasi'  => 'Defisiensi Boron — Pucuk Abnormal / Blind Pocket',
                 'kode_rule'       => 'VIS-B-01',
-                'sumber_halaman'  => '145-148',
+                'sumber_halaman'  => '152-153',
                 'sumber_tabel'    => '9.5',
                 'tingkat_bukti'   => 'BUKU',
                 'status_validasi' => 'TERVERIFIKASI_SUMBER',
                 'versi_rule'      => '2.0',
                 'is_system_rule'  => true,
-                'catatan_validasi' => 'Blind pocket dan daun tombak tidak membuka — gejala khas defisiensi B (Pahan 2013, Tabel 9.5).',
+                'catatan_validasi' => 'Blind pocket dan daun tombak tidak membuka — gejala khas defisiensi B (Pahan 2013, Tabel 9.5, hal. 152-153).',
             ] + $sumberPahan,
 
             // ─── pH Sangat Masam ─────────────────────────────────────────
@@ -325,26 +428,26 @@ class PahanRuleBaseV2Seeder extends Seeder
             [
                 'match_indikasi'  => 'Defisiensi Fosfor — Nekrosis Ujung Daun',
                 'kode_rule'       => 'VIS-P-01',
-                'sumber_halaman'  => '145-148',
+                'sumber_halaman'  => '152-153',
                 'sumber_tabel'    => '9.5',
                 'tingkat_bukti'   => 'BUKU',
                 'status_validasi' => 'TERVERIFIKASI_SUMBER',
                 'versi_rule'      => '2.0',
                 'is_system_rule'  => true,
-                'catatan_validasi' => 'Nekrosis ujung daun dan warna kecoklatan pada pelepah tua — indikasi defisiensi P (Pahan 2013, Tabel 9.5).',
+                'catatan_validasi' => 'Nekrosis ujung daun dan warna kecoklatan pada pelepah tua — indikasi defisiensi P (Pahan 2013, Tabel 9.5, hal. 152-153).',
             ] + $sumberPahan,
 
             // ─── Defisiensi Fe ───────────────────────────────────────────
             [
                 'match_indikasi'  => 'Defisiensi Besi (Fe) — pH Terlalu Tinggi',
                 'kode_rule'       => 'VIS-FE-01',
-                'sumber_halaman'  => '145-148',
+                'sumber_halaman'  => '152-153',
                 'sumber_tabel'    => '9.5',
                 'tingkat_bukti'   => 'BUKU',
                 'status_validasi' => 'TERVERIFIKASI_SUMBER',
                 'versi_rule'      => '2.0',
                 'is_system_rule'  => true,
-                'catatan_validasi' => 'Klorosis antar tulang pada daun muda dengan pH tinggi — indikasi defisiensi Fe (Pahan 2013, Tabel 9.5).',
+                'catatan_validasi' => 'Klorosis antar tulang pada daun muda dengan pH tinggi — indikasi defisiensi Fe (Pahan 2013, Tabel 9.5, hal. 152-153).',
             ] + $sumberPahan,
 
             // ─── Defisiensi Zn ───────────────────────────────────────────
@@ -364,13 +467,13 @@ class PahanRuleBaseV2Seeder extends Seeder
             [
                 'match_indikasi'  => 'Rontok Tandan Prematur — Defisiensi B atau K',
                 'kode_rule'       => 'VIS-BK-01',
-                'sumber_halaman'  => '145-148',
+                'sumber_halaman'  => '152-153',
                 'sumber_tabel'    => '9.5',
                 'tingkat_bukti'   => 'BUKU',
                 'status_validasi' => 'TERVERIFIKASI_SUMBER',
                 'versi_rule'      => '2.0',
                 'is_system_rule'  => true,
-                'catatan_validasi' => 'Rontok tandan prematur berkaitan dengan defisiensi B dan K (Pahan 2013, Tabel 9.5).',
+                'catatan_validasi' => 'Rontok tandan prematur berkaitan dengan defisiensi B dan K (Pahan 2013, Tabel 9.5, hal. 152-153).',
             ] + $sumberPahan,
 
             // ─── Kondisi Normal ──────────────────────────────────────────
