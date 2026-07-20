@@ -20,16 +20,19 @@
     </div>
 
     {{-- Status Banner --}}
-    @php $sc = match($rekomendasiRbs->status_kebutuhan_dominan) {
-        'Darurat' => 'from-red-50 to-rose-50/30 border-red-200 text-red-950',
-        'Segera'  => 'from-orange-50 to-amber-50/30 border-orange-200 text-orange-950',
-        'Normal'  => 'from-emerald-50 to-green-50/30 border-emerald-200 text-emerald-950',
-        'Tunda'   => 'from-slate-50 to-slate-100/50 border-slate-200 text-slate-900',
-        default   => 'from-slate-50 to-slate-100/50 border-slate-200 text-slate-900'
-    }; @endphp
+    @php
+        // Pahan v2.6: Banner berdasarkan status_kondisi_tanaman dan status_kelayakan_aplikasi
+        $sc = match($rekomendasiRbs->status_kondisi_tanaman) {
+            'GEJALA_BERAT' => 'from-red-50 to-rose-50/30 border-red-200 text-red-950',
+            'TERINDIKASI_DEFISIENSI' => 'from-orange-50 to-amber-50/30 border-orange-200 text-orange-950',
+            'NORMAL_VISUAL' => 'from-emerald-50 to-green-50/30 border-emerald-200 text-emerald-950',
+            'PERLU_VERIFIKASI' => 'from-yellow-50 to-yellow-50/30 border-yellow-200 text-yellow-950',
+            default => 'from-slate-50 to-slate-100/50 border-slate-200 text-slate-900'
+        };
+    @endphp
     <div class="bg-gradient-to-r {{ $sc }} border rounded-2xl p-5 shadow-sm">
         <p class="text-xs text-slate-500 font-semibold tracking-wider uppercase">Rekomendasi Rule-Based System</p>
-        <p class="text-xl font-extrabold mt-0.5">{{ \App\Models\RekomendasiRbs::labelStatus($rekomendasiRbs->status_kebutuhan_dominan) }}</p>
+        <p class="text-xl font-extrabold mt-0.5">{{ $rekomendasiRbs->label_kondisi_tanaman }}</p>
         <p class="text-xs text-slate-500 mt-1 font-medium">
             {{ $rekomendasiRbs->blokLahan->nama_blok }} · {{ $rekomendasiRbs->blokLahan->nama_pemilik }}
             · {{ $rekomendasiRbs->tanggal_analisis->format('d F Y') }}
@@ -68,11 +71,17 @@
     {{-- Info Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-50 pb-2">Info Lahan</h3>
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-50 pb-2">Info Lahan <span class="text-[9px] text-slate-400 normal-case font-normal">(data saat analisis)</span></h3>
+            @php
+                // Pahan v2.6: Gunakan snapshot; fallback ke data blok terkini untuk legacy
+                $luasDisplay = $rekomendasiRbs->luas_ha_snapshot ?? $rekomendasiRbs->blokLahan->luas_ha;
+                $sphDisplay = $rekomendasiRbs->sph_snapshot ?? $rekomendasiRbs->blokLahan->sph;
+                $pokokDisplay = $rekomendasiRbs->jumlah_pokok_snapshot ?? ($luasDisplay * $sphDisplay);
+            @endphp
             <div class="space-y-2.5 text-sm">
-                <div class="flex justify-between"><span class="text-slate-500">Luas</span><span class="text-slate-800 font-bold">{{ number_format($rekomendasiRbs->blokLahan->luas_ha, 2) }} Ha</span></div>
-                <div class="flex justify-between"><span class="text-slate-500">SPH</span><span class="text-slate-800 font-medium">{{ number_format($rekomendasiRbs->blokLahan->sph) }} ph/Ha</span></div>
-                <div class="flex justify-between"><span class="text-slate-500">Total Pohon</span><span class="text-slate-900 font-bold">{{ number_format($rekomendasiRbs->blokLahan->sph * $rekomendasiRbs->blokLahan->luas_ha) }}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Luas</span><span class="text-slate-800 font-bold">{{ number_format($luasDisplay, 2) }} Ha</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">SPH</span><span class="text-slate-800 font-medium">{{ number_format($sphDisplay) }} ph/Ha</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">Total Pohon</span><span class="text-slate-900 font-bold">{{ number_format($pokokDisplay) }}</span></div>
             </div>
         </div>
 

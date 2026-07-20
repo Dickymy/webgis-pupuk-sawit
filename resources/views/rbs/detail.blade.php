@@ -153,23 +153,28 @@
         <div>
             <p class="text-xs font-bold text-amber-800">Aplikasi Pupuk Kimia Ditunda</p>
             <p class="text-[11px] text-amber-700 mt-0.5 leading-relaxed">
-                @if($rbs->status_kebutuhan_dominan === 'Darurat')
-                    Status <strong>Defisiensi Berat / Darurat</strong> terdeteksi pada lahan ini. Pemupukan Urea &amp; KCl ditangguhkan sementara. Sangat disarankan untuk memprioritaskan tindakan koreksi (seperti pengapuran dengan Dolomit) sesuai petunjuk jadwal di bawah sebelum mengaplikasikan pupuk kimia utama.
-                @else
-                    @php
-                        $masalahStr = implode(' ', $rbs->masalah_teridentifikasi ?? []);
-                        $pesanTunda = 'Kondisi pembatas lahan saat ini (genangan air atau kekeringan ekstrem) tidak ideal untuk pemupukan. Pemupukan kimia standar ditunda sementara waktu guna mencegah pemborosan pupuk akibat pencucian (leaching) atau penguapan (volatilisasi).';
-                        if (str_contains($masalahStr, 'Waterlogging') || str_contains($masalahStr, 'tergenang') || str_contains($masalahStr, 'drainase') || str_contains($masalahStr, 'Drainase')) {
-                            $pesanTunda = '<strong>Lahan Tergenang (Waterlogging)</strong>: Pemupukan tanah ditunda sementara. Air tergenang akan mencuci bersih pupuk (leaching) dan membuat akar kelapa sawit kekurangan oksigen untuk menyerap hara secara efektif. Disarankan untuk memprioritaskan perbaikan parit drainase terlebih dahulu.';
-                        } elseif (str_contains($masalahStr, 'Kekeringan') || str_contains($masalahStr, 'kering') || str_contains($masalahStr, 'Kemarau')) {
-                            $pesanTunda = '<strong>Cekaman Kekeringan</strong>: Pemupukan ditunda sementara. Tanah yang terlalu kering membuat pupuk tidak dapat larut untuk diserap akar, serta berisiko membakar akar rambut kelapa sawit. Disarankan fokus pada pemberian mulsing organik (seperti janjang kosong) untuk menjaga kelembaban dan menunggu hingga curah hujan cukup.';
-                        } elseif (str_contains($masalahStr, 'Tua Renta') || str_contains($masalahStr, 'Tua')) {
-                            $pesanTunda = '<strong>Tanaman Tua Renta</strong>: Pemupukan standar ditangguhkan untuk analisis ekonomi. Pohon berusia di atas 25 tahun memiliki efisiensi penyerapan hara yang sangat rendah. Disarankan mengevaluasi kelayakan replanting (peremajaan lahan) dibandingkan biaya pemeliharaan pupuk.';
-                        }
-                    @endphp
-                    {!! $pesanTunda !!}
-                @endif
+                @php
+                    // Pahan v2.6: Penundaan berdasarkan status_kelayakan_aplikasi, BUKAN status_kebutuhan_dominan
+                    $masalahStr = implode(' ', $rbs->masalah_teridentifikasi ?? []);
+                    $pesanTunda = 'Kondisi kelayakan belum terpenuhi untuk aplikasi pemupukan. Kebutuhan tahunan tetap tercatat.';
+
+                    if ($rbs->status_kelayakan_aplikasi === 'PERLU_PERBAIKAN_DRAINASE' || str_contains($masalahStr, 'Waterlogging') || str_contains($masalahStr, 'tergenang') || str_contains($masalahStr, 'drainase') || str_contains($masalahStr, 'Drainase')) {
+                        $pesanTunda = '<strong>Lahan Tergenang (Waterlogging)</strong>: Pemupukan tanah ditunda sementara. Air tergenang akan mencuci bersih pupuk (leaching) dan membuat akar kelapa sawit kekurangan oksigen untuk menyerap hara secara efektif. Disarankan untuk memprioritaskan perbaikan parit drainase terlebih dahulu.';
+                    } elseif ($rbs->status_kelayakan_aplikasi === 'TUNDA_HUJAN_RENDAH' || str_contains($masalahStr, 'Kekeringan') || str_contains($masalahStr, 'kering') || str_contains($masalahStr, 'Kemarau')) {
+                        $pesanTunda = '<strong>Curah Hujan Rendah</strong>: Pemupukan ditunda sementara. Tanah yang terlalu kering membuat pupuk tidak dapat larut untuk diserap akar. Tunggu curah hujan dalam rentang 100-250 mm/bulan.';
+                    } elseif ($rbs->status_kelayakan_aplikasi === 'TUNDA_HUJAN_TINGGI') {
+                        $pesanTunda = '<strong>Curah Hujan Tinggi</strong>: Pemupukan ditunda sementara karena risiko pencucian hara. Tunggu curah hujan kembali ke rentang 100-250 mm/bulan.';
+                    } elseif ($rbs->status_kelayakan_aplikasi === 'TUNDA_INTERVAL') {
+                        $pesanTunda = '<strong>Interval Terlalu Pendek</strong>: Tunggu minimal 60 hari antar aplikasi pupuk sejenis. Kebutuhan tahunan tetap tercatat.';
+                    } elseif (str_contains($masalahStr, 'Tua Renta') || str_contains($masalahStr, 'Tua')) {
+                        $pesanTunda = '<strong>Tanaman Tua Renta</strong>: Pemupukan standar ditangguhkan untuk analisis ekonomi. Disarankan mengevaluasi kelayakan replanting dibandingkan biaya pemeliharaan pupuk.';
+                    }
+                @endphp
+                {!! $pesanTunda !!}
             </p>
+            @if($rbs->alasan_kelayakan)
+            <p class="text-[10px] text-amber-600 mt-1 italic">{{ $rbs->alasan_kelayakan }}</p>
+            @endif
         </div>
     </div>
 </div>

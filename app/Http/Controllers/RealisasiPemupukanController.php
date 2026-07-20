@@ -8,6 +8,7 @@ use App\Models\RealisasiPemupukan;
 use App\Models\RekomendasiRbs;
 use App\Services\CurrentApplicationCalculator;
 use App\Services\FertilizationRealizationService;
+use App\Services\RecommendationOperationalRefreshService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,7 @@ class RealisasiPemupukanController extends Controller
     public function __construct(
         private FertilizationRealizationService $realizationService,
         private CurrentApplicationCalculator $currentAppCalculator,
+        private RecommendationOperationalRefreshService $refreshService,
     ) {}
 
     /**
@@ -117,6 +119,9 @@ class RealisasiPemupukanController extends Controller
             ]);
         });
 
+        // Refresh operasional rekomendasi setelah realisasi disimpan
+        $this->refreshService->refreshAfterRealization($realisasi);
+
         return redirect()
             ->route('realisasi-pemupukan.show', $realisasi)
             ->with('success', 'Realisasi pemupukan berhasil dicatat.');
@@ -173,6 +178,9 @@ class RealisasiPemupukanController extends Controller
             ]);
         });
 
+        // Refresh operasional rekomendasi setelah realisasi diupdate
+        $this->refreshService->refreshAfterRealization($realisasiPemupukan);
+
         return redirect()
             ->route('realisasi-pemupukan.show', $realisasiPemupukan)
             ->with('success', 'Realisasi pemupukan berhasil diperbarui.');
@@ -194,6 +202,9 @@ class RealisasiPemupukanController extends Controller
                 'status_realisasi' => RealisasiPemupukan::STATUS_BATAL,
             ]);
         });
+
+        // Refresh operasional rekomendasi setelah pembatalan
+        $this->refreshService->refreshAfterRealization($realisasiPemupukan);
 
         return redirect()
             ->route('realisasi-pemupukan.show', $realisasiPemupukan)

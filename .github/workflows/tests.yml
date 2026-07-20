@@ -105,8 +105,28 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: password
 
-      - name: Rollback last migration
-        run: php artisan migrate:rollback --step=1 --env=testing --force
+      - name: Rollback v2.6 migration
+        run: php artisan migrate:rollback --path=database/migrations/2026_07_21_000001_upgrade_realisasi_pemupukans_for_v26.php --env=testing --force
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: password
+
+      - name: Rollback v2.5 rekomendasi fields
+        run: php artisan migrate:rollback --path=database/migrations/2026_07_20_000002_add_v25_fields_to_rekomendasi_rbs_table.php --env=testing --force
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: password
+
+      - name: Rollback v2.5 realisasi upgrade
+        run: php artisan migrate:rollback --path=database/migrations/2026_07_20_000001_upgrade_realisasi_pemupukans_for_v25.php --env=testing --force
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -135,8 +155,8 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: password
 
-      - name: Run finalize audit v2.5 (dry-run)
-        run: php artisan sawit:finalize-pahan-v2-5 --dry-run
+      - name: Run finalize audit v2.6 (dry-run)
+        run: php artisan sawit:finalize-pahan-v2-6 --dry-run
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
