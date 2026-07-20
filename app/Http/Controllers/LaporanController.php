@@ -98,9 +98,15 @@ class LaporanController extends Controller
 
     public function exportPdf(RekomendasiRbs $rekomendasiRbs)
     {
-        $rekomendasiRbs->load(['blokLahan.anggota', 'kondisiLahan', 'admin']);
+        $rekomendasiRbs->load(['blokLahan.anggota', 'kondisiLahan', 'admin', 'realisasiPemupukans']);
 
-        $pdf = Pdf::loadView('laporan.pdf', compact('rekomendasiRbs'));
+        // Pahan v2.7: Sediakan data realisasi untuk histori pada PDF
+        $realisasis = $rekomendasiRbs->realisasiPemupukans()
+            ->orderBy('tahap')
+            ->orderBy('tanggal_realisasi')
+            ->get();
+
+        $pdf = Pdf::loadView('laporan.pdf', compact('rekomendasiRbs', 'realisasis'));
         $pdf->setPaper('a4', 'portrait');
 
         $filename = 'Laporan_'.str_replace(' ', '_', $rekomendasiRbs->blokLahan->nama_blok).'_'.$rekomendasiRbs->tanggal_analisis->format('Y-m-d').'.pdf';

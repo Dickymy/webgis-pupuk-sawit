@@ -132,4 +132,37 @@
     @endif
 </div>
 
+{{-- Histori Operasional (Pahan v2.7) --}}
+@if(isset($historiOperasional) && $historiOperasional->count() > 0)
+<div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-5 mt-5">
+    <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3">📜 Histori Operasional</h3>
+    <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+            <thead class="bg-slate-50 dark:bg-slate-700">
+                <tr>
+                    <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Waktu</th>
+                    <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Event</th>
+                    <th class="px-3 py-2 text-center font-semibold text-slate-600 dark:text-slate-300">Tahap</th>
+                    <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Status</th>
+                    <th class="px-3 py-2 text-right font-semibold text-slate-600 dark:text-slate-300">Sisa Urea</th>
+                    <th class="px-3 py-2 text-right font-semibold text-slate-600 dark:text-slate-300">Sisa KCl</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                @foreach($historiOperasional as $h)
+                <tr>
+                    <td class="px-3 py-2 text-slate-500">{{ $h->created_at?->format('d/m/Y H:i') }}</td>
+                    <td class="px-3 py-2 font-medium text-slate-800 dark:text-slate-200">{{ $h->label_event }}</td>
+                    <td class="px-3 py-2 text-center">{{ $h->active_stage ?? '-' }}</td>
+                    <td class="px-3 py-2 text-slate-600 dark:text-slate-400">{{ \App\Services\CurrentApplicationCalculator::labelStatusStage($h->status_stage) }}</td>
+                    <td class="px-3 py-2 text-right">{{ $h->urea_sisa_tahunan !== null ? number_format($h->urea_sisa_tahunan, 1) : '-' }}</td>
+                    <td class="px-3 py-2 text-right">{{ $h->kcl_sisa_tahunan !== null ? number_format($h->kcl_sisa_tahunan, 1) : '-' }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
 @endsection
