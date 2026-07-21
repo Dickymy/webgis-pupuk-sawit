@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Demo Mode
+    |--------------------------------------------------------------------------
+    |
+    | Saat aktif, tampilkan badge "Mode Demo" dan sembunyikan detail error teknis.
+    | Perhitungan dan validasi tetap berjalan normal.
+    |
+    */
+
+    'demo_mode' => env('APP_DEMO_MODE', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

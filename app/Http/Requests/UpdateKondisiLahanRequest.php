@@ -16,8 +16,8 @@ class UpdateKondisiLahanRequest extends FormRequest
     {
         return [
             'blok_lahan_id' => ['required', 'exists:blok_lahans,id'],
-            'tanggal_observasi' => ['required', 'date'],
-            'tanggal_pemupukan_terakhir' => ['nullable', 'date'],
+            'tanggal_observasi' => ['required', 'date', 'before_or_equal:today'],
+            'tanggal_pemupukan_terakhir' => ['nullable', 'date', 'before_or_equal:today'],
             'ph_tanah' => ['nullable', 'numeric', 'min:3', 'max:8'],
             'metode_pengukuran_ph' => ['nullable', 'in:kertas_lakmus,ph_meter,estimasi,laboratorium'],
             'kelembaban_tanah' => ['nullable', 'string'],

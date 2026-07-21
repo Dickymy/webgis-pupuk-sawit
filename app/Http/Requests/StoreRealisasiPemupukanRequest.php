@@ -48,6 +48,13 @@ class StoreRealisasiPemupukanRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            // Nilai nol untuk kedua pupuk ditolak
+            $urea = (float) $this->input('urea_realisasi_kg', 0);
+            $kcl = (float) $this->input('kcl_realisasi_kg', 0);
+            if ($urea <= 0 && $kcl <= 0) {
+                $validator->errors()->add('urea_realisasi_kg', 'Minimal salah satu pupuk (Urea atau KCl) harus memiliki nilai realisasi lebih dari 0.');
+            }
+
             $this->validateOverPlanAndAnnualLimit($validator);
         });
     }

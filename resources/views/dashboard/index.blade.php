@@ -128,11 +128,19 @@
         @foreach($blokPerluTindakan->take(6) as $bp)
         @php
             if (!$bp->kondisiTerbaru) {
-                $keterangan = 'Belum ada data kondisi';
+                $keterangan = 'Belum ada kondisi lahan';
             } elseif (!$bp->rekomendasiRbsTerbaru) {
                 $keterangan = 'Belum dianalisis';
+            } elseif ($bp->rekomendasiRbsTerbaru->tanggal_analisis->diffInDays(now()) > 90) {
+                $keterangan = 'Analisis lebih dari 90 hari';
+            } elseif ($bp->rekomendasiRbsTerbaru->status_stage === 'TAHAP_1_SIAP') {
+                $keterangan = 'Tahap 1 siap dilaksanakan';
+            } elseif ($bp->rekomendasiRbsTerbaru->status_stage === 'TAHAP_1_SEBAGIAN') {
+                $keterangan = 'Tahap 1 belum selesai';
+            } elseif ($bp->rekomendasiRbsTerbaru->status_stage === 'TAHAP_2_SIAP') {
+                $keterangan = 'Tahap 2 siap dilaksanakan';
             } else {
-                $keterangan = 'Terakhir ' . $bp->rekomendasiRbsTerbaru->tanggal_analisis->diffInDays(now()) . ' hari lalu';
+                $keterangan = 'Perlu ditindaklanjuti';
             }
         @endphp
         <a href="{{ $bp->kondisiTerbaru ? route('rbs.detail', $bp) : route('kondisi-lahan.create', ['blok_lahan_id' => $bp->id]) }}" class="flex items-center gap-2 px-3 py-2 bg-white border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors">
@@ -374,7 +382,21 @@ function renderMapLayers(){
         mapLayers.push({id:blok.id,layer:layer});
         activeLayers.push(layer);
     });
-    if(activeLayers.length>0)map.fitBounds(L.featureGroup(activeLayers).getBounds().pad(0.1));
+    if(activeLayers.length>0){map.fitBounds(L.featureGroup(activeLayers).getBounds().pad(0.1));}
+    // Empty state: tampilkan pesan jika tidak ada polygon
+    var emptyEl=document.getElementById('map-empty-state');
+    if(activeLayers.length===0){
+        if(!emptyEl){
+            emptyEl=document.createElement('div');
+            emptyEl.id='map-empty-state';
+            emptyEl.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:45;text-align:center;padding:16px 24px;background:rgba(255,255,255,0.95);border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
+            emptyEl.innerHTML='<p style="font-size:13px;font-weight:600;color:#475569;">Belum ada batas blok lahan yang dapat ditampilkan pada peta.</p><p style="font-size:11px;color:#94a3b8;margin-top:4px;">Tambahkan polygon GeoJSON pada data blok lahan.</p>';
+            document.getElementById('map-body').appendChild(emptyEl);
+        }
+        emptyEl.style.display='';
+    } else {
+        if(emptyEl)emptyEl.style.display='none';
+    }
 }
 
 renderMapLayers();
