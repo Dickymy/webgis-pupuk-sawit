@@ -123,36 +123,46 @@
 {{-- Blok Perlu Tindakan --}}
 @if($blokPerluTindakan->isNotEmpty())
 <div class="mb-3 sm:mb-4 bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4">
-    <p class="text-xs font-bold text-amber-800 mb-2 flex items-center gap-1.5"><span>⚠️</span> Perlu Tindakan — {{ $blokPerluTindakan->count() }} Blok</p>
-    <div class="flex flex-wrap gap-2">
+    <div class="flex items-center justify-between mb-2">
+        <p class="text-xs font-bold text-amber-800 flex items-center gap-1.5"><span>⚠️</span> Perlu Tindakan — {{ $blokPerluTindakan->count() }} Blok</p>
+        @if($blokPerluTindakan->count() > 5)
+        <a href="{{ route('rbs.index') }}" class="text-[10px] text-amber-700 font-semibold hover:underline">Lihat semua →</a>
+        @endif
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
         @foreach($blokPerluTindakan->take(6) as $bp)
         @php
             if (!$bp->kondisiTerbaru) {
                 $keterangan = 'Belum ada kondisi lahan';
+                $icon = '📋';
             } elseif (!$bp->rekomendasiRbsTerbaru) {
                 $keterangan = 'Belum dianalisis';
+                $icon = '🔬';
             } elseif ($bp->rekomendasiRbsTerbaru->tanggal_analisis->diffInDays(now()) > 90) {
                 $keterangan = 'Analisis lebih dari 90 hari';
+                $icon = '⏰';
             } elseif ($bp->rekomendasiRbsTerbaru->status_stage === 'TAHAP_1_SIAP') {
-                $keterangan = 'Tahap 1 siap dilaksanakan';
+                $keterangan = 'Tahap 1 siap';
+                $icon = '🟢';
             } elseif ($bp->rekomendasiRbsTerbaru->status_stage === 'TAHAP_1_SEBAGIAN') {
                 $keterangan = 'Tahap 1 belum selesai';
+                $icon = '🟡';
             } elseif ($bp->rekomendasiRbsTerbaru->status_stage === 'TAHAP_2_SIAP') {
-                $keterangan = 'Tahap 2 siap dilaksanakan';
+                $keterangan = 'Tahap 2 siap';
+                $icon = '🟢';
             } else {
                 $keterangan = 'Perlu ditindaklanjuti';
+                $icon = '📌';
             }
         @endphp
-        <a href="{{ $bp->kondisiTerbaru ? route('rbs.detail', $bp) : route('kondisi-lahan.create', ['blok_lahan_id' => $bp->id]) }}" class="flex items-center gap-2 px-3 py-2 bg-white border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors">
-            <div>
-                <p class="text-xs font-semibold text-slate-800">{{ $bp->nama_blok }}</p>
-                <p class="text-[10px] text-amber-700">{{ $bp->nama_pemilik }} · {{ $keterangan }}</p>
+        <a href="{{ $bp->kondisiTerbaru ? route('rbs.detail', $bp) : route('kondisi-lahan.create', ['blok_lahan_id' => $bp->id]) }}" class="flex items-center gap-2 px-2.5 py-1.5 bg-white border border-amber-100 rounded-lg hover:bg-amber-100/50 transition-colors">
+            <span class="text-sm flex-shrink-0">{{ $icon }}</span>
+            <div class="min-w-0">
+                <p class="text-[11px] font-semibold text-slate-800 truncate">{{ $bp->nama_blok }}</p>
+                <p class="text-[9px] text-amber-600 truncate">{{ $keterangan }}</p>
             </div>
         </a>
         @endforeach
-        @if($blokPerluTindakan->count() > 6)
-        <a href="{{ route('rbs.index') }}" class="flex items-center px-3 py-2 text-[10px] text-amber-700 font-semibold hover:underline">+{{ $blokPerluTindakan->count() - 6 }} lainnya →</a>
-        @endif
     </div>
 </div>
 @endif
