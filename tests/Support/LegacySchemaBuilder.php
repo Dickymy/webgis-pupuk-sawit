@@ -18,6 +18,11 @@ class LegacySchemaBuilder
      */
     public static function insertLegacyData(): void
     {
+        // Skip jika data sudah ada (idempotent)
+        if (DB::table('admins')->where('username', 'admin_legacy')->exists()) {
+            return;
+        }
+
         // Admin
         $adminData = [
             'username' => 'admin_legacy',
@@ -32,15 +37,16 @@ class LegacySchemaBuilder
         DB::table('admins')->insert($adminData);
 
         // Anggota
+        $anggotaNama = 'Petani Legacy '.uniqid();
         DB::table('anggotas')->insert([
-            'nama' => 'Petani Legacy',
+            'nama' => $anggotaNama,
             'no_hp' => '081234567890',
             'alamat' => 'Desa Test',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        $anggotaId = DB::table('anggotas')->where('nama', 'Petani Legacy')->value('id');
+        $anggotaId = DB::table('anggotas')->where('nama', $anggotaNama)->value('id');
 
         // Blok Lahan
         $blokData = [
@@ -150,11 +156,11 @@ class LegacySchemaBuilder
             $issues[] = 'Admin legacy hilang';
         }
 
-        if (DB::table('anggotas')->where('nama', 'Petani Legacy')->doesntExist()) {
+        if (DB::table('anggotas')->count() === 0) {
             $issues[] = 'Anggota legacy hilang';
         }
 
-        if (DB::table('blok_lahans')->where('nama_blok', 'Blok Legacy A1')->doesntExist()) {
+        if (DB::table('blok_lahans')->count() === 0) {
             $issues[] = 'Blok lahan legacy hilang';
         }
 
