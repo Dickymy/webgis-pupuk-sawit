@@ -189,6 +189,12 @@
                                     </button>
                                 </form>
                                 @if($rbs)
+                                @if($rbs->is_tahap_siap && ($rbs->urea_aplikasi_saat_ini > 0 || $rbs->kcl_aplikasi_saat_ini > 0))
+                                <a href="{{ route('realisasi-pemupukan.create', $rbs) }}" class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-medium rounded-md hover:bg-blue-100 transition-colors">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    Realisasi
+                                </a>
+                                @endif
                                 <a href="{{ route('rbs.detail', $blok) }}" class="inline-flex items-center gap-1 px-2 py-1 bg-slate-50 text-slate-600 border border-slate-200 text-[10px] font-medium rounded-md hover:bg-slate-100 transition-colors">
                                     Detail
                                 </a>
@@ -255,6 +261,9 @@
                             <button type="submit" class="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-medium rounded-md">Analisis</button>
                         </form>
                         @if($rbs)
+                        @if($rbs->is_tahap_siap && ($rbs->urea_aplikasi_saat_ini > 0 || $rbs->kcl_aplikasi_saat_ini > 0))
+                        <a href="{{ route('realisasi-pemupukan.create', $rbs) }}" class="px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-medium rounded-md">Realisasi</a>
+                        @endif
                         <a href="{{ route('rbs.detail', $blok) }}" class="px-2 py-1 bg-slate-50 text-slate-600 border border-slate-200 text-[9px] font-medium rounded-md">Detail</a>
                         @endif
                     @endif

@@ -85,7 +85,7 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: password
 
-      - name: Run tests (first pass)
+      - name: Run tests
         run: php artisan test
         env:
           DB_CONNECTION: mysql
@@ -95,8 +95,8 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: password
 
-      - name: Run Eligibility test
-        run: php artisan test --filter=RealisasiEligibilityTest
+      - name: Run RBS Program Integration test
+        run: php artisan test --filter=RbsProgramIntegrationTest
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -105,8 +105,8 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: password
 
-      - name: Run Tampered Request test
-        run: php artisan test --filter=RealisasiTamperedRequestTest
+      - name: Run Program Lifecycle test
+        run: php artisan test --filter=ProgramLifecycleTest
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -115,8 +115,8 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: password
 
-      - name: Run Status Selesai Validation test
-        run: php artisan test --filter=RealisasiStatusSelesaiValidationTest
+      - name: Run True Legacy Schema Upgrade V28 test
+        run: php artisan test --filter=TrueLegacySchemaUpgradeV28Test
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -125,8 +125,8 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: password
 
-      - name: Run Program Isolation test
-        run: php artisan test --filter=ProgramPemupukanIsolationTest
+      - name: Run Laporan Non Legacy Decision test
+        run: php artisan test --filter=LaporanNonLegacyDecisionTest
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -135,8 +135,8 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: password
 
-      - name: Run Operational History test
-        run: php artisan test --filter=OperationalHistoryTest
+      - name: Rollback v2.8 migration
+        run: php artisan migrate:rollback --path=database/migrations/2026_07_23_000001_add_active_key_to_program_pemupukans_table.php --env=testing --force
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -215,8 +215,8 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: password
 
-      - name: Run finalize audit v2.7 (dry-run)
-        run: php artisan sawit:finalize-pahan-v2-7 --dry-run
+      - name: Run finalize audit v2.8 (dry-run)
+        run: php artisan sawit:finalize-pahan-v2-8 --dry-run
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1

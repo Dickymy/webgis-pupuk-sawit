@@ -52,8 +52,6 @@
     .status-filter-btn[data-status="TERINDIKASI_DEFISIENSI_RINGAN"].active { background: #eab308; color: #fff; border-color: #eab308; }
     .status-filter-btn[data-status="NORMAL_VISUAL"] { border-color: #86efac; background: #dcfce7; color: #166534; }
     .status-filter-btn[data-status="NORMAL_VISUAL"].active { background: #22c55e; color: #fff; border-color: #22c55e; }
-    .status-filter-btn[data-status="PERLU_VERIFIKASI"] { border-color: #c4b5fd; background: #ede9fe; color: #5b21b6; }
-    .status-filter-btn[data-status="PERLU_VERIFIKASI"].active { background: #7c3aed; color: #fff; border-color: #7c3aed; }
     .status-filter-btn[data-status="BELUM_DIOBSERVASI"] { border-color: #cbd5e1; background: #f1f5f9; color: #475569; }
     .status-filter-btn[data-status="BELUM_DIOBSERVASI"].active { background: #475569; color: #fff; border-color: #475569; }
     /* Luas per status */
@@ -77,74 +75,75 @@
 @section('content')
 
 {{-- Stats Cards --}}
-<div class="flex items-stretch gap-2.5 overflow-x-auto pb-2.5 sm:pb-0 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 lg:grid-cols-5 sm:gap-3 mb-3 sm:mb-4" id="stats-cards" style="-webkit-overflow-scrolling: touch;">
-    <div class="stat-card flex-shrink-0 w-[145px] sm:w-auto bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-sm flex flex-col justify-between">
+<div class="flex items-stretch gap-2.5 overflow-x-auto pb-2.5 sm:pb-0 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 lg:grid-cols-6 sm:gap-3 mb-3 sm:mb-4" id="stats-cards" style="-webkit-overflow-scrolling: touch;">
+    <div class="stat-card flex-shrink-0 w-[130px] sm:w-auto bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-sm flex flex-col justify-between">
         <div>
-            <p class="stat-label text-xs text-slate-500 mb-0.5">Total Blok</p>
+            <p class="stat-label text-xs text-slate-500 mb-0.5">Anggota</p>
+            <p class="stat-value text-xl sm:text-2xl font-bold text-slate-800">{{ $stats['total_anggota'] }}</p>
+        </div>
+        <p class="stat-sub text-xs text-slate-400 mt-1">terdaftar</p>
+    </div>
+    <div class="stat-card flex-shrink-0 w-[130px] sm:w-auto bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-sm flex flex-col justify-between">
+        <div>
+            <p class="stat-label text-xs text-slate-500 mb-0.5">Blok Lahan</p>
             <p class="stat-value text-xl sm:text-2xl font-bold text-slate-800" id="stat-total-blok">{{ $stats['total_blok'] }}</p>
         </div>
-        <p class="stat-sub text-xs text-slate-400 mt-1" id="stat-total-luas">{{ number_format($stats['total_luas'], 2) }} hektar</p>
+        <p class="stat-sub text-xs text-slate-400 mt-1" id="stat-total-luas">{{ number_format($stats['total_luas'], 2) }} Ha</p>
     </div>
-    <div class="stat-card flex-shrink-0 w-[145px] sm:w-auto bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-sm flex flex-col justify-between">
+    <div class="stat-card flex-shrink-0 w-[130px] sm:w-auto bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-sm border-l-4 border-l-amber-400 flex flex-col justify-between">
         <div>
-            <p class="stat-label text-xs text-slate-500 mb-0.5">Dianalisis</p>
-            <p class="stat-value text-xl sm:text-2xl font-bold text-blue-600" id="stat-sudah-analisis">{{ $stats['sudah_analisis'] }}</p>
+            <p class="stat-label text-xs text-slate-500 mb-0.5">Belum Ada Kondisi</p>
+            <p class="stat-value text-xl sm:text-2xl font-bold text-amber-600">{{ $stats['belum_kondisi'] }}</p>
         </div>
-        <p class="stat-sub text-xs text-slate-400 mt-1">dari {{ $stats['total_blok'] }} blok</p>
+        <p class="stat-sub text-xs text-slate-400 mt-1">perlu observasi</p>
     </div>
-    <div class="stat-card flex-shrink-0 w-[145px] sm:w-auto bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-sm border-l-4 border-l-red-500 flex flex-col justify-between">
+    <div class="stat-card flex-shrink-0 w-[130px] sm:w-auto bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-sm border-l-4 border-l-emerald-500 flex flex-col justify-between">
         <div>
-            <p class="stat-label text-xs text-slate-500 mb-0.5">Gejala Berat</p>
-            <p class="stat-value text-xl sm:text-2xl font-bold text-red-600" id="stat-gejala-berat">{{ $stats['gejala_berat'] }}</p>
+            <p class="stat-label text-xs text-slate-500 mb-0.5">Siap Dipupuk</p>
+            <p class="stat-value text-xl sm:text-2xl font-bold text-emerald-600">{{ $stats['siap_dipupuk'] }}</p>
         </div>
-        @php $delta = $stats['gejala_berat'] - ($statsBulanLalu['gejala_berat'] ?? 0); @endphp
-        @if($delta > 0)
-        <p class="stat-sub text-xs text-red-500 mt-1">↑ {{ $delta }} dari bulan lalu</p>
-        @elseif($delta < 0)
-        <p class="stat-sub text-xs text-green-600 mt-1">↓ {{ abs($delta) }} dari bulan lalu</p>
-        @else
-        <p class="stat-sub text-xs text-slate-400 mt-1">= sama dengan bulan lalu</p>
-        @endif
+        <p class="stat-sub text-xs text-slate-400 mt-1">blok</p>
     </div>
-    <div class="stat-card flex-shrink-0 w-[145px] sm:w-auto bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-sm border-l-4 border-l-orange-400 flex flex-col justify-between">
+    <div class="stat-card flex-shrink-0 w-[130px] sm:w-auto bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-sm border-l-4 border-l-blue-400 flex flex-col justify-between">
         <div>
-            <p class="stat-label text-xs text-slate-500 mb-0.5">Terindikasi Defisiensi</p>
-            <p class="stat-value text-xl sm:text-2xl font-bold text-orange-500" id="stat-terindikasi-defisiensi">{{ $stats['terindikasi_defisiensi'] }}</p>
+            <p class="stat-label text-xs text-slate-500 mb-0.5">Menunggu Interval</p>
+            <p class="stat-value text-xl sm:text-2xl font-bold text-blue-600">{{ $stats['menunggu_interval'] }}</p>
         </div>
-        @php $delta2 = $stats['terindikasi_defisiensi'] - ($statsBulanLalu['terindikasi_defisiensi'] ?? 0); @endphp
-        @if($delta2 > 0)
-        <p class="stat-sub text-xs text-red-500 mt-1">↑ {{ $delta2 }} dari bulan lalu</p>
-        @elseif($delta2 < 0)
-        <p class="stat-sub text-xs text-green-600 mt-1">↓ {{ abs($delta2) }} dari bulan lalu</p>
-        @else
-        <p class="stat-sub text-xs text-slate-400 mt-1">= sama dengan bulan lalu</p>
-        @endif
+        <p class="stat-sub text-xs text-slate-400 mt-1">blok</p>
     </div>
-    <div class="stat-card flex-shrink-0 w-[145px] sm:w-auto bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-sm border-l-4 border-l-green-400 flex flex-col justify-between">
+    <div class="stat-card flex-shrink-0 w-[130px] sm:w-auto bg-white border border-slate-200 rounded-xl p-3 sm:p-4 shadow-sm border-l-4 border-l-green-600 flex flex-col justify-between">
         <div>
-            <p class="stat-label text-xs text-slate-500 mb-0.5">Layak Dijadwalkan</p>
-            <p class="stat-value text-xl sm:text-2xl font-bold text-green-600" id="stat-layak">{{ $stats['layak_dijadwalkan'] }}</p>
+            <p class="stat-label text-xs text-slate-500 mb-0.5">Program Selesai</p>
+            <p class="stat-value text-xl sm:text-2xl font-bold text-green-700">{{ $stats['program_selesai'] }}</p>
         </div>
-        <p class="stat-sub text-xs text-slate-400 mt-1">siap pupuk</p>
+        <p class="stat-sub text-xs text-slate-400 mt-1">tahun ini</p>
     </div>
 </div>
 
-{{-- Blok Perlu Perhatian --}}
-@if($blokPerluPerhatian->isNotEmpty())
+{{-- Blok Perlu Tindakan --}}
+@if($blokPerluTindakan->isNotEmpty())
 <div class="mb-3 sm:mb-4 bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4">
-    <p class="text-xs font-bold text-amber-800 mb-2 flex items-center gap-1.5"><span>⚠️</span> Perlu Perhatian — {{ $blokPerluPerhatian->count() }} Blok</p>
+    <p class="text-xs font-bold text-amber-800 mb-2 flex items-center gap-1.5"><span>⚠️</span> Perlu Tindakan — {{ $blokPerluTindakan->count() }} Blok</p>
     <div class="flex flex-wrap gap-2">
-        @foreach($blokPerluPerhatian->take(6) as $bp)
-        @php $keterangan = $bp->rekomendasiRbsTerbaru ? 'Terakhir ' . $bp->rekomendasiRbsTerbaru->tanggal_analisis->diffInDays(now()) . ' hari lalu' : 'Belum dianalisis'; @endphp
-        <a href="{{ route('rbs.detail', $bp) }}" class="flex items-center gap-2 px-3 py-2 bg-white border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors">
+        @foreach($blokPerluTindakan->take(6) as $bp)
+        @php
+            if (!$bp->kondisiTerbaru) {
+                $keterangan = 'Belum ada data kondisi';
+            } elseif (!$bp->rekomendasiRbsTerbaru) {
+                $keterangan = 'Belum dianalisis';
+            } else {
+                $keterangan = 'Terakhir ' . $bp->rekomendasiRbsTerbaru->tanggal_analisis->diffInDays(now()) . ' hari lalu';
+            }
+        @endphp
+        <a href="{{ $bp->kondisiTerbaru ? route('rbs.detail', $bp) : route('kondisi-lahan.create', ['blok_lahan_id' => $bp->id]) }}" class="flex items-center gap-2 px-3 py-2 bg-white border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors">
             <div>
                 <p class="text-xs font-semibold text-slate-800">{{ $bp->nama_blok }}</p>
                 <p class="text-[10px] text-amber-700">{{ $bp->nama_pemilik }} · {{ $keterangan }}</p>
             </div>
         </a>
         @endforeach
-        @if($blokPerluPerhatian->count() > 6)
-        <a href="{{ route('rbs.index') }}" class="flex items-center px-3 py-2 text-[10px] text-amber-700 font-semibold hover:underline">+{{ $blokPerluPerhatian->count() - 6 }} lainnya →</a>
+        @if($blokPerluTindakan->count() > 6)
+        <a href="{{ route('rbs.index') }}" class="flex items-center px-3 py-2 text-[10px] text-amber-700 font-semibold hover:underline">+{{ $blokPerluTindakan->count() - 6 }} lainnya →</a>
         @endif
     </div>
 </div>
@@ -158,7 +157,6 @@
         <div class="luas-status-item flex-shrink-0"><div class="luas-dot" style="background:#f97316;"></div><span class="luas-label">Def. Sedang</span><span class="luas-value" id="luas-terindikasi-defisiensi">0 Ha</span></div>
         <div class="luas-status-item flex-shrink-0"><div class="luas-dot" style="background:#eab308;"></div><span class="luas-label">Def. Ringan</span><span class="luas-value" id="luas-defisiensi-ringan">0 Ha</span></div>
         <div class="luas-status-item flex-shrink-0"><div class="luas-dot" style="background:#22c55e;"></div><span class="luas-label">Normal</span><span class="luas-value" id="luas-normal">0 Ha</span></div>
-        <div class="luas-status-item flex-shrink-0"><div class="luas-dot" style="background:#7c3aed;"></div><span class="luas-label">Verifikasi</span><span class="luas-value" id="luas-verifikasi">0 Ha</span></div>
         <div class="luas-status-item flex-shrink-0"><div class="luas-dot" style="background:#475569;"></div><span class="luas-label">Belum Obs.</span><span class="luas-value" id="luas-belum">0 Ha</span></div>
     </div>
 </div>
@@ -174,7 +172,6 @@
                 <button type="button" class="status-filter-btn active" data-status="TERINDIKASI_DEFISIENSI" onclick="toggleStatusFilter(this)">Def. Sedang</button>
                 <button type="button" class="status-filter-btn active" data-status="TERINDIKASI_DEFISIENSI_RINGAN" onclick="toggleStatusFilter(this)">Def. Ringan</button>
                 <button type="button" class="status-filter-btn active" data-status="NORMAL_VISUAL" onclick="toggleStatusFilter(this)">Normal</button>
-                <button type="button" class="status-filter-btn active" data-status="PERLU_VERIFIKASI" onclick="toggleStatusFilter(this)">Verifikasi</button>
                 <button type="button" class="status-filter-btn active" data-status="BELUM_DIOBSERVASI" onclick="toggleStatusFilter(this)">Belum Obs.</button>
             </div>
             <div class="flex-1"></div>
@@ -199,7 +196,6 @@
                 <button type="button" class="status-filter-btn active flex-shrink-0" data-status="TERINDIKASI_DEFISIENSI" onclick="toggleStatusFilter(this)">Def. Sedang</button>
                 <button type="button" class="status-filter-btn active flex-shrink-0" data-status="TERINDIKASI_DEFISIENSI_RINGAN" onclick="toggleStatusFilter(this)">Def. Ringan</button>
                 <button type="button" class="status-filter-btn active flex-shrink-0" data-status="NORMAL_VISUAL" onclick="toggleStatusFilter(this)">Normal</button>
-                <button type="button" class="status-filter-btn active flex-shrink-0" data-status="PERLU_VERIFIKASI" onclick="toggleStatusFilter(this)">Verifikasi</button>
                 <button type="button" class="status-filter-btn active flex-shrink-0" data-status="BELUM_DIOBSERVASI" onclick="toggleStatusFilter(this)">Belum Obs.</button>
             </div>
             <div class="flex items-center gap-2" id="mobile-dropdown-filters">
@@ -237,7 +233,6 @@
                 <div class="legend-item"><div class="legend-dot" style="background:#f97316;"></div>Terindikasi Defisiensi</div>
                 <div class="legend-item"><div class="legend-dot" style="background:#eab308;"></div>Defisiensi Ringan</div>
                 <div class="legend-item"><div class="legend-dot" style="background:#22c55e;"></div>Normal Visual</div>
-                <div class="legend-item"><div class="legend-dot" style="background:#7c3aed;"></div>Perlu Verifikasi</div>
                 <div class="legend-item"><div class="legend-dot" style="background:#475569;"></div>Belum Diobservasi</div>
             </div>
         </div>
@@ -258,7 +253,7 @@ L.Icon.Default.mergeOptions({
 var mapData = @json($mapData);
 
 // Filter utama berdasarkan status_kondisi_tanaman (BUKAN status legacy)
-var activeStatuses = ['GEJALA_BERAT', 'TERINDIKASI_DEFISIENSI', 'TERINDIKASI_DEFISIENSI_RINGAN', 'NORMAL_VISUAL', 'PERLU_VERIFIKASI', 'BELUM_DIOBSERVASI'];
+var activeStatuses = ['GEJALA_BERAT', 'TERINDIKASI_DEFISIENSI', 'TERINDIKASI_DEFISIENSI_RINGAN', 'NORMAL_VISUAL', 'BELUM_DIOBSERVASI'];
 
 var map = L.map('map', { center: [-2.5489, 118.0149], zoom: 5, zoomControl: false, zoomSnap: 0, zoomDelta: 0.25, wheelDebounceTime: 40, wheelPxPerZoomLevel: 120 });
 var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
@@ -302,27 +297,24 @@ pemilikList.forEach(function(p){var o1=document.createElement('option');o1.value
 
 var mapLayers=[];
 
-// Statistik dinamis — membaca status_kondisi (BUKAN status_rbs legacy)
+// Statistik dinamis — update hanya elemen yang ada
 function updateStats(data){
-    var t=0,l=0,a=0,gb=0,td=0;
-    data.forEach(function(b){t++;l+=(b.luas_ha||0);if(b.status_kondisi&&b.status_kondisi!=='BELUM_DIOBSERVASI')a++;if(b.status_kondisi==='GEJALA_BERAT')gb++;if(b.status_kondisi==='TERINDIKASI_DEFISIENSI')td++;});
-    document.getElementById('stat-total-blok').textContent=t;
-    document.getElementById('stat-total-luas').textContent=l.toFixed(2)+' hektar';
-    document.getElementById('stat-sudah-analisis').textContent=a;
-    document.getElementById('stat-gejala-berat').textContent=gb;
-    document.getElementById('stat-terindikasi-defisiensi').textContent=td;
+    var t=0,l=0;
+    data.forEach(function(b){t++;l+=(b.luas_ha||0);});
+    var el1=document.getElementById('stat-total-blok');if(el1)el1.textContent=t;
+    var el2=document.getElementById('stat-total-luas');if(el2)el2.textContent=l.toFixed(2)+' Ha';
 }
 
 // Luas per status_kondisi
 function updateLuasPerStatus(data){
-    var r={GEJALA_BERAT:0,TERINDIKASI_DEFISIENSI:0,TERINDIKASI_DEFISIENSI_RINGAN:0,NORMAL_VISUAL:0,PERLU_VERIFIKASI:0,BELUM_DIOBSERVASI:0};
+    var r={GEJALA_BERAT:0,TERINDIKASI_DEFISIENSI:0,TERINDIKASI_DEFISIENSI_RINGAN:0,NORMAL_VISUAL:0,BELUM_DIOBSERVASI:0};
     data.forEach(function(b){var s=b.status_kondisi||'BELUM_DIOBSERVASI';var h=b.luas_ha||0;if(r.hasOwnProperty(s))r[s]+=h;else r.BELUM_DIOBSERVASI+=h;});
-    document.getElementById('luas-gejala-berat').textContent=r.GEJALA_BERAT.toFixed(2)+' Ha';
-    document.getElementById('luas-terindikasi-defisiensi').textContent=r.TERINDIKASI_DEFISIENSI.toFixed(2)+' Ha';
-    document.getElementById('luas-defisiensi-ringan').textContent=r.TERINDIKASI_DEFISIENSI_RINGAN.toFixed(2)+' Ha';
-    document.getElementById('luas-normal').textContent=r.NORMAL_VISUAL.toFixed(2)+' Ha';
-    document.getElementById('luas-verifikasi').textContent=r.PERLU_VERIFIKASI.toFixed(2)+' Ha';
-    document.getElementById('luas-belum').textContent=r.BELUM_DIOBSERVASI.toFixed(2)+' Ha';
+    var el;
+    el=document.getElementById('luas-gejala-berat');if(el)el.textContent=r.GEJALA_BERAT.toFixed(2)+' Ha';
+    el=document.getElementById('luas-terindikasi-defisiensi');if(el)el.textContent=r.TERINDIKASI_DEFISIENSI.toFixed(2)+' Ha';
+    el=document.getElementById('luas-defisiensi-ringan');if(el)el.textContent=r.TERINDIKASI_DEFISIENSI_RINGAN.toFixed(2)+' Ha';
+    el=document.getElementById('luas-normal');if(el)el.textContent=r.NORMAL_VISUAL.toFixed(2)+' Ha';
+    el=document.getElementById('luas-belum');if(el)el.textContent=r.BELUM_DIOBSERVASI.toFixed(2)+' Ha';
 }
 
 // Popup — menampilkan kondisi DAN kelayakan terpisah

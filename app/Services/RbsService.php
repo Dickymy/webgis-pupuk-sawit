@@ -35,6 +35,10 @@ class RbsService
 
     private CurrentApplicationCalculator $currentAppCalculator;
 
+    private ProgramPemupukanService $programService;
+
+    private ProgramStatusService $programStatusService;
+
     public function __construct(
         PahanDoseReferenceService $doseService,
         FertilizationWindowService $windowService,
@@ -46,7 +50,9 @@ class RbsService
         SupportingFertilizerSanitizer $sanitizer,
         AnnualFertilizerSnapshotBuilder $snapshotBuilder,
         FertilizationRealizationService $realizationService,
-        CurrentApplicationCalculator $currentAppCalculator
+        CurrentApplicationCalculator $currentAppCalculator,
+        ProgramPemupukanService $programService,
+        ProgramStatusService $programStatusService
     ) {
         $this->doseService = $doseService;
         $this->windowService = $windowService;
@@ -59,6 +65,8 @@ class RbsService
         $this->snapshotBuilder = $snapshotBuilder;
         $this->realizationService = $realizationService;
         $this->currentAppCalculator = $currentAppCalculator;
+        $this->programService = $programService;
+        $this->programStatusService = $programStatusService;
     }
 
     /**
@@ -377,6 +385,14 @@ class RbsService
             $fingerprint = $this->generateFingerprint($data);
             $data['analysis_fingerprint'] = $fingerprint;
 
+            // Pahan v2.8: Resolve program pemupukan
+            $blok = BlokLahan::find($blokLahanId);
+            $tahunProgram = now()->year;
+            if ($blok && ($data['urea_total_estimasi_tahunan'] ?? null) > 0) {
+                $program = $this->programService->resolveActiveProgram($blok, $tahunProgram);
+                $data['program_pemupukan_id'] = $program->id;
+            }
+
             // Cek apakah hasil sama dengan rekomendasi terakhir
             $existing = RekomendasiRbs::where('blok_lahan_id', $blokLahanId)
                 ->where('is_latest', true)
@@ -449,8 +465,10 @@ class RbsService
 
         // Pahan v2.5: Fingerprint menyertakan luas, SPH, jumlah pokok, total tahunan,
         // aplikasi saat ini, sisa tahunan, tahap aktif, dan ringkasan realisasi
+        // Pahan v2.8: Tambah program_pemupukan_id dan status_program
         $fingerprintData = [
             'kondisi_lahan_id' => $data['kondisi_lahan_id'] ?? null,
+            'program_pemupukan_id' => $data['program_pemupukan_id'] ?? null,
             'versi_mesin' => $data['versi_mesin_rekomendasi'] ?? null,
             'fase' => $data['fase_tanaman_snapshot'] ?? null,
             'umur' => $data['umur_tanaman_snapshot'] ?? null,
@@ -539,7 +557,12 @@ class RbsService
         $annualSnapshot = $this->snapshotBuilder->build($blok, $doseReference ?? ['urea' => ['estimate' => null], 'kcl' => ['estimate' => null]], $isApplicable);
 
         // Pahan v2.5: Hitung aplikasi saat ini via CurrentApplicationCalculator
-        $realizationSummary = $this->realizationService->getRealizationSummary($blok);
+        // Pahan v2.8: Gunakan program-based realization summary
+        $tahunProgram = now()->year;
+        $program = $this->programService->getActiveProgram($blok, $tahunProgram);
+        $realizationSummary = $program
+            ? $this->realizationService->getRealizationSummaryForProgram($program)
+            : $this->realizationService->getRealizationSummary($blok);
         $currentApp = $this->currentAppCalculator->calculate([
             'annual_snapshot' => $annualSnapshot,
             'window_result' => $window ?? ['layak' => false],
@@ -663,7 +686,7 @@ class RbsService
             'alasan_tahap' => $currentApp['reason'],
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.5'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.8'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -809,7 +832,7 @@ class RbsService
             'alasan_tahap' => 'Fase tanaman perlu diverifikasi sebelum tahap aktif dapat ditentukan.',
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.5'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.8'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -894,7 +917,7 @@ class RbsService
             'alasan_tahap' => 'Data kondisi belum lengkap untuk menentukan tahap aktif.',
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.5'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.8'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -981,7 +1004,7 @@ class RbsService
             'alasan_tahap' => 'Data observasi belum cukup untuk diagnosis — tahap belum ditentukan.',
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.5'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.8'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -1026,7 +1049,12 @@ class RbsService
         $annualSnapshot = $this->snapshotBuilder->build($blok, $doseReference ?? ['urea' => ['estimate' => null], 'kcl' => ['estimate' => null]], $isApplicable);
 
         // Pahan v2.5: Hitung aplikasi saat ini via CurrentApplicationCalculator
-        $realizationSummary = $this->realizationService->getRealizationSummary($blok);
+        // Pahan v2.8: Gunakan program-based realization summary
+        $tahunProgram = now()->year;
+        $programNormal = $this->programService->getActiveProgram($blok, $tahunProgram);
+        $realizationSummary = $programNormal
+            ? $this->realizationService->getRealizationSummaryForProgram($programNormal)
+            : $this->realizationService->getRealizationSummary($blok);
         $currentApp = $this->currentAppCalculator->calculate([
             'annual_snapshot' => $annualSnapshot,
             'window_result' => $window ?? ['layak' => true],
@@ -1124,7 +1152,7 @@ class RbsService
             'alasan_tahap' => $currentApp['reason'],
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.5'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.8'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];

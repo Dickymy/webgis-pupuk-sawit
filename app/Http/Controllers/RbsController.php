@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Anggota;
 use App\Models\BlokLahan;
 use App\Models\RekomendasiRbs;
+use App\Notifications\RealisasiNotification;
 use App\Services\RbsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class RbsController extends Controller
 {
@@ -81,6 +83,9 @@ class RbsController extends Controller
         try {
             $hasil = $this->rbsService->analisis($blokLahan);
 
+            // Pahan v2.8: Kirim notifikasi jika tahap siap realisasi
+            $this->sendAnalysisNotification($blokLahan, $hasil['rekomendasi']);
+
             return redirect()
                 ->route('rbs.detail', $blokLahan)
                 ->with('success', "Analisis RBS blok '{$blokLahan->nama_blok}' berhasil. Status: {$hasil['rekomendasi']->status_kebutuhan_dominan}.");
@@ -98,6 +103,11 @@ class RbsController extends Controller
         $hasil = $this->rbsService->analisisSemua();
         $berhasil = count($hasil['results']);
         $gagal = count($hasil['errors']);
+
+        // Pahan v2.8: Kirim notifikasi untuk blok yang siap realisasi
+        foreach ($hasil['results'] as $item) {
+            $this->sendAnalysisNotification($item['blok'], $item['result']['rekomendasi']);
+        }
 
         $message = "Analisis selesai: {$berhasil} blok berhasil dianalisis.";
         if ($gagal > 0) {
@@ -180,5 +190,45 @@ class RbsController extends Controller
             ]);
 
         return response()->json($bloks->values());
+    }
+
+    /**
+     * Kirim notifikasi jika analisis menunjukkan blok siap realisasi.
+     */
+    private function sendAnalysisNotification(BlokLahan $blokLahan, $rekomendasi): void
+    {
+        if (! $rekomendasi) {
+            return;
+        }
+
+        $admin = Auth::guard('admin')->user();
+        if (! $admin) {
+            return;
+        }
+
+        $statusStage = $rekomendasi->status_stage ?? null;
+        $siapRealisasi = in_array($statusStage, ['TAHAP_1_SIAP', 'TAHAP_2_SIAP']);
+
+        if (! $siapRealisasi) {
+            return;
+        }
+
+        // Cek apakah sudah ada notifikasi serupa yang belum dibaca (hindari spam)
+        $existing = $admin->unreadNotifications()
+            ->where('data->tipe', 'tahap_siap')
+            ->where('data->meta->blok', $blokLahan->nama_blok)
+            ->where('data->meta->tahap', $rekomendasi->active_stage)
+            ->first();
+
+        if ($existing) {
+            return;
+        }
+
+        $tahap = $rekomendasi->active_stage ?? 1;
+        $url = route('rbs.detail', $blokLahan);
+
+        $admin->notify(
+            RealisasiNotification::tahapSiap($blokLahan->nama_blok, $tahap, $url)
+        );
     }
 }

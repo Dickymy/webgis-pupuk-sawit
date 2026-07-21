@@ -83,7 +83,9 @@ class DashboardNewStatusFeatureTest extends TestCase
         $this->assertArrayHasKey('terindikasi_defisiensi', $stats);
         $this->assertArrayHasKey('terindikasi_defisiensi_ringan', $stats);
         $this->assertArrayHasKey('kondisi_normal', $stats);
-        $this->assertArrayHasKey('belum_diobservasi', $stats);
+        $this->assertArrayHasKey('siap_dipupuk', $stats);
+        $this->assertArrayHasKey('menunggu_interval', $stats);
+        $this->assertArrayHasKey('program_selesai', $stats);
         $this->assertArrayHasKey('layak_dijadwalkan', $stats);
     }
 
@@ -103,8 +105,10 @@ class DashboardNewStatusFeatureTest extends TestCase
         $response->assertSee('data-status="TERINDIKASI_DEFISIENSI"', false);
         $response->assertSee('data-status="TERINDIKASI_DEFISIENSI_RINGAN"', false);
         $response->assertSee('data-status="NORMAL_VISUAL"', false);
-        $response->assertSee('data-status="PERLU_VERIFIKASI"', false);
         $response->assertSee('data-status="BELUM_DIOBSERVASI"', false);
+
+        // Verifikasi TIDAK boleh ada sebagai filter button
+        $response->assertDontSee('data-status="PERLU_VERIFIKASI"', false);
     }
 
     public function test_dashboard_legend_has_all_new_statuses(): void
@@ -116,8 +120,10 @@ class DashboardNewStatusFeatureTest extends TestCase
         $response->assertSee('Terindikasi Defisiensi', false);
         $response->assertSee('Defisiensi Ringan', false);
         $response->assertSee('Normal Visual', false);
-        $response->assertSee('Perlu Verifikasi', false);
         $response->assertSee('Belum Diobservasi', false);
+
+        // Verifikasi TIDAK boleh muncul di legend
+        $response->assertDontSee('Perlu Verifikasi', false);
     }
 
     public function test_dashboard_javascript_uses_status_kondisi_not_status_rbs(): void

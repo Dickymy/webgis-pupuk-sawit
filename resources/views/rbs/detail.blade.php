@@ -428,61 +428,59 @@
 {{-- ═══════════════════════════════════════════════════════════ --}}
 {{-- SECTION 8: Aksi --}}
 {{-- ═══════════════════════════════════════════════════════════ --}}
-<div class="flex items-center gap-3 flex-wrap mt-5">
-    @if($blokLahan->kondisiTerbaru)
-    <form action="{{ route('rbs.analisis', $blokLahan) }}" method="POST">
-        @csrf
-        <button type="submit"
-            class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-            Jalankan Ulang Analisis
-        </button>
-    </form>
-    @endif
+@php
+    $statusStage = $rbs->status_stage ?? null;
+    $activeStage = $rbs->active_stage ?? 0;
+    $showRealisasi = in_array($statusStage, ['TAHAP_1_SIAP', 'TAHAP_1_SEBAGIAN', 'TAHAP_2_SIAP']);
+@endphp
 
-    {{-- Tombol Realisasi Pemupukan (Pahan v2.6) --}}
-    @php
-        $statusStage = $rbs->status_stage ?? null;
-        $activeStage = $rbs->active_stage ?? 0;
-        $showRealisasi = in_array($statusStage, ['TAHAP_1_SIAP', 'TAHAP_1_SEBAGIAN', 'TAHAP_2_SIAP']);
-    @endphp
-    @if($showRealisasi)
-        @if($statusStage === 'TAHAP_1_SIAP')
-        <a href="{{ route('realisasi-pemupukan.create', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
-            📝 Catat Realisasi Tahap 1
-        </a>
-        @elseif($statusStage === 'TAHAP_1_SEBAGIAN')
-        <a href="{{ route('realisasi-pemupukan.create', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
-            📝 Lanjutkan Realisasi Tahap 1
-        </a>
-        @elseif($statusStage === 'TAHAP_2_SIAP')
-        <a href="{{ route('realisasi-pemupukan.create', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm">
-            📝 Catat Realisasi Tahap 2
-        </a>
+<div class="mt-5 space-y-3">
+    {{-- Baris utama: tombol primer --}}
+    <div class="flex flex-col sm:flex-row gap-2">
+        @if($blokLahan->kondisiTerbaru)
+        <form action="{{ route('rbs.analisis', $blokLahan) }}" method="POST">
+            @csrf
+            <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm" style="min-height:44px;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Jalankan Ulang Analisis
+            </button>
+        </form>
         @endif
-    @elseif($statusStage === 'SELESAI_TAHUNAN')
-        <span class="inline-flex items-center gap-2 px-4 py-2.5 bg-green-100 text-green-800 text-sm font-medium rounded-xl border border-green-200">
-            ✅ Kebutuhan Tahunan Selesai
-        </span>
-    @elseif(in_array($statusStage, ['MENUNGGU_INTERVAL', 'MENUNGGU_KELAYAKAN', 'PERLU_VERIFIKASI_REALISASI']))
-        <span class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-50 text-amber-700 text-xs font-medium rounded-xl border border-amber-200">
-            ⏳ {{ \App\Services\CurrentApplicationCalculator::labelStatusStage($statusStage) }}
-        </span>
-    @endif
 
-    {{-- Tombol Histori Realisasi --}}
-    <a href="{{ route('realisasi-pemupukan.index', ['blok_lahan_id' => $blokLahan->id]) }}" class="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-        📋 Lihat Histori Realisasi
-    </a>
+        @if($showRealisasi)
+            <a href="{{ route('realisasi-pemupukan.create', $rbs) }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm" style="min-height:44px;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                @if($statusStage === 'TAHAP_2_SIAP')
+                    Catat Realisasi Tahap 2
+                @elseif($statusStage === 'TAHAP_1_SEBAGIAN')
+                    Lanjutkan Realisasi Tahap 1
+                @else
+                    Catat Realisasi Tahap 1
+                @endif
+            </a>
+        @elseif($statusStage === 'SELESAI_TAHUNAN')
+            <span class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-green-100 text-green-800 text-sm font-medium rounded-xl border border-green-200" style="min-height:44px;">
+                ✅ Kebutuhan Tahunan Selesai
+            </span>
+        @elseif(in_array($statusStage, ['MENUNGGU_INTERVAL', 'MENUNGGU_KELAYAKAN', 'PERLU_VERIFIKASI_REALISASI']))
+            <span class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-xl border border-blue-200" style="min-height:44px;">
+                ⏳ {{ \App\Services\CurrentApplicationCalculator::labelStatusStage($statusStage) }}
+            </span>
+        @endif
+    </div>
 
-    <a href="{{ route('laporan.show', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-        📄 Lihat Laporan
-    </a>
-    <a href="{{ route('laporan.pdf', $rbs) }}" class="inline-flex items-center gap-2 px-4 py-2.5 border border-red-200 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 transition-colors">
-        📥 Download PDF
-    </a>
+    {{-- Baris sekunder: tombol link --}}
+    <div class="flex flex-wrap gap-2">
+        <a href="{{ route('realisasi-pemupukan.index', ['anggota_id' => $blokLahan->anggota_id]) }}" class="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 text-slate-600 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors">
+            📋 Histori Realisasi
+        </a>
+        <a href="{{ route('laporan.show', $rbs) }}" class="inline-flex items-center gap-1.5 px-3 py-2 border border-slate-200 text-slate-600 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors">
+            📄 Lihat Laporan
+        </a>
+        <a href="{{ route('laporan.pdf', $rbs) }}" class="inline-flex items-center gap-1.5 px-3 py-2 border border-red-200 text-red-600 text-xs font-medium rounded-lg hover:bg-red-50 transition-colors">
+            📥 Download PDF
+        </a>
+    </div>
 </div>
 
 {{-- ═══════════════════════════════════════════════════════════ --}}
@@ -526,5 +524,56 @@
 @endif
 
 @endif {{-- end if $rbs --}}
+
+{{-- ═══════════════════════════════════════════════════════════ --}}
+{{-- Pahan v2.8: Tindakan Berikutnya (info saja, tombol aksi sudah di atas) --}}
+{{-- ═══════════════════════════════════════════════════════════ --}}
+@if($rbs = $blokLahan->rekomendasiRbsTerbaru)
+<div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 mt-5">
+    <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+        <span class="text-base">🎯</span>
+        Tindakan Berikutnya
+    </h3>
+
+    @php
+        $statusStage = $rbs->status_stage;
+        $isSiap = in_array($statusStage, [
+            \App\Services\CurrentApplicationCalculator::TAHAP_1_SIAP,
+            \App\Services\CurrentApplicationCalculator::TAHAP_1_SEBAGIAN,
+            \App\Services\CurrentApplicationCalculator::TAHAP_2_SIAP,
+        ]);
+    @endphp
+
+    <div class="p-3 rounded-xl {{ $isSiap ? 'bg-emerald-50 border border-emerald-200' : 'bg-blue-50 border border-blue-200' }}">
+        <p class="text-sm font-semibold {{ $isSiap ? 'text-emerald-800' : 'text-blue-800' }}">
+            @switch($statusStage)
+                @case(\App\Services\CurrentApplicationCalculator::TAHAP_1_SIAP)
+                    Catat realisasi Tahap 1.
+                    @break
+                @case(\App\Services\CurrentApplicationCalculator::TAHAP_1_SEBAGIAN)
+                    Lanjutkan realisasi Tahap 1 (sisa belum terpenuhi).
+                    @break
+                @case(\App\Services\CurrentApplicationCalculator::MENUNGGU_INTERVAL)
+                    Tahap 1 selesai. Tahap 2 dapat dilakukan mulai {{ $rbs->tanggal_minimum_tahap_berikutnya ? $rbs->tanggal_minimum_tahap_berikutnya->format('d M Y') : '—' }}.
+                    @break
+                @case(\App\Services\CurrentApplicationCalculator::MENUNGGU_KELAYAKAN)
+                    Pemupukan ditunda karena kondisi kelayakan belum terpenuhi.
+                    @break
+                @case(\App\Services\CurrentApplicationCalculator::TAHAP_2_SIAP)
+                    Catat realisasi Tahap 2.
+                    @break
+                @case(\App\Services\CurrentApplicationCalculator::SELESAI_TAHUNAN)
+                    Program pemupukan tahun ini telah selesai.
+                    @break
+                @default
+                    {{ $rbs->alasan_tahap ?? 'Jalankan analisis ulang untuk mengetahui status terkini.' }}
+            @endswitch
+        </p>
+        @if($rbs->alasan_tahap && !in_array($statusStage, [\App\Services\CurrentApplicationCalculator::SELESAI_TAHUNAN]))
+            <p class="text-xs {{ $isSiap ? 'text-emerald-600' : 'text-blue-600' }} mt-0.5">{{ $rbs->alasan_tahap }}</p>
+        @endif
+    </div>
+</div>
+@endif
 
 @endsection

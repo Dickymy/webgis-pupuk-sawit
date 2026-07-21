@@ -25,7 +25,7 @@ enum PlantConditionStatus: string
             self::TERINDIKASI_DEFISIENSI_RINGAN => 'Terindikasi Defisiensi Ringan',
             self::TERINDIKASI_DEFISIENSI => 'Terindikasi Defisiensi',
             self::GEJALA_BERAT => 'Gejala Berat',
-            self::PERLU_VERIFIKASI => 'Perlu Verifikasi',
+            self::PERLU_VERIFIKASI => 'Data Belum Lengkap',
             self::BELUM_DIOBSERVASI => 'Belum Diobservasi',
         };
     }

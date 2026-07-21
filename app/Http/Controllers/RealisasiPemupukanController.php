@@ -4,18 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRealisasiPemupukanRequest;
 use App\Http\Requests\UpdateRealisasiPemupukanRequest;
+use App\Models\Anggota;
 use App\Models\ProgramPemupukan;
 use App\Models\RealisasiPemupukan;
 use App\Models\RekomendasiOperasionalHistory;
 use App\Models\RekomendasiRbs;
+use App\Notifications\RealisasiNotification;
 use App\Services\CurrentApplicationCalculator;
 use App\Services\FertilizationRealizationService;
+use App\Services\ProgramPemupukanService;
+use App\Services\ProgramStatusService;
 use App\Services\RealisasiEligibilityService;
 use App\Services\RecommendationOperationalRefreshService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 /**
  * RealisasiPemupukanController — CRUD realisasi pemupukan.
@@ -35,31 +38,54 @@ class RealisasiPemupukanController extends Controller
         private CurrentApplicationCalculator $currentAppCalculator,
         private RecommendationOperationalRefreshService $refreshService,
         private RealisasiEligibilityService $eligibilityService,
+        private ProgramPemupukanService $programService,
+        private ProgramStatusService $programStatusService,
     ) {}
 
     /**
-     * Daftar semua realisasi pemupukan.
+     * Daftar semua realisasi pemupukan — grouped by anggota.
      */
     public function index(Request $request)
     {
-        $query = RealisasiPemupukan::with(['rekomendasiRbs.blokLahan.anggota', 'blokLahan.anggota', 'admin'])
-            ->orderByDesc('tanggal_realisasi');
+        $query = RealisasiPemupukan::with(['rekomendasiRbs.blokLahan.anggota', 'blokLahan.anggota', 'admin']);
 
-        if ($request->filled('blok_lahan_id')) {
-            $query->where('blok_lahan_id', $request->blok_lahan_id);
-        }
-
-        if ($request->filled('tahun_program')) {
-            $query->where('tahun_program', $request->tahun_program);
+        if ($request->filled('anggota_id')) {
+            $query->whereHas('blokLahan', fn ($q) => $q->where('anggota_id', $request->anggota_id));
         }
 
         if ($request->filled('status_realisasi')) {
             $query->where('status_realisasi', $request->status_realisasi);
         }
 
-        $realisasis = $query->paginate(15)->withQueryString();
+        $realisasis = $query->orderByDesc('tanggal_realisasi')->get();
 
-        return view('realisasi_pemupukan.index', compact('realisasis'));
+        // Group by anggota
+        $grouped = $realisasis->groupBy(function ($r) {
+            return $r->blokLahan?->anggota_id ?? 0;
+        })->map(function ($items) {
+            $anggota = $items->first()->blokLahan?->anggota;
+
+            // Sort: aktif (Selesai, Sebagian) di atas, Batal di bawah, lalu by tanggal desc
+            $sorted = $items->sortBy(function ($r) {
+                $priority = match ($r->status_realisasi) {
+                    'SEBAGIAN' => 0,
+                    'SELESAI' => 1,
+                    'BATAL' => 9,
+                    default => 5,
+                };
+
+                return $priority.'-'.(9999999999 - ($r->tanggal_realisasi?->timestamp ?? 0));
+            })->values();
+
+            return [
+                'anggota' => $anggota,
+                'items' => $sorted,
+            ];
+        })->sortBy(fn ($g) => $g['anggota']?->nama ?? 'zzz')->values();
+
+        $anggotas = Anggota::orderBy('nama')->get();
+
+        return view('realisasi_pemupukan.index', compact('grouped', 'anggotas'));
     }
 
     /**
@@ -169,6 +195,15 @@ class RealisasiPemupukanController extends Controller
         // Refresh operasional + catat histori (4.6)
         $this->refreshService->refreshAfterRealization($realisasi);
         $this->recordOperationalHistory($rekomendasi, $program, $realisasi, RekomendasiOperasionalHistory::REALISASI_DIBUAT);
+
+        // Pahan v2.8: Sinkronisasi status program setelah realisasi
+        $postCurrentApp = $this->eligibilityService->evaluate($rekomendasi);
+        if (! empty($postCurrentApp['current_app'])) {
+            $this->programStatusService->synchronizeStatus($program, $postCurrentApp['current_app']);
+        }
+
+        // Pahan v2.8: Kirim notifikasi
+        $this->sendRealisasiNotification($realisasi, $rekomendasi, $postCurrentApp['current_app'] ?? []);
 
         return redirect()
             ->route('realisasi-pemupukan.show', $realisasi)
@@ -373,23 +408,16 @@ class RealisasiPemupukanController extends Controller
     }
 
     /**
-     * Ensure program pemupukan exists atau buat baru (4.5).
+     * Ensure program pemupukan exists via ProgramPemupukanService (Pahan v2.8).
+     * Juga memastikan rekomendasi terhubung ke program yang sama.
      */
     private function ensureProgram($blok, int $tahunProgram, RekomendasiRbs $rekomendasi): ProgramPemupukan
     {
-        $program = ProgramPemupukan::where('blok_lahan_id', $blok->id)
-            ->where('tahun_program', $tahunProgram)
-            ->where('status_program', ProgramPemupukan::STATUS_AKTIF)
-            ->first();
+        $program = $this->programService->resolveActiveProgram($blok, $tahunProgram, $rekomendasi);
 
-        if (! $program) {
-            $program = ProgramPemupukan::create([
-                'uuid' => Str::uuid()->toString(),
-                'blok_lahan_id' => $blok->id,
-                'tahun_program' => $tahunProgram,
-                'rekomendasi_awal_id' => $rekomendasi->id,
-                'status_program' => ProgramPemupukan::STATUS_AKTIF,
-            ]);
+        // Pastikan rekomendasi terhubung ke program yang sama (Pahan v2.8: 4.3)
+        if ($rekomendasi->program_pemupukan_id !== $program->id) {
+            $rekomendasi->update(['program_pemupukan_id' => $program->id]);
         }
 
         return $program;
@@ -427,5 +455,43 @@ class RealisasiPemupukanController extends Controller
             'source_realisasi_id' => $realisasi->id,
             'created_at' => now(),
         ]);
+    }
+
+    /**
+     * Kirim notifikasi setelah realisasi berhasil dicatat.
+     */
+    private function sendRealisasiNotification(
+        RealisasiPemupukan $realisasi,
+        RekomendasiRbs $rekomendasi,
+        array $currentApp
+    ): void {
+        $admin = Auth::guard('admin')->user();
+        if (! $admin) {
+            return;
+        }
+
+        $blok = $realisasi->blokLahan;
+        $namaBlok = $blok->nama_blok ?? 'Blok';
+        $url = route('realisasi-pemupukan.show', $realisasi);
+        $statusStage = $currentApp['status_stage'] ?? null;
+
+        // Notifikasi utama: realisasi berhasil dicatat
+        $admin->notify(
+            RealisasiNotification::realisasiDicatat($namaBlok, $realisasi->tahap, $url)
+        );
+
+        // Notifikasi tambahan berdasarkan status setelah realisasi
+        if ($statusStage === 'SELESAI_TAHUNAN') {
+            $admin->notify(
+                RealisasiNotification::programSelesai($namaBlok, route('rbs.detail', $blok))
+            );
+        } elseif ($statusStage === 'MENUNGGU_INTERVAL') {
+            // Tahap 1 selesai, Tahap 2 nanti
+            // Notifikasi akan diperlukan nanti saat interval terpenuhi (via scheduled command)
+        } elseif ($realisasi->status_realisasi === 'SEBAGIAN') {
+            $admin->notify(
+                RealisasiNotification::realisasiSebagian($namaBlok, $realisasi->tahap, route('rbs.detail', $blok))
+            );
+        }
     }
 }

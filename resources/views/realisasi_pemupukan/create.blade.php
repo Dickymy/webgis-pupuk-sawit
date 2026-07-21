@@ -192,14 +192,53 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const ureaInput = document.querySelector('[name="urea_realisasi_kg"]');
     const kclInput = document.querySelector('[name="kcl_realisasi_kg"]');
+    const statusSelect = document.querySelector('[name="status_realisasi"]');
     const overPlanSection = document.getElementById('over-plan-section');
     const overrideSection = document.getElementById('override-annual-section');
+
+    // Pahan v2.8: Tambah indikator selisih
+    let selisihDiv = document.getElementById('selisih-indicator');
+    if (!selisihDiv) {
+        selisihDiv = document.createElement('div');
+        selisihDiv.id = 'selisih-indicator';
+        selisihDiv.className = 'mt-3 p-3 rounded-lg text-xs font-medium hidden';
+        const formGrid = document.querySelector('.grid.grid-cols-1');
+        if (formGrid) formGrid.parentNode.insertBefore(selisihDiv, overPlanSection);
+    }
 
     function checkLimits() {
         const ureaVal = parseFloat(ureaInput.value) || 0;
         const kclVal = parseFloat(kclInput.value) || 0;
 
-        const overPlan = (ureaVal > ureaRencana && ureaRencana > 0) || (kclVal > kclRencana && kclRencana > 0);
+        // Pahan v2.8: Selisih indicator
+        const selisihUrea = ureaVal - ureaRencana;
+        const selisihKcl = kclVal - kclRencana;
+        const kurangDariRencana = (ureaVal < ureaRencana && ureaRencana > 0) || (kclVal < kclRencana && kclRencana > 0);
+        const lebihDariRencana = (ureaVal > ureaRencana && ureaRencana > 0) || (kclVal > kclRencana && kclRencana > 0);
+
+        if (kurangDariRencana) {
+            selisihDiv.classList.remove('hidden', 'bg-amber-50', 'border-amber-200', 'text-amber-700');
+            selisihDiv.classList.add('bg-blue-50', 'border', 'border-blue-200', 'text-blue-700');
+            let msg = 'Realisasi kurang dari rencana.';
+            if (ureaVal < ureaRencana && ureaRencana > 0) msg += ' Urea: ' + (ureaRencana - ureaVal).toFixed(1) + ' kg kurang.';
+            if (kclVal < kclRencana && kclRencana > 0) msg += ' KCl: ' + (kclRencana - kclVal).toFixed(1) + ' kg kurang.';
+            selisihDiv.textContent = msg;
+            // Auto-select SEBAGIAN
+            statusSelect.value = 'SEBAGIAN';
+        } else if (lebihDariRencana) {
+            selisihDiv.classList.remove('hidden', 'bg-blue-50', 'border-blue-200', 'text-blue-700');
+            selisihDiv.classList.add('bg-amber-50', 'border', 'border-amber-200', 'text-amber-700');
+            let msg = 'Realisasi melebihi rencana.';
+            if (selisihUrea > 0) msg += ' Urea: +' + selisihUrea.toFixed(1) + ' kg.';
+            if (selisihKcl > 0) msg += ' KCl: +' + selisihKcl.toFixed(1) + ' kg.';
+            selisihDiv.textContent = msg;
+            statusSelect.value = 'SELESAI';
+        } else {
+            selisihDiv.classList.add('hidden');
+            statusSelect.value = 'SELESAI';
+        }
+
+        const overPlan = lebihDariRencana;
         overPlanSection.classList.toggle('hidden', !overPlan);
 
         const totalUreaAfter = existingUrea + ureaVal;

@@ -33,7 +33,7 @@
 
     {{-- Keterangan --}}
     <div class="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-800">
-        <span class="font-semibold">ℹ Catatan:</span> Blok layak pupuk = berstatus <strong>Sehat</strong> dan <strong>Perlu Pupuk</strong>. Blok Defisiensi Berat dan Tunda perlu penanganan masalah terlebih dahulu.
+        <span class="font-semibold">ℹ Catatan:</span> Subtotal dan grand total dihitung dari blok yang <strong>siap dipupuk</strong> (status tahap siap dan jumlah aplikasi &gt; 0).
     </div>
 
     {{-- Filter --}}
@@ -70,15 +70,33 @@
             </div>
             @endif
 
+            {{-- Pahan v2.8: Filter berdasarkan status baru --}}
             <div class="w-full sm:w-auto relative">
-                <label class="block text-xs text-slate-500 font-semibold mb-1">Status</label>
+                <label class="block text-xs text-slate-500 font-semibold mb-1">Kondisi Tanaman</label>
                 <div class="relative">
-                    <select name="status_kebutuhan_dominan" onchange="this.form.submit()"
+                    <select name="status_kondisi_tanaman" onchange="this.form.submit()"
+                        style="background-image: none !important; -webkit-appearance: none !important; -moz-appearance: none !important; appearance: none !important;"
+                        class="w-full sm:w-auto pl-3 pr-8 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 sm:min-w-[150px] cursor-pointer">
+                        <option value="">Semua Kondisi</option>
+                        @foreach(['GEJALA_BERAT' => 'Gejala Berat', 'TERINDIKASI_DEFISIENSI' => 'Defisiensi Sedang', 'TERINDIKASI_DEFISIENSI_RINGAN' => 'Defisiensi Ringan', 'NORMAL_VISUAL' => 'Normal', 'PERLU_VERIFIKASI' => 'Perlu Verifikasi'] as $val => $label)
+                            <option value="{{ $val }}" {{ request('status_kondisi_tanaman') == $val ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-2.5 flex items-center">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full sm:w-auto relative">
+                <label class="block text-xs text-slate-500 font-semibold mb-1">Status Tahap</label>
+                <div class="relative">
+                    <select name="status_stage" onchange="this.form.submit()"
                         style="background-image: none !important; -webkit-appearance: none !important; -moz-appearance: none !important; appearance: none !important;"
                         class="w-full sm:w-auto pl-3 pr-8 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 sm:min-w-[160px] cursor-pointer">
-                        <option value="">Semua Status</option>
-                        @foreach(['Darurat' => 'Defisiensi Berat', 'Segera' => 'Perlu Pupuk', 'Normal' => 'Sehat', 'Tunda' => 'Tunda Pupuk'] as $val => $label)
-                            <option value="{{ $val }}" {{ request('status_kebutuhan_dominan') == $val ? 'selected' : '' }}>{{ $label }}</option>
+                        <option value="">Semua Tahap</option>
+                        @foreach(['TAHAP_1_SIAP' => 'Tahap 1 Siap', 'TAHAP_1_SEBAGIAN' => 'Tahap 1 Sebagian', 'MENUNGGU_INTERVAL' => 'Menunggu 60 Hari', 'TAHAP_2_SIAP' => 'Tahap 2 Siap', 'SELESAI_TAHUNAN' => 'Selesai Tahunan'] as $val => $label)
+                            <option value="{{ $val }}" {{ request('status_stage') == $val ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-2.5 flex items-center">
@@ -88,7 +106,7 @@
             </div>
 
             <div class="flex items-center gap-2 w-full sm:w-auto sm:ml-auto pt-1 sm:pt-0">
-                @if(request()->hasAny(['status_kebutuhan_dominan', 'anggota_id', 'blok_lahan_id']))
+                @if(request()->hasAny(['status_kondisi_tanaman', 'status_stage', 'anggota_id', 'blok_lahan_id']))
                 <a href="{{ route('laporan.index') }}" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-medium rounded-lg transition-colors">Reset</a>
                 @endif
             </div>
@@ -242,8 +260,15 @@
     </div>
     @empty
     <div class="bg-white border border-slate-200 rounded-xl p-8 sm:p-12 text-center shadow-sm">
-        <p class="text-slate-400 text-sm mb-2">Belum ada data laporan.</p>
-        <a href="{{ route('rbs.index') }}" class="text-emerald-600 text-sm font-semibold hover:underline">Jalankan analisis RBS terlebih dahulu →</a>
+        <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <p class="text-slate-600 text-sm font-medium mb-1">Belum ada data laporan.</p>
+        <p class="text-slate-400 text-xs mb-3">Jalankan analisis RBS pada blok lahan terlebih dahulu agar laporan dapat dibuat.</p>
+        <a href="{{ route('rbs.index') }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Jalankan Analisis RBS
+        </a>
     </div>
     @endforelse
 
