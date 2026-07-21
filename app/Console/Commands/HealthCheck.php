@@ -59,6 +59,8 @@ class HealthCheck extends Command
         $this->checkTanggalMasaDepan();
         $this->checkSelesaiDiBawahRencana();
         $this->checkBatalTerhitung();
+        $this->checkSubmissionTokenGanda();
+        $this->checkDuplikasiAktifIdentik();
 
         // Histori
         $this->info('── HISTORI ───────────────────────────────────────────────────');
@@ -405,12 +407,80 @@ class HealthCheck extends Command
         $file = app_path('Services/FertilizationRealizationService.php');
         if (file_exists($file)) {
             $content = file_get_contents($file);
-            if (str_contains($content, "!= 'BATAL'") || str_contains($content, '!= self::STATUS_BATAL') || str_contains($content, 'aktif()')) {
+            if (str_contains($content, "!= 'BATAL'") || str_contains($content, 'STATUS_BATAL') || str_contains($content, 'aktif()')) {
                 $this->line('   ✓ Realisasi BATAL tidak ikut terhitung (code check)');
             } else {
                 $this->warn('   ⚠ Perlu verifikasi filter realisasi BATAL di FertilizationRealizationService');
                 $this->warningCount++;
             }
+        }
+    }
+
+    private function checkSubmissionTokenGanda(): void
+    {
+        if (! Schema::hasColumn('realisasi_pemupukans', 'submission_token')) {
+            return;
+        }
+
+        $ganda = DB::table('realisasi_pemupukans')
+            ->select('submission_token')
+            ->whereNotNull('submission_token')
+            ->groupBy('submission_token')
+            ->havingRaw('COUNT(*) > 1')
+            ->count();
+
+        if ($ganda > 0) {
+            $this->error("   ✗ {$ganda} submission_token digunakan lebih dari sekali (KRITIS: duplikat)");
+            $this->issueCount++;
+        } else {
+            $this->line('   ✓ Tidak ada submission_token ganda');
+        }
+    }
+
+    private function checkDuplikasiAktifIdentik(): void
+    {
+        // Cari dua realisasi aktif identik yang dibuat dalam waktu sangat dekat (< 5 menit)
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'sqlite') {
+            // SQLite: gunakan julianday untuk diff dalam detik
+            $duplicates = DB::table('realisasi_pemupukans as a')
+                ->join('realisasi_pemupukans as b', function ($join) {
+                    $join->on('a.blok_lahan_id', '=', 'b.blok_lahan_id')
+                        ->on('a.rekomendasi_rbs_id', '=', 'b.rekomendasi_rbs_id')
+                        ->on('a.tahap', '=', 'b.tahap')
+                        ->on('a.tanggal_realisasi', '=', 'b.tanggal_realisasi')
+                        ->on('a.urea_realisasi_kg', '=', 'b.urea_realisasi_kg')
+                        ->on('a.kcl_realisasi_kg', '=', 'b.kcl_realisasi_kg')
+                        ->whereColumn('a.id', '<', 'b.id');
+                })
+                ->where('a.status_realisasi', '!=', 'BATAL')
+                ->where('b.status_realisasi', '!=', 'BATAL')
+                ->whereRaw('ABS((julianday(b.created_at) - julianday(a.created_at)) * 86400) < 300')
+                ->count();
+        } else {
+            // MySQL: TIMESTAMPDIFF
+            $duplicates = DB::table('realisasi_pemupukans as a')
+                ->join('realisasi_pemupukans as b', function ($join) {
+                    $join->on('a.blok_lahan_id', '=', 'b.blok_lahan_id')
+                        ->on('a.rekomendasi_rbs_id', '=', 'b.rekomendasi_rbs_id')
+                        ->on('a.tahap', '=', 'b.tahap')
+                        ->on('a.tanggal_realisasi', '=', 'b.tanggal_realisasi')
+                        ->on('a.urea_realisasi_kg', '=', 'b.urea_realisasi_kg')
+                        ->on('a.kcl_realisasi_kg', '=', 'b.kcl_realisasi_kg')
+                        ->whereColumn('a.id', '<', 'b.id');
+                })
+                ->where('a.status_realisasi', '!=', 'BATAL')
+                ->where('b.status_realisasi', '!=', 'BATAL')
+                ->whereRaw('ABS(TIMESTAMPDIFF(SECOND, a.created_at, b.created_at)) < 300')
+                ->count();
+        }
+
+        if ($duplicates > 0) {
+            $this->error("   ✗ {$duplicates} pasangan realisasi aktif identik dalam < 5 menit (KRITIS: duplikat double-submit)");
+            $this->issueCount++;
+        } else {
+            $this->line('   ✓ Tidak ada duplikasi realisasi aktif identik');
         }
     }
 

@@ -28,6 +28,7 @@ class StoreRealisasiPemupukanRequest extends FormRequest
     {
         return [
             'rekomendasi_rbs_id' => ['required', 'integer', 'exists:rekomendasi_rbs,id'],
+            'submission_token' => ['nullable', 'string', 'max:64'],
             'tanggal_realisasi' => ['required', 'date', 'before_or_equal:today'],
             'urea_realisasi_kg' => ['required', 'numeric', 'min:0'],
             'kcl_realisasi_kg' => ['required', 'numeric', 'min:0'],
@@ -48,6 +49,13 @@ class StoreRealisasiPemupukanRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            // Perlindungan double-submit: Jika token sudah pernah dipakai, skip semua validasi lanjutan.
+            // Controller akan menangani redirect ke realisasi yang sudah tersimpan.
+            $token = $this->input('submission_token');
+            if ($token && RealisasiPemupukan::where('submission_token', $token)->exists()) {
+                return; // Token sudah terpakai — biarkan controller yang menangani
+            }
+
             // Nilai nol untuk kedua pupuk ditolak
             $urea = (float) $this->input('urea_realisasi_kg', 0);
             $kcl = (float) $this->input('kcl_realisasi_kg', 0);

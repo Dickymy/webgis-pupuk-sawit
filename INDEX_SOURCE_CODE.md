@@ -12,8 +12,8 @@
 
 ```
 ├── app/
-│   ├── Console/Commands/     # Artisan commands (audit, migration)
-│   ├── Enums/                # Enum classes (status, fase, severity)
+│   ├── Console/Commands/     # 15 artisan commands (audit, backup, migration, health)
+│   ├── Enums/                # 5 enum classes (status, fase, severity)
 │   ├── Http/
 │   │   ├── Controllers/      # 14 controller
 │   │   ├── Middleware/       # AdminAuthenticated
@@ -26,12 +26,14 @@
 │   └── fertilization.php     # Konfigurasi dosis, window, reliability
 ├── database/
 │   ├── factories/            # 5 model factories (testing)
-│   ├── migrations/           # 43 migration files
-│   └── seeders/              # 5 seeders
-├── resources/views/          # Blade templates
+│   ├── migrations/           # 44 migration files
+│   └── seeders/              # 6 seeders
+├── deploy/                   # Panduan deploy (InfinityFree, Rumahweb)
+├── docs/                     # Dokumentasi teknis (~50 file)
+├── resources/views/          # Blade templates (~40 file)
 ├── routes/web.php            # Route definitions
-├── tests/                    # 235 tests (15 Unit + 34 Feature)
-└── docs/                     # Dokumentasi teknis
+├── tests/                    # 283 tests (15 Unit + 46 Feature)
+└── public/                   # Assets (Vite build, images, favicon)
 ```
 
 ---
@@ -47,7 +49,7 @@
 | `RuleBaseLanjutan.php` | Rule base RBS (Forward Chaining) |
 | `RekomendasiRbs.php` | Hasil analisis & rekomendasi pemupukan |
 | `ProgramPemupukan.php` | Program pemupukan tahunan per blok |
-| `RealisasiPemupukan.php` | Realisasi pelaksanaan pemupukan |
+| `RealisasiPemupukan.php` | Realisasi pelaksanaan pemupukan (+ submission_token) |
 | `RekomendasiOperasionalHistory.php` | Histori perubahan tahap operasional |
 
 ---
@@ -88,7 +90,7 @@
 | `KondisiLahanController.php` | CRUD data observasi kondisi lahan |
 | `RuleBaseController.php` | CRUD rule base RBS |
 | `RbsController.php` | Analisis RBS + detail + notifikasi |
-| `RealisasiPemupukanController.php` | CRUD realisasi pemupukan + program |
+| `RealisasiPemupukanController.php` | CRUD realisasi + double-submit protection + program |
 | `LaporanController.php` | Laporan rekap + export PDF |
 | `NotificationController.php` | API notifikasi (recent, mark read) |
 | `CuacaController.php` | Fetch curah hujan dari Open-Meteo |
@@ -118,10 +120,11 @@
 
 ---
 
-## App — Console Commands (10)
+## App — Console Commands (15)
 
 | File | Deskripsi |
 |------|-----------|
+| `FinalizePahanV2_9.php` | Audit command v2.9 (17 pemeriksaan + health-check) |
 | `FinalizePahanV2_8.php` | Audit command v2.8 (18 pemeriksaan) |
 | `FinalizePahanV2_7.php` | Audit command v2.7 |
 | `FinalizePahanV2_6.php` | Audit command v2.6 |
@@ -130,8 +133,12 @@
 | `FinalizePahanV2_3.php` | Audit command v2.3 |
 | `FinalizePahanV2_2.php` | Audit command v2.2 |
 | `AuditPahanV2.php` | Audit command v2.0 |
+| `HealthCheck.php` | Health check: integritas database, duplikat, submission_token |
 | `MigratePahanV2.php` | Helper migration |
 | `MaintenanceClearCache.php` | Maintenance: clear cache |
+| `BackupDatabase.php` | Backup database ke storage |
+| `BackupList.php` | Daftar backup yang tersedia |
+| `ResetDemoData.php` | Reset data demo (tidak produksi) |
 
 ---
 
@@ -143,12 +150,12 @@
 | `UpdateBlokLahanRequest.php` | Validasi update blok lahan |
 | `StoreKondisiLahanRequest.php` | Validasi create kondisi lahan |
 | `UpdateKondisiLahanRequest.php` | Validasi update kondisi lahan |
-| `StoreRealisasiPemupukanRequest.php` | Validasi create realisasi |
-| `UpdateRealisasiPemupukanRequest.php` | Validasi update realisasi |
+| `StoreRealisasiPemupukanRequest.php` | Validasi create realisasi (+ submission_token check) |
+| `UpdateRealisasiPemupukanRequest.php` | Validasi update realisasi (+ optimistic locking) |
 
 ---
 
-## Database — Migrations (43)
+## Database — Migrations (44)
 
 ### Tabel Utama
 | Migration | Tabel/Perubahan |
@@ -164,6 +171,7 @@
 | `create_rekomendasi_operasional_histories_table` | histori operasional (v2.7) |
 | `create_notifications_table` | notifications (v2.8) |
 | `add_active_key_to_program_pemupukans_table` | UNIQUE active_key (v2.8) |
+| `add_submission_token_to_realisasi_pemupukans` | submission_token (double-submit) |
 
 ### Evolusi Schema
 | Versi | Perubahan Utama |
@@ -176,6 +184,7 @@
 | v2.6 | tahun_program, confirmed_over_plan, override pada realisasi |
 | v2.7 | Tabel program_pemupukans, histori operasional, FK program |
 | v2.8 | active_key UNIQUE constraint, notifications table |
+| v2.9 | submission_token (idempotency, double-submit protection) |
 
 ---
 
@@ -191,15 +200,16 @@
 
 ---
 
-## Database — Seeders (5)
+## Database — Seeders (6)
 
 | File | Deskripsi |
 |------|-----------|
-| `DatabaseSeeder.php` | Seeder utama |
+| `DatabaseSeeder.php` | Seeder utama (admin + rules) |
 | `AdminSeeder.php` | Seeder admin default |
 | `RuleBaseLanjutanSeeder.php` | Seeder rule base awal |
 | `PahanRuleBaseV2Seeder.php` | Seeder rule v2 dengan provenance |
 | `RuleCurahHujanGulmaSeeder.php` | Seeder rule curah hujan & gulma |
+| `DemoSawitGisSeeder.php` | Seeder data demo (terpisah, tidak otomatis) |
 
 ---
 
@@ -208,22 +218,23 @@
 ### Layout
 | File | Deskripsi |
 |------|-----------|
-| `layouts/app.blade.php` | Layout utama (sidebar, header, notifikasi bell, dark mode) |
+| `layouts/app.blade.php` | Layout utama: sidebar, header, notifikasi, dark mode, toast, double-submit JS |
 
 ### Halaman Utama
 | Folder | File | Deskripsi |
 |--------|------|-----------|
 | `auth/` | `login.blade.php` | Form login |
-| `dashboard/` | `index.blade.php` | Dashboard WebGIS + peta + statistik |
+| `dashboard/` | `index.blade.php` | Dashboard WebGIS + peta Leaflet + statistik |
 | `anggota/` | `index`, `create`, `edit` | CRUD anggota |
 | `blok_lahan/` | `index`, `create`, `edit`, `show` | CRUD blok lahan |
 | `kondisi_lahan/` | `index`, `create`, `edit` | CRUD kondisi lahan |
 | `rule_base/` | `index`, `create`, `edit`, `info` | CRUD rule base + info referensi |
 | `rbs/` | `index`, `detail` | Daftar analisis + detail hasil |
 | `rbs/partials/` | `_hasil_rbs.blade.php` | Komponen reusable hasil analisis |
-| `realisasi_pemupukan/` | `index`, `create`, `edit`, `show` | CRUD realisasi |
-| `laporan/` | `index`, `show`, `pdf` | Rekap laporan + PDF |
+| `realisasi_pemupukan/` | `index`, `create`, `edit`, `show` | CRUD realisasi (dengan token & locking) |
+| `laporan/` | `index`, `show`, `pdf` | Rekap laporan + PDF (DomPDF) |
 | `settings/` | `index` | Pengaturan (password, tema) |
+| `errors/` | `403`, `404`, `419`, `422`, `500`, `503` | Halaman error custom |
 
 ### Komponen
 | File | Deskripsi |
@@ -232,6 +243,17 @@
 | `components/searchable-select.blade.php` | Select dengan pencarian |
 | `components/custom-select.blade.php` | Custom select styling |
 | `components/status-badge.blade.php` | Badge status |
+
+---
+
+## Resources — JavaScript
+
+| File | Deskripsi |
+|------|-----------|
+| `resources/js/app.js` | Entry point Vite |
+| `resources/js/bootstrap.js` | Axios setup |
+| `resources/js/overlap-detector.js` | Deteksi overlap polygon peta |
+| `resources/js/theme.js` | Dark/light mode toggle |
 
 ---
 
@@ -257,9 +279,9 @@
 
 ---
 
-## Tests (235 total)
+## Tests (283 total · 741 assertions)
 
-### Unit Tests (15)
+### Unit Tests (15 file · 98 assertions)
 
 | File | Deskripsi |
 |------|-----------|
@@ -279,23 +301,34 @@
 | `RuleEvaluationTest` | Evaluasi rule (AND logic) |
 | `SupportingFertilizerSanitizerTest` | Sanitasi pupuk pendukung |
 
-### Feature Tests (34)
+### Feature Tests (46 file · 643 assertions)
 
 | File | Deskripsi |
 |------|-----------|
 | `BlokLahanFaseTest` | Validasi fase tanaman pada blok |
 | `DashboardNewStatusFeatureTest` | Dashboard memakai status baru |
 | `DashboardNextActionTest` | Dashboard: tindakan berikutnya, no stepper |
+| `DatabaseHealthCheckTest` | Health check command test |
+| `DemoModeTest` | Mode demo tidak mengubah kalkulasi |
+| `DemoResetSafetyTest` | Reset demo aman, tidak hapus data real |
+| `DemoSeederSafetyTest` | Demo seeder idempoten, tidak otomatis |
+| `DoubleSubmitAnalysisTest` | Double-click analisis tidak duplikat |
+| `DoubleSubmitRealizationTest` | Double-submit realisasi: token + semantik + concurrent |
 | `FingerprintRealizationDetailTest` | Fingerprint berubah saat realisasi berubah |
+| `FriendlyErrorPageTest` | Halaman error custom (403/404/419/500/503) |
 | `HistoricalRecommendationRejectionTest` | Rekomendasi historis ditolak |
 | `LaporanNonLegacyDecisionTest` | Laporan tanpa status legacy |
 | `LegacyStatusStaticAuditTest` | Tidak ada keputusan berdasarkan legacy |
+| `MapInvalidGeoJsonTest` | Peta tetap berfungsi meski GeoJSON invalid |
 | `MigrationDataPreservationTest` | Data lama aman setelah migration |
 | `MigrationUpgradePathTest` | Upgrade path schema benar |
+| `NoManualVerificationFeatureTest` | Tidak ada fitur verifikasi manual |
 | `NoPlantPhaseAbbreviationInViewsTest` | TBM/TM tidak muncul di UI |
 | `OperationalHistoryTest` | Histori operasional dicatat |
 | `OperationalStageTransitionHistoryTest` | Transisi tahap tercatat |
+| `PdfConsistencyTest` | PDF konsisten + tidak ada kode teknis |
 | `PdfOperationalConsistencyTest` | PDF konsisten dengan snapshot |
+| `ProductionSafetyTest` | Keamanan konfigurasi produksi |
 | `ProgramActiveUniquenessTest` | Satu program aktif per blok/tahun |
 | `ProgramFingerprintTest` | Fingerprint memasukkan program |
 | `ProgramLifecycleTest` | Siklus hidup AKTIF → SELESAI |
@@ -311,6 +344,7 @@
 | `RealisasiStageLockTest` | Lock tahap saat interval/selesai |
 | `RealisasiStatusSelesaiValidationTest` | Validasi status selesai vs jumlah |
 | `RealisasiTamperedRequestTest` | Tolak request yang dimanipulasi |
+| `ReliabilityWeightTotalTest` | Bobot keandalan berjumlah 100 |
 | `ReportSnapshotFullConsistencyTest` | Laporan memakai snapshot |
 | `SecurityTest` | Autentikasi + tidak ada route berbahaya |
 | `TrueLegacySchemaUpgradeTest` | Upgrade schema legacy (v2.5–v2.7) |
@@ -323,6 +357,8 @@
 |------|-----------|
 | `Support/LegacyDatabaseFixture.php` | Fixture database legacy |
 | `Support/LegacySchemaBuilder.php` | Builder schema legacy untuk upgrade test |
+| `sample_files/sample_blok_lahan.geojson` | Sample GeoJSON untuk test upload |
+| `sample_files/sample_blok_lahan.zip` | Sample SHP (zipped) untuk test upload |
 
 ---
 
@@ -331,6 +367,41 @@
 | File | Deskripsi |
 |------|-----------|
 | `config/fertilization.php` | Dosis Pahan 2013, window, reliability weights, engine version |
+| `config/app.php` | Konfigurasi aplikasi (timezone Asia/Makassar, locale id) |
+| `config/auth.php` | Guard admin (eloquent) |
+| `config/database.php` | MySQL (prod) + SQLite (testing) |
+| `config/session.php` | Session config |
+
+---
+
+## Deploy
+
+| File | Deskripsi |
+|------|-----------|
+| `deploy/PANDUAN_DEPLOY_INFINITYFREE.md` | Panduan deploy ke InfinityFree |
+| `deploy/PANDUAN_DEPLOY_RUMAHWEB.md` | Panduan deploy ke Rumahweb |
+| `deploy/htaccess-root.txt` | .htaccess untuk root folder shared hosting |
+| `deploy/setup-route.php` | Script setup route untuk shared hosting |
+
+---
+
+## CI/CD (GitHub Actions)
+
+| File | Deskripsi |
+|------|-----------|
+| `.github/workflows/tests.yml` | CI: setup PHP 8.2, MySQL 8, Pint, migrate, test, rollback, re-migrate, health-check |
+
+### Pipeline Steps
+1. Install PHP + Composer + Node
+2. `vendor/bin/pint --test` (code style)
+3. `php artisan migrate:fresh` (MySQL)
+4. `php artisan test` (283 tests)
+5. Rollback migrations (v2.5 → v2.8)
+6. Re-migrate
+7. `php artisan test` (second pass)
+8. `php artisan sawit:finalize-pahan-v2-9 --dry-run`
+9. `php artisan sawit:health-check --dry-run`
+10. `php artisan test --filter=DoubleSubmitRealizationTest`
 
 ---
 
@@ -338,15 +409,45 @@
 
 | File | Deskripsi |
 |------|-----------|
-| `PANDUAN_ADMIN_SINGKAT_V2_8.md` | Panduan admin 3–5 halaman |
+| `BASELINE_PAHAN_V2_9.md` | Baseline stabil v2.9 |
+| `REVISI_PAHAN_V2_9.md` | Perubahan v2.9 |
+| `CHECKLIST_DEMO_SKRIPSI_V2_9.md` | Checklist demo skripsi |
+| `FORM_UJI_PENGGUNA_V2_9.md` | Form uji pengguna |
+| `PANDUAN_PENGUJIAN_LAPANGAN_V2_9.md` | Panduan pengujian lapangan |
+| `KNOWN_LIMITATIONS_V2_9.md` | Batasan yang diketahui |
+| `BACKUP_DAN_PEMULIHAN_V2_9.md` | Prosedur backup & pemulihan |
+| `SECURITY_REVIEW_V2_9.md` | Review keamanan |
+| `PANDUAN_ADMIN_SINGKAT_V2_8.md` | Panduan admin singkat |
 | `ALUR_PENGGUNA_SAWITGIS_V2_8.md` | Alur kerja pengguna |
 | `UX_GUIDELINES_SAWITGIS_V2_8.md` | Panduan UX (warna, label, mobile) |
 | `PROGRAM_PEMUPUKAN_V2_8.md` | Arsitektur program pemupukan |
-| `MIGRASI_PAHAN_V2_8.md` | Panduan migrasi v2.8 |
-| `REVISI_PAHAN_V2_8.md` | Ringkasan perubahan v2.8 |
-| `AUDIT_PAHAN_V2_8.md` | Dokumentasi audit command |
-| `PENGUJIAN_PAHAN_V2_8.md` | Checklist pengujian |
-| `TRACEABILITY_PAHAN_V2_8.md` | Traceability requirement → test |
+| `HISTORI_OPERASIONAL_V2_7.md` | Histori operasional |
+| `PANDUAN_REALISASI_AMAN_V2_7.md` | Panduan realisasi aman |
+| `ARSITEKTUR_RBS_PAHAN_V2_5.md` | Arsitektur mesin analisis |
+| `ALUR_REALISASI_PEMUPUKAN_V2_6.md` | Alur realisasi pemupukan |
+
+---
+
+## Fitur Keamanan & Perlindungan
+
+### Double-Submit Protection (Realisasi Pemupukan)
+| Layer | Mekanisme |
+|-------|-----------|
+| Frontend | Tombol disable + spinner "Sedang menyimpan..." + block Enter key |
+| Backend Token | UUID submission_token (UNIQUE index, nullable untuk data lama) |
+| Semantik | Deteksi payload identik dalam 5 menit terakhir |
+| Transaksi | DB::transaction + lockForUpdate pada rekomendasi & program |
+| Optimistic Lock | `_expected_updated_at` pada form edit |
+| Re-check | Cek ulang token & eligibility di dalam transaksi (race condition) |
+
+### Keamanan Umum
+- CSRF protection pada semua form
+- AdminAuthenticated middleware
+- Password hashing (bcrypt)
+- Validasi server-side (tahap, rencana, tahun tidak dipercaya dari browser)
+- Halaman error custom tanpa stack trace
+- Debug off di production
+- Backup tidak di public/
 
 ---
 
@@ -355,10 +456,11 @@
 | Metrik | Nilai |
 |--------|-------|
 | Versi mesin | pahan-v2.9 |
-| Total file PHP (app) | ~60 |
-| Total migrations | 43 |
-| Total tests | 235 |
-| Total assertions | 628 |
-| Total views | ~35 blade files |
-| Code style | Laravel Pint (185 files PASS) |
-| Test duration | ~8 detik |
+| Total file PHP (app) | ~65 |
+| Total migrations | 44 |
+| Total tests | 283 |
+| Total assertions | 741 |
+| Total views | ~40 blade files |
+| Code style | Laravel Pint (204 files PASS) |
+| Test duration | ~9 detik |
+| CI pipeline | GitHub Actions (MySQL 8, PHP 8.2) |

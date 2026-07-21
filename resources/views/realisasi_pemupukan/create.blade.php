@@ -72,9 +72,10 @@
 <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-4 sm:p-6">
     <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4">✏️ Form Realisasi Pemupukan</h3>
 
-    <form method="POST" action="{{ route('realisasi-pemupukan.store') }}">
+    <form method="POST" action="{{ route('realisasi-pemupukan.store') }}" data-prevent-double-submit>
         @csrf
         <input type="hidden" name="rekomendasi_rbs_id" value="{{ $rekomendasiRbs->id }}">
+        <input type="hidden" name="submission_token" value="{{ $submissionToken }}">
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {{-- Tahap Aktif Sistem (TEKS, bukan pilihan) --}}
