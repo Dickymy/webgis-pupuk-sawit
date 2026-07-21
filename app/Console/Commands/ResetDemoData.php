@@ -73,7 +73,9 @@ class ResetDemoData extends Command
 
         DB::transaction(function () use ($demoBlokIds, $demoAnggota) {
             // Delete in order of dependencies
-            RekomendasiOperasionalHistory::whereIn('blok_lahan_id', $demoBlokIds)->delete();
+            // Histori operasional terhubung via rekomendasi_rbs_id
+            $rekomendasiIds = RekomendasiRbs::whereIn('blok_lahan_id', $demoBlokIds)->pluck('id');
+            RekomendasiOperasionalHistory::whereIn('rekomendasi_rbs_id', $rekomendasiIds)->delete();
             RealisasiPemupukan::whereIn('blok_lahan_id', $demoBlokIds)->delete();
             RekomendasiRbs::whereIn('blok_lahan_id', $demoBlokIds)->delete();
             ProgramPemupukan::whereIn('blok_lahan_id', $demoBlokIds)->delete();
