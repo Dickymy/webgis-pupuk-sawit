@@ -123,28 +123,46 @@
 {{-- Blok Perlu Tindakan --}}
 @if($blokPerluTindakan->isNotEmpty())
 <div class="mb-3 sm:mb-4 bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4">
-    <p class="text-xs font-bold text-amber-800 mb-2 flex items-center gap-1.5"><span>⚠️</span> Perlu Tindakan — {{ $blokPerluTindakan->count() }} Blok</p>
-    <div class="flex flex-wrap gap-2">
+    <div class="flex items-center justify-between mb-2">
+        <p class="text-xs font-bold text-amber-800 flex items-center gap-1.5"><span>⚠️</span> Perlu Tindakan — {{ $blokPerluTindakan->count() }} Blok</p>
+        @if($blokPerluTindakan->count() > 5)
+        <a href="{{ route('rbs.index') }}" class="text-[10px] text-amber-700 font-semibold hover:underline">Lihat semua →</a>
+        @endif
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
         @foreach($blokPerluTindakan->take(6) as $bp)
         @php
             if (!$bp->kondisiTerbaru) {
-                $keterangan = 'Belum ada data kondisi';
+                $keterangan = 'Belum ada kondisi lahan';
+                $icon = '📋';
             } elseif (!$bp->rekomendasiRbsTerbaru) {
                 $keterangan = 'Belum dianalisis';
+                $icon = '🔬';
+            } elseif ($bp->rekomendasiRbsTerbaru->tanggal_analisis->diffInDays(now()) > 90) {
+                $keterangan = 'Analisis lebih dari 90 hari';
+                $icon = '⏰';
+            } elseif ($bp->rekomendasiRbsTerbaru->status_stage === 'TAHAP_1_SIAP') {
+                $keterangan = 'Tahap 1 siap';
+                $icon = '🟢';
+            } elseif ($bp->rekomendasiRbsTerbaru->status_stage === 'TAHAP_1_SEBAGIAN') {
+                $keterangan = 'Tahap 1 belum selesai';
+                $icon = '🟡';
+            } elseif ($bp->rekomendasiRbsTerbaru->status_stage === 'TAHAP_2_SIAP') {
+                $keterangan = 'Tahap 2 siap';
+                $icon = '🟢';
             } else {
-                $keterangan = 'Terakhir ' . $bp->rekomendasiRbsTerbaru->tanggal_analisis->diffInDays(now()) . ' hari lalu';
+                $keterangan = 'Perlu ditindaklanjuti';
+                $icon = '📌';
             }
         @endphp
-        <a href="{{ $bp->kondisiTerbaru ? route('rbs.detail', $bp) : route('kondisi-lahan.create', ['blok_lahan_id' => $bp->id]) }}" class="flex items-center gap-2 px-3 py-2 bg-white border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors">
-            <div>
-                <p class="text-xs font-semibold text-slate-800">{{ $bp->nama_blok }}</p>
-                <p class="text-[10px] text-amber-700">{{ $bp->nama_pemilik }} · {{ $keterangan }}</p>
+        <a href="{{ $bp->kondisiTerbaru ? route('rbs.detail', $bp) : route('kondisi-lahan.create', ['blok_lahan_id' => $bp->id]) }}" class="flex items-center gap-2 px-2.5 py-1.5 bg-white border border-amber-100 rounded-lg hover:bg-amber-100/50 transition-colors">
+            <span class="text-sm flex-shrink-0">{{ $icon }}</span>
+            <div class="min-w-0">
+                <p class="text-[11px] font-semibold text-slate-800 truncate">{{ $bp->nama_blok }}</p>
+                <p class="text-[9px] text-amber-600 truncate">{{ $keterangan }}</p>
             </div>
         </a>
         @endforeach
-        @if($blokPerluTindakan->count() > 6)
-        <a href="{{ route('rbs.index') }}" class="flex items-center px-3 py-2 text-[10px] text-amber-700 font-semibold hover:underline">+{{ $blokPerluTindakan->count() - 6 }} lainnya →</a>
-        @endif
     </div>
 </div>
 @endif
@@ -374,7 +392,21 @@ function renderMapLayers(){
         mapLayers.push({id:blok.id,layer:layer});
         activeLayers.push(layer);
     });
-    if(activeLayers.length>0)map.fitBounds(L.featureGroup(activeLayers).getBounds().pad(0.1));
+    if(activeLayers.length>0){map.fitBounds(L.featureGroup(activeLayers).getBounds().pad(0.1));}
+    // Empty state: tampilkan pesan jika tidak ada polygon
+    var emptyEl=document.getElementById('map-empty-state');
+    if(activeLayers.length===0){
+        if(!emptyEl){
+            emptyEl=document.createElement('div');
+            emptyEl.id='map-empty-state';
+            emptyEl.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:45;text-align:center;padding:16px 24px;background:rgba(255,255,255,0.95);border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
+            emptyEl.innerHTML='<p style="font-size:13px;font-weight:600;color:#475569;">Belum ada batas blok lahan yang dapat ditampilkan pada peta.</p><p style="font-size:11px;color:#94a3b8;margin-top:4px;">Tambahkan polygon GeoJSON pada data blok lahan.</p>';
+            document.getElementById('map-body').appendChild(emptyEl);
+        }
+        emptyEl.style.display='';
+    } else {
+        if(emptyEl)emptyEl.style.display='none';
+    }
 }
 
 renderMapLayers();

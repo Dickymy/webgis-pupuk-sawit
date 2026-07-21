@@ -16,8 +16,8 @@ class StoreKondisiLahanRequest extends FormRequest
     {
         return [
             'blok_lahan_id' => ['required', 'exists:blok_lahans,id'],
-            'tanggal_observasi' => ['required', 'date'],
-            'tanggal_pemupukan_terakhir' => ['nullable', 'date'],
+            'tanggal_observasi' => ['required', 'date', 'before_or_equal:today'],
+            'tanggal_pemupukan_terakhir' => ['nullable', 'date', 'before_or_equal:today'],
             'ph_tanah' => ['nullable', 'numeric', 'min:3', 'max:8'],
             'metode_pengukuran_ph' => ['nullable', 'in:kertas_lakmus,ph_meter,estimasi,laboratorium'],
             'kelembaban_tanah' => ['nullable', 'string'],
@@ -43,6 +43,8 @@ class StoreKondisiLahanRequest extends FormRequest
         return [
             'blok_lahan_id.required' => 'Blok lahan wajib dipilih.',
             'tanggal_observasi.required' => 'Tanggal observasi wajib diisi.',
+            'tanggal_observasi.before_or_equal' => 'Tanggal observasi tidak boleh di masa depan.',
+            'tanggal_pemupukan_terakhir.before_or_equal' => 'Tanggal pemupukan terakhir tidak boleh di masa depan.',
             'ph_tanah.numeric' => 'pH tanah harus berupa angka.',
             'ph_tanah.min' => 'pH tanah minimal 3.0.',
             'ph_tanah.max' => 'pH tanah maksimal 8.0.',

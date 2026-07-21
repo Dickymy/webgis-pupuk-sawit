@@ -215,8 +215,48 @@ jobs:
           DB_USERNAME: root
           DB_PASSWORD: password
 
-      - name: Run finalize audit v2.8 (dry-run)
-        run: php artisan sawit:finalize-pahan-v2-8 --dry-run
+      - name: Run finalize audit v2.9 (dry-run)
+        run: php artisan sawit:finalize-pahan-v2-9 --dry-run
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: password
+
+      - name: Run health check
+        run: php artisan sawit:health-check --dry-run
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: password
+
+      - name: Run Database Health Check test
+        run: php artisan test --filter=DatabaseHealthCheckTest
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: password
+
+      - name: Run Demo Seeder Safety test
+        run: php artisan test --filter=DemoSeederSafetyTest
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: password
+
+      - name: Run Double Submit Realization test
+        run: php artisan test --filter=DoubleSubmitRealizationTest
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1

@@ -26,6 +26,7 @@
                     </label>
                     <input type="date" name="tanggal_observasi"
                         value="{{ old('tanggal_observasi', now()->format('Y-m-d')) }}"
+                        max="{{ now()->format('Y-m-d') }}"
                         class="w-full border border-slate-300 rounded-xl px-3 py-2.5 text-sm focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors @error('tanggal_observasi') border-red-400 @enderror"
                         required>
                     @error('tanggal_observasi')
@@ -825,9 +826,9 @@ function updateCuacaButton(blok) {
         // Blok dipilih tapi tidak ada koordinat
         btn.style.display = 'none';
         placeholder.style.display = 'block';
-        placeholder.innerHTML = '<p style="font-size:12px; color:#d97706; font-weight:500;">⚠️ Blok "' + blok.nama_blok + '" belum memiliki koordinat peta. Silakan isi data iklim secara manual.</p>';
-        hint.textContent = 'Blok belum memiliki koordinat peta.';
-        showToast('warning', '⚠️ Blok ini belum punya koordinat. Isi data iklim secara manual.');
+        placeholder.innerHTML = '<p style="font-size:12px; color:#d97706; font-weight:500;">⚠️ Koordinat blok belum tersedia. Masukkan curah hujan secara manual atau lengkapi lokasi blok.</p>';
+        hint.textContent = 'Koordinat blok belum tersedia.';
+        showToast('warning', '⚠️ Koordinat blok belum tersedia. Masukkan curah hujan secara manual.');
     } else {
         // Belum ada blok dipilih
         btn.style.display = 'none';

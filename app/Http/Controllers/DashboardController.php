@@ -109,8 +109,14 @@ class DashboardController extends Controller
             'terindikasi_defisiensi' => $rbsBulanLalu->where('status_kondisi_tanaman', 'TERINDIKASI_DEFISIENSI')->count(),
         ];
 
-        // Blok perlu tindakan
-        $blokPerluTindakan = $blokLahans->filter(function ($blok) {
+        // Blok perlu tindakan (lebih lengkap — v2.9)
+        $stagesSiapPerluTindakan = [
+            CurrentApplicationCalculator::TAHAP_1_SIAP,
+            CurrentApplicationCalculator::TAHAP_1_SEBAGIAN,
+            CurrentApplicationCalculator::TAHAP_2_SIAP,
+        ];
+
+        $blokPerluTindakan = $blokLahans->filter(function ($blok) use ($stagesSiapPerluTindakan) {
             // Belum punya kondisi
             if (! $blok->kondisiTerbaru) {
                 return true;
@@ -121,6 +127,10 @@ class DashboardController extends Controller
             }
             // Analisis kedaluwarsa (>90 hari)
             if ($blok->rekomendasiRbsTerbaru && $blok->rekomendasiRbsTerbaru->tanggal_analisis->diffInDays(now()) > 90) {
+                return true;
+            }
+            // Tahap siap (perlu dicatat realisasi)
+            if (in_array($blok->rekomendasiRbsTerbaru?->status_stage, $stagesSiapPerluTindakan)) {
                 return true;
             }
 

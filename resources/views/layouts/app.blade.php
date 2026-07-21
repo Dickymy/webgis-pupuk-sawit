@@ -344,6 +344,9 @@
                     <h1 class="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 truncate">@yield('page-title', 'Dashboard')</h1>
                     <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">@yield('page-subtitle', 'SPK Pemupukan Kelapa Sawit')</p>
                 </div>
+                @if(config('app.demo_mode'))
+                <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-100 text-purple-700 border border-purple-200 flex-shrink-0">Mode Demo</span>
+                @endif
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
                 {{-- Notification Bell --}}

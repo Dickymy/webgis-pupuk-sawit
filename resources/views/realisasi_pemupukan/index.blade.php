@@ -22,15 +22,12 @@
             </div>
             <div class="relative">
                 <select name="status_realisasi" onchange="this.form.submit()"
-                    class="w-full sm:w-auto pl-3 pr-8 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer appearance-none">
+                    class="w-full sm:w-auto pl-3 pr-8 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer">
                     <option value="">Semua Status</option>
                     <option value="SELESAI" {{ request('status_realisasi') === 'SELESAI' ? 'selected' : '' }}>Selesai</option>
                     <option value="SEBAGIAN" {{ request('status_realisasi') === 'SEBAGIAN' ? 'selected' : '' }}>Sebagian</option>
                     <option value="BATAL" {{ request('status_realisasi') === 'BATAL' ? 'selected' : '' }}>Dibatalkan</option>
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-2.5 flex items-center">
-                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </div>
             </div>
             @if(request()->hasAny(['anggota_id', 'status_realisasi']))
                 <a href="{{ route('realisasi-pemupukan.index') }}" class="text-xs text-slate-500 hover:text-slate-700 font-medium px-2 py-1.5">Reset</a>

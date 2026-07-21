@@ -52,7 +52,6 @@ class RecommendationReliabilityTest extends TestCase
             'kondisi_drainase' => 'Baik',
             'kondisi_pelepah' => 'Normal',
             'gejala_defisiensi' => ['N'],
-            'status_verifikasi_gejala' => 'terverifikasi',
         ]);
 
         $result = $this->service->calculate($blok, $kondisi, []);
