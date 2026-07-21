@@ -405,7 +405,7 @@ class FinalizePahanV2_8 extends Command
             // Cek apakah ada guard: is_tahap_siap, showRealisasi, atau in_array($statusStage
             if (str_contains($content, 'is_tahap_siap')
                 || str_contains($content, 'showRealisasi')
-                || str_contains($content, "in_array(\$statusStage")) {
+                || str_contains($content, 'in_array($statusStage')) {
                 $this->line('   ✓ Tombol realisasi dijaga oleh pemeriksaan kelayakan');
             } else {
                 $this->warn('   ⚠ Tombol realisasi mungkin muncul tanpa pemeriksaan kelayakan');
