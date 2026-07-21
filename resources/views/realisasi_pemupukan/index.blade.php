@@ -2,98 +2,160 @@
 
 @section('title', 'Realisasi Pemupukan')
 @section('page-title', 'Realisasi Pemupukan')
-@section('page-subtitle', 'Daftar seluruh realisasi pemupukan')
+@section('page-subtitle', 'Riwayat pelaksanaan pemupukan per anggota')
 
 @section('content')
+<div class="space-y-4">
 
-{{-- Filter --}}
-<div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-4 mb-5">
-    <form method="GET" action="{{ route('realisasi-pemupukan.index') }}" class="flex flex-wrap gap-3 items-end" data-no-prevent-double="true">
-        <div>
-            <label class="text-[10px] text-slate-500 uppercase font-semibold block mb-1">Status</label>
-            <select name="status_realisasi" class="text-sm border-slate-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-1.5 pr-8" style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22%236b7280%22><path fill-rule=%22evenodd%22 d=%22M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z%22 clip-rule=%22evenodd%22/></svg>');background-position:right 0.5rem center;background-repeat:no-repeat;background-size:1rem;">
-                <option value="">Semua</option>
-                <option value="SELESAI" {{ request('status_realisasi') === 'SELESAI' ? 'selected' : '' }}>Selesai</option>
-                <option value="SEBAGIAN" {{ request('status_realisasi') === 'SEBAGIAN' ? 'selected' : '' }}>Sebagian</option>
-                <option value="BATAL" {{ request('status_realisasi') === 'BATAL' ? 'selected' : '' }}>Batal</option>
-            </select>
+    {{-- Filter --}}
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <form method="GET" action="{{ route('realisasi-pemupukan.index') }}" id="realisasi-filter-form" data-no-prevent-double="true" class="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div class="flex-1 sm:max-w-[240px]">
+                @include('components.filter-searchable', [
+                    'name' => 'anggota_id',
+                    'placeholder' => 'Cari pemilik...',
+                    'options' => $anggotas,
+                    'displayField' => 'nama',
+                    'selected' => request('anggota_id'),
+                    'formId' => 'realisasi-filter-form',
+                ])
+            </div>
+            <div class="relative">
+                <select name="status_realisasi" onchange="this.form.submit()"
+                    class="w-full sm:w-auto pl-3 pr-8 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer appearance-none">
+                    <option value="">Semua Status</option>
+                    <option value="SELESAI" {{ request('status_realisasi') === 'SELESAI' ? 'selected' : '' }}>Selesai</option>
+                    <option value="SEBAGIAN" {{ request('status_realisasi') === 'SEBAGIAN' ? 'selected' : '' }}>Sebagian</option>
+                    <option value="BATAL" {{ request('status_realisasi') === 'BATAL' ? 'selected' : '' }}>Dibatalkan</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-2.5 flex items-center">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+            </div>
+            @if(request()->hasAny(['anggota_id', 'status_realisasi']))
+                <a href="{{ route('realisasi-pemupukan.index') }}" class="text-xs text-slate-500 hover:text-slate-700 font-medium px-2 py-1.5">Reset</a>
+            @endif
+        </form>
+    </div>
+
+    {{-- Grouped by Anggota --}}
+    @forelse($grouped as $group)
+    @php $anggota = $group['anggota']; $items = $group['items']; @endphp
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        {{-- Header anggota --}}
+        <div class="px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    {{ strtoupper(substr($anggota->nama ?? '?', 0, 1)) }}
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800 text-sm">{{ $anggota->nama ?? 'Tidak Diketahui' }}</p>
+                    @php
+                        $aktif = $items->where('status_realisasi', '!=', 'BATAL');
+                    @endphp
+                    <p class="text-[10px] text-slate-500">{{ $aktif->count() }} realisasi aktif · Urea {{ number_format($aktif->sum('urea_realisasi_kg'), 1) }} kg · KCl {{ number_format($aktif->sum('kcl_realisasi_kg'), 1) }} kg</p>
+                </div>
+            </div>
         </div>
-        <div>
-            <label class="text-[10px] text-slate-500 uppercase font-semibold block mb-1">Tahun</label>
-            <select name="tahun_program" class="text-sm border-slate-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg px-3 py-1.5 pr-8" style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 20 20%22 fill=%22%236b7280%22><path fill-rule=%22evenodd%22 d=%22M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z%22 clip-rule=%22evenodd%22/></svg>');background-position:right 0.5rem center;background-repeat:no-repeat;background-size:1rem;">
-                <option value="">Semua</option>
-                @for($y = now()->year; $y >= 2024; $y--)
-                <option value="{{ $y }}" {{ request('tahun_program') == $y ? 'selected' : '' }}>{{ $y }}</option>
-                @endfor
-            </select>
+
+        {{-- Desktop Table --}}
+        <div class="hidden sm:block">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-slate-100 bg-slate-50/50">
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-slate-400 uppercase">Tanggal</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-slate-400 uppercase">Blok Lahan</th>
+                        <th class="px-4 py-2 text-center text-[10px] font-semibold text-slate-400 uppercase">Tahap</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold text-slate-400 uppercase">Urea (kg)</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold text-slate-400 uppercase">KCl (kg)</th>
+                        <th class="px-4 py-2 text-center text-[10px] font-semibold text-slate-400 uppercase">Status</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold text-slate-400 uppercase">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @foreach($items as $realisasi)
+                    @php
+                        $statusStyle = match($realisasi->status_realisasi) {
+                            'SELESAI' => 'bg-green-100 text-green-800',
+                            'SEBAGIAN' => 'bg-amber-100 text-amber-800',
+                            'BATAL' => 'bg-red-100 text-red-800',
+                            default => 'bg-slate-100 text-slate-600',
+                        };
+                        $isBatal = $realisasi->status_realisasi === 'BATAL';
+                        $tahapLabel = $realisasi->tahap === 1 ? 'Tahap 1' : 'Tahap 2';
+                        $tahapColor = $realisasi->tahap === 1 ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
+                    @endphp
+                    <tr class="hover:bg-slate-50/50 {{ $isBatal ? 'opacity-50' : '' }}">
+                        <td class="px-4 py-2.5 text-xs text-slate-600 whitespace-nowrap">{{ $realisasi->tanggal_realisasi->format('d/m/Y') }}</td>
+                        <td class="px-4 py-2.5">
+                            <p class="text-xs font-semibold text-slate-800">{{ $realisasi->blokLahan->nama_blok ?? '-' }}</p>
+                        </td>
+                        <td class="px-4 py-2.5 text-center">
+                            <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold {{ $tahapColor }}">{{ $tahapLabel }}</span>
+                        </td>
+                        <td class="px-4 py-2.5 text-right text-xs font-semibold text-slate-800 whitespace-nowrap">{{ number_format($realisasi->urea_realisasi_kg, 1) }}</td>
+                        <td class="px-4 py-2.5 text-right text-xs font-semibold text-slate-800 whitespace-nowrap">{{ number_format($realisasi->kcl_realisasi_kg, 1) }}</td>
+                        <td class="px-4 py-2.5 text-center">
+                            <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $statusStyle }}">
+                                {{ $realisasi->label_status }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-2.5 text-right">
+                            <a href="{{ route('realisasi-pemupukan.show', $realisasi) }}" class="inline-flex items-center px-2.5 py-1 bg-slate-50 border border-slate-200 text-slate-600 hover:text-blue-700 hover:bg-blue-50 hover:border-blue-200 text-[10px] font-medium rounded-lg transition-colors">
+                                Detail
+                            </a>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
-        <button type="submit" class="px-4 py-1.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors">Filter</button>
-        @if(request()->hasAny(['status_realisasi', 'tahun_program', 'blok_lahan_id']))
-        <a href="{{ route('realisasi-pemupukan.index') }}" class="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors">Reset</a>
-        @endif
-    </form>
+
+        {{-- Mobile Cards --}}
+        <div class="sm:hidden divide-y divide-slate-100">
+            @foreach($items as $realisasi)
+            @php
+                $statusStyle = match($realisasi->status_realisasi) {
+                    'SELESAI' => 'bg-green-100 text-green-800',
+                    'SEBAGIAN' => 'bg-amber-100 text-amber-800',
+                    'BATAL' => 'bg-red-100 text-red-800',
+                    default => 'bg-slate-100 text-slate-600',
+                };
+                $isBatal = $realisasi->status_realisasi === 'BATAL';
+                $tahapLabel = $realisasi->tahap === 1 ? 'Tahap 1' : 'Tahap 2';
+                $tahapColor = $realisasi->tahap === 1 ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
+            @endphp
+            <a href="{{ route('realisasi-pemupukan.show', $realisasi) }}" class="block px-4 py-3 hover:bg-slate-50 transition-colors {{ $isBatal ? 'opacity-50' : '' }}">
+                <div class="flex items-center justify-between mb-1.5">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold {{ $tahapColor }}">{{ $tahapLabel }}</span>
+                        <span class="text-xs font-semibold text-slate-800">{{ $realisasi->blokLahan->nama_blok ?? '-' }}</span>
+                    </div>
+                    <span class="inline-flex px-1.5 py-0.5 rounded-full text-[9px] font-semibold {{ $statusStyle }} flex-shrink-0">{{ $realisasi->label_status }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3 text-[11px]">
+                        <span class="text-slate-500">Urea: <strong class="text-slate-800">{{ number_format($realisasi->urea_realisasi_kg, 1) }} kg</strong></span>
+                        <span class="text-slate-500">KCl: <strong class="text-slate-800">{{ number_format($realisasi->kcl_realisasi_kg, 1) }} kg</strong></span>
+                    </div>
+                    <span class="text-[10px] text-slate-400">{{ $realisasi->tanggal_realisasi->format('d/m/Y') }}</span>
+                </div>
+            </a>
+            @endforeach
+        </div>
+    </div>
+    @empty
+    <div class="bg-white border border-slate-200 rounded-xl p-8 sm:p-12 text-center shadow-sm">
+        <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        </div>
+        <p class="text-slate-600 text-sm font-medium mb-1">Belum ada realisasi pemupukan.</p>
+        <p class="text-slate-400 text-xs mb-3">Catat realisasi setelah rekomendasi analisis tersedia dan tahap siap dilaksanakan.</p>
+        <a href="{{ route('rbs.index') }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Buka Analisis Pemupukan
+        </a>
+    </div>
+    @endforelse
 </div>
-
-{{-- Tabel --}}
-<div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
-    @if($realisasis->isEmpty())
-    <div class="p-8 text-center">
-        <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center mx-auto mb-3">
-            <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        </div>
-        <p class="text-sm text-slate-500 dark:text-slate-400">Belum ada realisasi pemupukan yang tercatat.</p>
-        <p class="text-xs text-slate-400 mt-1">Catat realisasi melalui halaman detail analisis RBS.</p>
-    </div>
-    @else
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead class="bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
-                <tr>
-                    <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Tanggal</th>
-                    <th class="px-4 py-3 text-left font-semibold text-slate-600 dark:text-slate-300">Blok</th>
-                    <th class="px-4 py-3 text-center font-semibold text-slate-600 dark:text-slate-300">Tahap</th>
-                    <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">Urea (kg)</th>
-                    <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">KCl (kg)</th>
-                    <th class="px-4 py-3 text-center font-semibold text-slate-600 dark:text-slate-300">Status</th>
-                    <th class="px-4 py-3 text-center font-semibold text-slate-600 dark:text-slate-300">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-                @foreach($realisasis as $r)
-                @php
-                    $statusColor = match($r->status_realisasi) {
-                        'SELESAI' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-                        'SEBAGIAN' => 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
-                        'BATAL' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
-                        default => 'bg-slate-100 text-slate-600',
-                    };
-                @endphp
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <td class="px-4 py-3 text-slate-800 dark:text-slate-200">{{ $r->tanggal_realisasi->format('d/m/Y') }}</td>
-                    <td class="px-4 py-3">
-                        <p class="font-medium text-slate-800 dark:text-slate-200">{{ $r->blokLahan->nama_blok ?? '-' }}</p>
-                        <p class="text-xs text-slate-400">{{ $r->blokLahan->anggota->nama ?? '-' }}</p>
-                    </td>
-                    <td class="px-4 py-3 text-center">
-                        <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">{{ $r->tahap }}</span>
-                    </td>
-                    <td class="px-4 py-3 text-right font-medium text-slate-800 dark:text-slate-200">{{ number_format($r->urea_realisasi_kg, 1) }}</td>
-                    <td class="px-4 py-3 text-right font-medium text-slate-800 dark:text-slate-200">{{ number_format($r->kcl_realisasi_kg, 1) }}</td>
-                    <td class="px-4 py-3 text-center">
-                        <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold {{ $statusColor }}">{{ $r->label_status }}</span>
-                    </td>
-                    <td class="px-4 py-3 text-center">
-                        <a href="{{ route('realisasi-pemupukan.show', $r) }}" class="text-xs text-emerald-600 hover:text-emerald-700 font-medium hover:underline">Detail</a>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-    <div class="px-4 py-3 border-t border-slate-100 dark:border-slate-700">
-        {{ $realisasis->links() }}
-    </div>
-    @endif
-</div>
-
 @endsection

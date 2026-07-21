@@ -44,6 +44,12 @@ class RealisasiEligibilityService
     /**
      * Evaluasi kelayakan pencatatan realisasi.
      *
+     * Pahan v2.8:
+     * - Tolak rekomendasi historis (is_latest = false)
+     * - Tolak jika program bukan AKTIF
+     * - Tolak jika rekomendasi tidak terhubung ke program aktif
+     * - Gunakan program.tahun_program bukan now()->year secara buta
+     *
      * @return array{
      *   boleh_mencatat: bool,
      *   active_stage: int,
@@ -62,18 +68,41 @@ class RealisasiEligibilityService
     {
         $blok = $rekomendasi->blokLahan;
 
-        // Tentukan program pemupukan aktif
-        $tahunProgram = now()->year;
-        $program = ProgramPemupukan::where('blok_lahan_id', $blok->id)
-            ->where('tahun_program', $tahunProgram)
-            ->where('status_program', ProgramPemupukan::STATUS_AKTIF)
-            ->first();
+        // Pahan v2.8: Tolak rekomendasi historis
+        if (! $rekomendasi->is_latest) {
+            return $this->reject(
+                'Realisasi tidak dapat dicatat dari rekomendasi historis. Gunakan rekomendasi terbaru pada program aktif.'
+            );
+        }
 
-        // Ambil ringkasan realisasi
-        $realizationSummary = $this->realizationService->getRealizationSummary(
-            $blok,
-            $rekomendasi->id
-        );
+        // Pahan v2.8: Tentukan program pemupukan aktif
+        // Gunakan program dari rekomendasi jika sudah terhubung
+        $program = null;
+        if ($rekomendasi->program_pemupukan_id) {
+            $program = ProgramPemupukan::find($rekomendasi->program_pemupukan_id);
+            if ($program && ! $program->isAktif()) {
+                return $this->reject(
+                    'Program pemupukan terkait rekomendasi ini sudah berstatus '
+                    .$program->label_status.'. Gunakan program aktif.'
+                );
+            }
+        }
+
+        // Jika rekomendasi belum punya program, cari program aktif untuk blok
+        if (! $program) {
+            $tahunProgram = now()->year;
+            $program = ProgramPemupukan::where('blok_lahan_id', $blok->id)
+                ->where('tahun_program', $tahunProgram)
+                ->where('status_program', ProgramPemupukan::STATUS_AKTIF)
+                ->first();
+        }
+
+        $tahunProgram = $program ? $program->tahun_program : now()->year;
+
+        // Ambil ringkasan realisasi berbasis program (Pahan v2.8)
+        $realizationSummary = $program
+            ? $this->realizationService->getRealizationSummaryForProgram($program)
+            : $this->realizationService->getRealizationSummary($blok, $rekomendasi->id);
 
         // Evaluasi kelayakan waktu dari kondisi terbaru
         $kondisi = $blok->kondisiTerbaru;
@@ -121,6 +150,26 @@ class RealisasiEligibilityService
             'realization_summary' => $realizationSummary,
             'window_result' => $windowResult,
             'current_app' => $currentApp,
+        ];
+    }
+
+    /**
+     * Buat response penolakan standar.
+     */
+    private function reject(string $reason): array
+    {
+        return [
+            'boleh_mencatat' => false,
+            'active_stage' => 0,
+            'status_stage' => '',
+            'urea_rencana_kg' => 0,
+            'kcl_rencana_kg' => 0,
+            'tahun_program' => now()->year,
+            'program_pemupukan_id' => null,
+            'reason' => $reason,
+            'realization_summary' => [],
+            'window_result' => ['layak' => false, 'alasan' => [$reason]],
+            'current_app' => [],
         ];
     }
 }

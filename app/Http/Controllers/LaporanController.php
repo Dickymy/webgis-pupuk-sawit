@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Anggota;
 use App\Models\BlokLahan;
 use App\Models\RekomendasiRbs;
+use App\Services\CurrentApplicationCalculator;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
@@ -20,9 +21,23 @@ class LaporanController extends Controller
             $query->where('is_latest', true);
         }
 
-        // Filter by status
-        if ($request->filled('status_kebutuhan_dominan')) {
-            $query->where('status_kebutuhan_dominan', $request->status_kebutuhan_dominan);
+        // Pahan v2.8: Filter berdasarkan status baru (bukan legacy)
+        if ($request->filled('status_kondisi_tanaman')) {
+            $query->where('status_kondisi_tanaman', $request->status_kondisi_tanaman);
+        }
+
+        if ($request->filled('status_kelayakan_aplikasi')) {
+            $query->where('status_kelayakan_aplikasi', $request->status_kelayakan_aplikasi);
+        }
+
+        if ($request->filled('status_stage')) {
+            $query->where('status_stage', $request->status_stage);
+        }
+
+        if ($request->filled('status_program')) {
+            $query->whereHas('programPemupukan', function ($q) use ($request) {
+                $q->where('status_program', $request->status_program);
+            });
         }
 
         // Filter by anggota
@@ -44,13 +59,23 @@ class LaporanController extends Controller
             return $r->blokLahan->anggota_id ?? 0;
         });
 
-        // Build structured data per anggota — sort: yang baru dianalisis di atas
-        $laporanPerAnggota = $grouped->map(function ($items, $anggotaId) {
+        // Pahan v2.8: Blok dianggap siap jika status_stage mengizinkan realisasi
+        // DAN urea/kcl_aplikasi_saat_ini > 0
+        $stagesSiap = [
+            CurrentApplicationCalculator::TAHAP_1_SIAP,
+            CurrentApplicationCalculator::TAHAP_1_SEBAGIAN,
+            CurrentApplicationCalculator::TAHAP_2_SIAP,
+        ];
+
+        // Build structured data per anggota
+        $laporanPerAnggota = $grouped->map(function ($items, $anggotaId) use ($stagesSiap) {
             $anggota = $items->first()->blokLahan->anggota;
 
-            // Hanya hitung total dari blok yang layak dipupuk (Normal/Segera)
-            $blokLayak = $items->filter(function ($r) {
-                return in_array($r->status_kebutuhan_dominan, ['Normal', 'Segera']);
+            // Pahan v2.8: Subtotal berdasarkan urea_aplikasi_saat_ini dan kcl_aplikasi_saat_ini
+            // dari blok yang siap (status_stage izinkan realisasi)
+            $blokSiap = $items->filter(function ($r) use ($stagesSiap) {
+                return in_array($r->status_stage, $stagesSiap)
+                    && (($r->urea_aplikasi_saat_ini ?? 0) > 0 || ($r->kcl_aplikasi_saat_ini ?? 0) > 0);
             });
 
             $latestAnalisis = $items->max(fn ($r) => $r->tanggal_analisis?->timestamp ?? 0);
@@ -60,22 +85,24 @@ class LaporanController extends Controller
                 'items' => $items,
                 'jumlah_blok' => $items->count(),
                 'total_luas' => $items->sum(fn ($r) => $r->blokLahan->luas_ha),
-                'subtotal_urea' => $blokLayak->sum('total_urea'),
-                'subtotal_kcl' => $blokLayak->sum('total_kcl'),
-                'blok_layak' => $blokLayak->count(),
+                'subtotal_urea' => $blokSiap->sum('urea_aplikasi_saat_ini'),
+                'subtotal_kcl' => $blokSiap->sum('kcl_aplikasi_saat_ini'),
+                'blok_layak' => $blokSiap->count(),
                 'latest_analisis' => $latestAnalisis,
             ];
         })->sortByDesc('latest_analisis')->values();
 
-        // Grand total — hanya dari blok layak pupuk (status Normal + Segera)
-        $rekapLayak = $rekap->filter(function ($r) {
-            return in_array($r->status_kebutuhan_dominan, ['Normal', 'Segera']);
+        // Pahan v2.8: Grand total — berdasarkan urea_aplikasi_saat_ini / kcl_aplikasi_saat_ini
+        // dari blok yang status_stage siap
+        $rekapSiap = $rekap->filter(function ($r) use ($stagesSiap) {
+            return in_array($r->status_stage, $stagesSiap)
+                && (($r->urea_aplikasi_saat_ini ?? 0) > 0 || ($r->kcl_aplikasi_saat_ini ?? 0) > 0);
         });
-        $totalUrea = $rekapLayak->sum('total_urea');
-        $totalKcl = $rekapLayak->sum('total_kcl');
+        $totalUrea = $rekapSiap->sum('urea_aplikasi_saat_ini');
+        $totalKcl = $rekapSiap->sum('kcl_aplikasi_saat_ini');
         $karungUrea = $totalUrea > 0 ? (int) ceil($totalUrea / 50) : 0;
         $karungKcl = $totalKcl > 0 ? (int) ceil($totalKcl / 50) : 0;
-        $blokLayakTotal = $rekapLayak->count();
+        $blokLayakTotal = $rekapSiap->count();
 
         // Dropdown data
         $anggotas = Anggota::orderBy('nama')->get();

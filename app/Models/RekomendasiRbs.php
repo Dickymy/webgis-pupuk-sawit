@@ -6,12 +6,15 @@ use App\Enums\ApplicationFeasibilityStatus;
 use App\Enums\PlantConditionStatus;
 use App\Enums\PlantPhase;
 use App\Services\CurrentApplicationCalculator;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RekomendasiRbs extends Model
 {
+    use HasFactory;
+
     protected $table = 'rekomendasi_rbs';
 
     protected $fillable = [

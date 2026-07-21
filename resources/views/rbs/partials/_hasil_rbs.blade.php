@@ -243,6 +243,40 @@ $warna = match($rbs->status_kondisi_tanaman) {
     </div>
     @endif
 
+    {{-- Pahan v2.8: Detail Teknis (collapsible) --}}
+    <details class="bg-slate-50 border border-slate-200 rounded-xl">
+        <summary class="px-3 py-2.5 text-xs font-semibold text-slate-600 cursor-pointer hover:text-slate-800 select-none flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            Lihat Detail Teknis
+        </summary>
+        <div class="px-3 pb-3 space-y-2 text-[10px] text-slate-500">
+            @if($rbs->versi_mesin_rekomendasi)
+            <p>Mesin: <span class="font-mono font-medium text-slate-700">{{ $rbs->versi_mesin_rekomendasi }}</span></p>
+            @endif
+            @if($rbs->analysis_fingerprint)
+            <p>Fingerprint: <span class="font-mono text-slate-600 break-all">{{ substr($rbs->analysis_fingerprint, 0, 16) }}…</span></p>
+            @endif
+            @if($rbs->strategi_estimasi_dosis)
+            <p>Strategi dosis: <span class="font-medium text-slate-700">{{ $rbs->strategi_estimasi_dosis }}</span></p>
+            @endif
+            @if($rbs->kelengkapan_data_score)
+            <p>Skor keandalan: <span class="font-medium text-slate-700">{{ $rbs->kelengkapan_data_score }}% ({{ $rbs->kategori_keandalan ?? '-' }})</span></p>
+            @endif
+            @if($rbs->program_pemupukan_id)
+            <p>Program ID: <span class="font-mono text-slate-700">{{ $rbs->program_pemupukan_id }}</span></p>
+            @endif
+            @if($rbs->status_stage)
+            <p>Status Stage: <span class="font-mono text-slate-700">{{ $rbs->status_stage }}</span></p>
+            @endif
+            @if($rbs->nomor_analisis)
+            <p>Nomor Analisis: <span class="font-mono text-slate-700">#{{ $rbs->nomor_analisis }}</span></p>
+            @endif
+            @if($rbs->metode_perhitungan_umur)
+            <p>Metode umur: <span class="font-medium text-slate-700">{{ $rbs->metode_perhitungan_umur }}</span></p>
+            @endif
+        </div>
+    </details>
+
     {{-- Footer --}}
     <div class="flex items-center justify-between pt-1">
         <p class="text-xs text-slate-400">

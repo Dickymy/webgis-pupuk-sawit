@@ -272,20 +272,20 @@
                 Analisis Pemupukan
             </a>
 
-            <a href="{{ route('laporan.index') }}"
-               class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('laporan.*') ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-emerald-700 dark:hover:text-emerald-400' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                Laporan & Rekap
-            </a>
-
             <a href="{{ route('realisasi-pemupukan.index') }}"
                class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('realisasi-pemupukan.*') ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-emerald-700 dark:hover:text-emerald-400' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                 </svg>
                 Realisasi Pemupukan
+            </a>
+
+            <a href="{{ route('laporan.index') }}"
+               class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('laporan.*') ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-emerald-700 dark:hover:text-emerald-400' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Laporan & Rekap
             </a>
 
             <p class="px-3 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 mt-4">Lainnya</p>
@@ -346,62 +346,59 @@
                 </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
-                {{-- Notification Bell (E3) --}}
+                {{-- Notification Bell --}}
                 <div class="relative" id="notif-wrapper">
                     <button onclick="toggleNotifDropdown()" class="relative p-1.5 sm:p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" type="button">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                        @if(($jumlahNotifDarurat ?? 0) > 0)
-                        <span class="absolute top-1.5 right-1.5 flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                        </span>
+                        @if(($totalNotifBadge ?? 0) > 0)
+                        <span class="absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold bg-red-500 text-white">{{ $totalNotifBadge > 9 ? '9+' : $totalNotifBadge }}</span>
                         @endif
                     </button>
                     {{-- Dropdown --}}
-                    <div id="notif-dropdown" class="notif-dropdown-panel absolute right-0 top-full mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 hidden overflow-hidden" style="width:290px;max-width:calc(100vw - 32px);">
-                        <div class="px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                            <p class="text-xs font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">Blok Defisiensi Berat</p>
-                            @if(($jumlahNotifDarurat ?? 0) > 0)
-                            <span class="inline-flex px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-100 text-red-700">{{ $jumlahNotifDarurat }}</span>
+                    <div id="notif-dropdown" class="notif-dropdown-panel absolute right-0 top-full mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 hidden overflow-hidden" style="width:320px;max-width:calc(100vw - 32px);">
+                        {{-- Tabs --}}
+                        <div class="flex border-b border-slate-100 dark:border-slate-700">
+                            <button type="button" onclick="switchNotifTab('peringatan')" id="tab-peringatan" class="flex-1 px-3 py-2 text-[11px] font-semibold text-center border-b-2 border-emerald-600 text-emerald-700">
+                                Peringatan @if(($jumlahNotifDarurat ?? 0) > 0)<span class="ml-1 inline-flex px-1 py-0.5 rounded text-[8px] bg-red-100 text-red-700">{{ $jumlahNotifDarurat }}</span>@endif
+                            </button>
+                            <button type="button" onclick="switchNotifTab('aktivitas')" id="tab-aktivitas" class="flex-1 px-3 py-2 text-[11px] font-semibold text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700">
+                                Aktivitas @if(($unreadNotifCount ?? 0) > 0)<span class="ml-1 inline-flex px-1 py-0.5 rounded text-[8px] bg-blue-100 text-blue-700">{{ $unreadNotifCount }}</span>@endif
+                            </button>
+                        </div>
+
+                        {{-- Tab Peringatan (defisiensi berat) --}}
+                        <div id="panel-peringatan">
+                            @if(($notifBlokDarurat ?? collect())->isEmpty())
+                            <div class="px-4 py-6 text-center">
+                                <p class="text-xs text-slate-500">Tidak ada peringatan saat ini.</p>
+                            </div>
+                            @else
+                            <div class="max-h-52 overflow-y-auto divide-y divide-slate-100">
+                                @foreach($notifBlokDarurat ?? [] as $nb)
+                                @php $latestRbs = $nb->rekomendasiRbsTerbaru; @endphp
+                                <a href="{{ route('rbs.detail', $nb) }}" class="flex items-start gap-2.5 px-4 py-2.5 hover:bg-slate-50 transition-colors">
+                                    <div class="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 text-[10px] mt-0.5">🚨</div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-[11px] font-semibold text-slate-800 truncate">{{ $nb->nama_blok }} <span class="font-normal text-slate-400">· {{ $nb->anggota?->nama ?? '-' }}</span></p>
+                                        <p class="text-[10px] text-red-600">Defisiensi berat · {{ $latestRbs?->tanggal_analisis?->diffForHumans() }}</p>
+                                    </div>
+                                </a>
+                                @endforeach
+                            </div>
                             @endif
                         </div>
-                        @if(($notifBlokDarurat ?? collect())->isEmpty())
-                        <div class="px-4 py-8 text-center flex flex-col items-center justify-center">
-                            <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-2.5 border border-emerald-100">
-                                🛡️
+
+                        {{-- Tab Aktivitas (notifikasi database) --}}
+                        <div id="panel-aktivitas" class="hidden">
+                            <div id="notif-aktivitas-list" class="max-h-52 overflow-y-auto">
+                                <div class="px-4 py-6 text-center">
+                                    <p class="text-xs text-slate-400">Memuat...</p>
+                                </div>
                             </div>
-                            <p class="text-xs text-slate-800 font-bold">Semua Blok Lahan Aman</p>
-                            <p class="text-[10px] text-slate-500 mt-1 leading-relaxed max-w-[200px] mx-auto">Tidak ada blok lahan yang mengalami defisiensi unsur hara tingkat berat saat ini.</p>
+                            <div class="px-3 py-2 border-t border-slate-100 bg-slate-50 text-center">
+                                <button type="button" onclick="markAllNotifRead()" class="text-[10px] text-emerald-600 font-bold hover:text-emerald-700 hover:underline">Tandai Semua Dibaca</button>
+                            </div>
                         </div>
-                        @else
-                        <div class="max-h-60 overflow-y-auto divide-y divide-slate-100">
-                            @foreach($notifBlokDarurat ?? [] as $nb)
-                            @php $latestRbs = $nb->rekomendasiRbsTerbaru; @endphp
-                            <a href="{{ route('rbs.detail', $nb) }}" class="flex items-start gap-2.5 px-4 py-3 hover:bg-slate-50 transition-colors">
-                                <div class="w-6 h-6 rounded-full bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
-                                    🚨
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <p class="text-xs font-bold text-slate-800 truncate leading-tight">{{ $nb->nama_blok }}</p>
-                                    <p class="text-[10px] text-slate-500 truncate mt-0.5">Pemilik: {{ $nb->anggota?->nama ?? '-' }}</p>
-                                    @if($latestRbs)
-                                    <p class="text-[9px] text-red-500 mt-0.5 font-semibold">Defisiensi Berat · {{ $latestRbs->tanggal_analisis->diffForHumans() }}</p>
-                                    @if(!empty($latestRbs->masalah_teridentifikasi))
-                                    <div class="flex flex-wrap gap-1 mt-1">
-                                        @foreach(array_slice($latestRbs->masalah_teridentifikasi, 0, 2) as $m)
-                                        <span class="px-1.5 py-0.5 bg-red-50 text-red-700 border border-red-100 rounded text-[8px] font-medium leading-none whitespace-nowrap truncate max-w-[120px]">{{ $m }}</span>
-                                        @endforeach
-                                    </div>
-                                    @endif
-                                    @endif
-                                </div>
-                            </a>
-                            @endforeach
-                        </div>
-                        <div class="px-4 py-2 border-t border-slate-100 bg-slate-50 text-center">
-                            <a href="{{ route('rbs.index') }}" class="text-[10px] text-emerald-600 font-bold hover:text-emerald-700 hover:underline">Lihat Semua Blok →</a>
-                        </div>
-                        @endif
                     </div>
                 </div>
 
@@ -511,7 +508,7 @@
         }
     });
 
-    // Notification dropdown toggle (E3)
+    // Notification dropdown toggle
     function toggleNotifDropdown() {
         var dd = document.getElementById('notif-dropdown');
         dd.classList.toggle('hidden');
@@ -522,6 +519,108 @@
             document.getElementById('notif-dropdown').classList.add('hidden');
         }
     });
+
+    // Notification tabs
+    function switchNotifTab(tab) {
+        var tabPeringatan = document.getElementById('tab-peringatan');
+        var tabAktivitas = document.getElementById('tab-aktivitas');
+        var panelPeringatan = document.getElementById('panel-peringatan');
+        var panelAktivitas = document.getElementById('panel-aktivitas');
+
+        if (tab === 'peringatan') {
+            tabPeringatan.classList.add('border-emerald-600', 'text-emerald-700');
+            tabPeringatan.classList.remove('border-transparent', 'text-slate-500');
+            tabAktivitas.classList.remove('border-emerald-600', 'text-emerald-700');
+            tabAktivitas.classList.add('border-transparent', 'text-slate-500');
+            panelPeringatan.classList.remove('hidden');
+            panelAktivitas.classList.add('hidden');
+        } else {
+            tabAktivitas.classList.add('border-emerald-600', 'text-emerald-700');
+            tabAktivitas.classList.remove('border-transparent', 'text-slate-500');
+            tabPeringatan.classList.remove('border-emerald-600', 'text-emerald-700');
+            tabPeringatan.classList.add('border-transparent', 'text-slate-500');
+            panelAktivitas.classList.remove('hidden');
+            panelPeringatan.classList.add('hidden');
+            loadNotifAktivitas();
+        }
+    }
+
+    // Load aktivitas notifications via API
+    var notifLoaded = false;
+    function loadNotifAktivitas() {
+        notifLoaded = true;
+        var list = document.getElementById('notif-aktivitas-list');
+        list.innerHTML = '<div class="px-4 py-6 text-center"><p class="text-xs text-slate-400">Memuat...</p></div>';
+        fetch('{{ route("notifications.recent") }}', {headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json'}})
+            .then(function(r){return r.json();})
+            .then(function(data){
+                if (!data.notifications || data.notifications.length === 0) {
+                    list.innerHTML = '<div class="px-4 py-6 text-center"><p class="text-xs text-slate-400">Belum ada aktivitas.</p></div>';
+                    updateBadgeCount(0);
+                    return;
+                }
+                var html = '<div class="divide-y divide-slate-100">';
+                data.notifications.forEach(function(n){
+                    var icon = n.tipe === 'program_selesai' ? '✅' : (n.tipe === 'realisasi_sebagian' ? '⚠️' : (n.tipe === 'tahap_siap' ? '🔔' : '📝'));
+                    var bgClass = n.dibaca ? '' : 'bg-blue-50/50';
+                    html += '<a href="'+(n.url||'#')+'" class="flex items-start gap-2.5 px-4 py-2.5 hover:bg-slate-50 transition-colors '+bgClass+'" onclick="markNotifRead(\''+n.id+'\')">';
+                    html += '<span class="text-sm mt-0.5">'+icon+'</span>';
+                    html += '<div class="min-w-0 flex-1">';
+                    html += '<p class="text-[11px] font-semibold text-slate-800">'+(n.judul||'')+'</p>';
+                    html += '<p class="text-[10px] text-slate-500 truncate">'+(n.pesan||'')+'</p>';
+                    html += '<p class="text-[9px] text-slate-400 mt-0.5">'+(n.waktu||'')+'</p>';
+                    html += '</div></a>';
+                });
+                html += '</div>';
+                list.innerHTML = html;
+                updateBadgeCount(data.unread_count);
+            })
+            .catch(function(){
+                list.innerHTML = '<div class="px-4 py-6 text-center"><p class="text-xs text-red-400">Gagal memuat.</p></div>';
+            });
+    }
+
+    function markNotifRead(id) {
+        fetch('{{ url("api/notifications") }}/'+id+'/read', {method:'POST',headers:{'X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content,'Accept':'application/json'}});
+    }
+
+    function markAllNotifRead() {
+        fetch('{{ route("notifications.readAll") }}', {method:'POST',headers:{'X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content,'Accept':'application/json'}})
+            .then(function(r){return r.json();})
+            .then(function(){
+                // Reload list dan update badge
+                loadNotifAktivitas();
+            });
+    }
+
+    function updateBadgeCount(unreadCount) {
+        var daruratCount = {{ $jumlahNotifDarurat ?? 0 }};
+        var total = daruratCount + unreadCount;
+        var badge = document.querySelector('#notif-wrapper button span.min-w-\\[16px\\]');
+        if (total > 0) {
+            if (!badge) {
+                var btn = document.querySelector('#notif-wrapper button');
+                var span = document.createElement('span');
+                span.className = 'absolute top-1 right-1 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold bg-red-500 text-white';
+                span.textContent = total > 9 ? '9+' : total;
+                btn.appendChild(span);
+            } else {
+                badge.textContent = total > 9 ? '9+' : total;
+            }
+        } else {
+            if (badge) badge.remove();
+        }
+        // Update tab badge
+        var tabAktivitas = document.getElementById('tab-aktivitas');
+        if (tabAktivitas) {
+            var tabBadge = tabAktivitas.querySelector('span');
+            if (unreadCount > 0) {
+                if (tabBadge) { tabBadge.textContent = unreadCount; }
+            } else {
+                if (tabBadge) tabBadge.remove();
+            }
+        }
+    }
 </script>
 
 {{-- Global Confirm Modal --}}

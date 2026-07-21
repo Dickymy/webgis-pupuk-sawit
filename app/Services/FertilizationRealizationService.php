@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\BlokLahan;
+use App\Models\ProgramPemupukan;
 use App\Models\RealisasiPemupukan;
 use Carbon\Carbon;
 
@@ -208,6 +209,99 @@ class FertilizationRealizationService
         }
 
         return $query->exists();
+    }
+
+    /**
+     * Ambil ringkasan realisasi berbasis program pemupukan (Pahan v2.8).
+     *
+     * Method utama yang disarankan: mengisolasi realisasi berdasarkan program,
+     * bukan tahun kalender atau rekomendasi tertentu.
+     *
+     * @return array Sama seperti getRealizationSummary() dengan tambahan metadata program
+     */
+    public function getRealizationSummaryForProgram(
+        ProgramPemupukan $program,
+        ?Carbon $analysisDate = null
+    ): array {
+        $analysisDate = $analysisDate ?? now();
+
+        // Query realisasi aktif (non-batal) untuk PROGRAM ini
+        $realisasis = RealisasiPemupukan::where('program_pemupukan_id', $program->id)
+            ->where('status_realisasi', '!=', RealisasiPemupukan::STATUS_BATAL)
+            ->orderBy('tahap')
+            ->orderBy('tanggal_realisasi')
+            ->get();
+
+        // Pisahkan per tahap
+        $tahap1 = $realisasis->where('tahap', 1);
+        $tahap2 = $realisasis->where('tahap', 2);
+
+        // Hitung total realisasi aktif
+        $totalUrea = $realisasis->sum('urea_realisasi_kg');
+        $totalKcl = $realisasis->sum('kcl_realisasi_kg');
+
+        // === TAHAP 1: Evaluasi status ===
+        $tahap1Ada = $tahap1->isNotEmpty();
+        $ureaRealisasiTahap1 = (float) $tahap1->sum('urea_realisasi_kg');
+        $kclRealisasiTahap1 = (float) $tahap1->sum('kcl_realisasi_kg');
+        $ureaRencanaTahap1 = (float) ($tahap1->max('urea_rencana_kg') ?? 0);
+        $kclRencanaTahap1 = (float) ($tahap1->max('kcl_rencana_kg') ?? 0);
+
+        $tahap1Selesai = $this->isTahapSelesai($tahap1, $ureaRealisasiTahap1, $kclRealisasiTahap1, $ureaRencanaTahap1, $kclRencanaTahap1);
+        $tahap1Sebagian = $tahap1Ada && ! $tahap1Selesai;
+        $tahap1Batal = ! $tahap1Ada && RealisasiPemupukan::where('program_pemupukan_id', $program->id)
+            ->where('tahap', 1)
+            ->where('status_realisasi', RealisasiPemupukan::STATUS_BATAL)
+            ->exists();
+
+        // Persentase realisasi Tahap 1
+        $maxRencana = max($ureaRencanaTahap1, $kclRencanaTahap1);
+        $persentaseTahap1 = 0;
+        if ($maxRencana > 0) {
+            $pctUrea = $ureaRencanaTahap1 > 0 ? ($ureaRealisasiTahap1 / $ureaRencanaTahap1) * 100 : 100;
+            $pctKcl = $kclRencanaTahap1 > 0 ? ($kclRealisasiTahap1 / $kclRencanaTahap1) * 100 : 100;
+            $persentaseTahap1 = round(min($pctUrea, $pctKcl), 1);
+        }
+
+        $tahap1Tanggal = $tahap1->max('tanggal_realisasi');
+
+        // Interval dan tanggal minimum tahap 2
+        $tanggalMinTahap2 = null;
+        $intervalHari = null;
+        $intervalTerpenuhi = false;
+
+        if ($tahap1Tanggal) {
+            $tglTahap1 = Carbon::parse($tahap1Tanggal);
+            $tanggalMinTahap2 = $tglTahap1->copy()->addDays(self::MIN_INTERVAL_DAYS)->toDateString();
+            $intervalHari = (int) $tglTahap1->diffInDays($analysisDate);
+            $intervalTerpenuhi = $intervalHari >= self::MIN_INTERVAL_DAYS;
+        }
+
+        return [
+            'tahap_1_ada' => $tahap1Ada,
+            'tahap_1_sebagian' => $tahap1Sebagian,
+            'tahap_1_selesai' => $tahap1Selesai,
+            'tahap_1_batal' => $tahap1Batal,
+            'tahap_1_tanggal' => $tahap1Tanggal ? (string) $tahap1Tanggal : null,
+            'urea_rencana_tahap_1' => round($ureaRencanaTahap1, 2),
+            'kcl_rencana_tahap_1' => round($kclRencanaTahap1, 2),
+            'urea_realisasi_tahap_1' => round($ureaRealisasiTahap1, 2),
+            'kcl_realisasi_tahap_1' => round($kclRealisasiTahap1, 2),
+            'persentase_realisasi_tahap_1' => $persentaseTahap1,
+            'total_urea_realisasi' => round((float) $totalUrea, 2),
+            'total_kcl_realisasi' => round((float) $totalKcl, 2),
+            'urea_realisasi_tahap_2' => round((float) $tahap2->sum('urea_realisasi_kg'), 2),
+            'kcl_realisasi_tahap_2' => round((float) $tahap2->sum('kcl_realisasi_kg'), 2),
+            'realisasi_tahap_1' => $tahap1->toArray(),
+            'realisasi_tahap_2' => $tahap2->toArray(),
+            'tanggal_minimum_tahap_2' => $tanggalMinTahap2,
+            'interval_hari_sejak_tahap_1' => $intervalHari,
+            'interval_terpenuhi' => $intervalTerpenuhi,
+            // Pahan v2.8: metadata program
+            'program_pemupukan_id' => $program->id,
+            'tahun_program' => $program->tahun_program,
+            'mode_ringkasan' => 'PROGRAM_BASED',
+        ];
     }
 
     /**

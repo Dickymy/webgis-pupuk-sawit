@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GeoUploadController;
 use App\Http\Controllers\KondisiLahanController;
 use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RbsController;
 use App\Http\Controllers\RealisasiPemupukanController;
 use App\Http\Controllers\RuleBaseController;
@@ -86,5 +87,12 @@ Route::middleware(AdminAuthenticated::class)->group(function () {
         Route::get('/', [SettingController::class, 'index'])->name('index');
         Route::put('/password', [SettingController::class, 'updatePassword'])->name('password.update');
         Route::put('/theme', [SettingController::class, 'updateTheme'])->name('theme.update');
+    });
+
+    // Notifikasi (Pahan v2.8)
+    Route::prefix('api/notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'recent'])->name('recent');
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('readAll');
     });
 });

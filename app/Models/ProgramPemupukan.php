@@ -22,6 +22,7 @@ class ProgramPemupukan extends Model
         'tahun_program',
         'rekomendasi_awal_id',
         'status_program',
+        'active_key',
     ];
 
     protected function casts(): array

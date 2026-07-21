@@ -165,4 +165,48 @@
 </div>
 @endif
 
+{{-- Pahan v2.8: Tindakan Berikutnya --}}
+@if($rekomendasi = $realisasiPemupukan->rekomendasiRbs)
+@php
+    $statusStage = $rekomendasi->status_stage;
+    $isSiap = in_array($statusStage, [
+        \App\Services\CurrentApplicationCalculator::TAHAP_1_SIAP,
+        \App\Services\CurrentApplicationCalculator::TAHAP_1_SEBAGIAN,
+        \App\Services\CurrentApplicationCalculator::TAHAP_2_SIAP,
+    ]);
+@endphp
+<div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 mt-5">
+    <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+        <span class="text-base">🎯</span>
+        Tindakan Berikutnya
+    </h3>
+    <div class="p-3 rounded-xl {{ $isSiap ? 'bg-emerald-50 border border-emerald-200' : 'bg-blue-50 border border-blue-200' }}">
+        <p class="text-sm font-semibold {{ $isSiap ? 'text-emerald-800' : 'text-blue-800' }}">
+            @switch($statusStage)
+                @case(\App\Services\CurrentApplicationCalculator::TAHAP_1_SIAP)
+                    Catat realisasi Tahap 1.
+                    @break
+                @case(\App\Services\CurrentApplicationCalculator::TAHAP_1_SEBAGIAN)
+                    Lanjutkan realisasi Tahap 1 (sisa belum terpenuhi).
+                    @break
+                @case(\App\Services\CurrentApplicationCalculator::MENUNGGU_INTERVAL)
+                    Tahap 1 selesai. Tahap 2 dapat dilakukan mulai {{ $rekomendasi->tanggal_minimum_tahap_berikutnya ? $rekomendasi->tanggal_minimum_tahap_berikutnya->format('d M Y') : '—' }}.
+                    @break
+                @case(\App\Services\CurrentApplicationCalculator::MENUNGGU_KELAYAKAN)
+                    Pemupukan ditunda karena kondisi kelayakan belum terpenuhi.
+                    @break
+                @case(\App\Services\CurrentApplicationCalculator::TAHAP_2_SIAP)
+                    Catat realisasi Tahap 2.
+                    @break
+                @case(\App\Services\CurrentApplicationCalculator::SELESAI_TAHUNAN)
+                    Program pemupukan tahun ini telah selesai.
+                    @break
+                @default
+                    {{ $rekomendasi->alasan_tahap ?? 'Jalankan analisis ulang untuk status terkini.' }}
+            @endswitch
+        </p>
+    </div>
+</div>
+@endif
+
 @endsection

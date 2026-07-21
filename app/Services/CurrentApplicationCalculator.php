@@ -169,7 +169,7 @@ class CurrentApplicationCalculator
             self::MENUNGGU_KELAYAKAN => 'Menunggu Kelayakan Aplikasi',
             self::TAHAP_2_SIAP => 'Tahap 2 Siap Diaplikasikan',
             self::SELESAI_TAHUNAN => 'Kebutuhan Tahunan Telah Terpenuhi',
-            self::PERLU_VERIFIKASI_REALISASI => 'Perlu Verifikasi Data Realisasi',
+            self::PERLU_VERIFIKASI_REALISASI => 'Periksa Data Realisasi',
             default => $status ?? '-',
         };
     }

@@ -26,7 +26,7 @@ enum ApplicationFeasibilityStatus: string
             self::TUNDA_HUJAN_TINGGI => 'Ditunda karena Curah Hujan Tinggi',
             self::TUNDA_INTERVAL => 'Ditunda karena Interval Pemupukan Terlalu Dekat',
             self::TUNDA_DRAINASE => 'Ditunda karena Drainase Bermasalah',
-            self::PERLU_VERIFIKASI_DATA => 'Perlu Verifikasi Data',
+            self::PERLU_VERIFIKASI_DATA => 'Data Belum Lengkap',
             self::TERLAMBAT_PERLU_DIJADWALKAN => 'Terlambat dan Perlu Dijadwalkan',
         };
     }

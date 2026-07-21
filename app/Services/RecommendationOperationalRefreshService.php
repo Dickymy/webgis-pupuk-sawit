@@ -3,8 +3,11 @@
 namespace App\Services;
 
 use App\Models\BlokLahan;
+use App\Models\ProgramPemupukan;
 use App\Models\RealisasiPemupukan;
 use App\Models\RekomendasiRbs;
+use App\Notifications\RealisasiNotification;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -86,9 +89,18 @@ class RecommendationOperationalRefreshService
      */
     private function refreshRekomendasi(RekomendasiRbs $rekomendasi, BlokLahan $blok): void
     {
+        // Simpan status sebelum refresh untuk deteksi transisi
+        $oldStatusStage = $rekomendasi->status_stage;
+
         DB::transaction(function () use ($rekomendasi, $blok) {
-            // 1. Hitung ulang ringkasan realisasi
-            $realizationSummary = $this->realizationService->getRealizationSummary($blok, $rekomendasi->id);
+            // 1. Hitung ulang ringkasan realisasi (Pahan v2.8: berbasis program jika tersedia)
+            $program = $rekomendasi->program_pemupukan_id
+                ? ProgramPemupukan::find($rekomendasi->program_pemupukan_id)
+                : null;
+
+            $realizationSummary = ($program && $program->isAktif())
+                ? $this->realizationService->getRealizationSummaryForProgram($program)
+                : $this->realizationService->getRealizationSummary($blok, $rekomendasi->id);
 
             // 2. Build annual snapshot data dari rekomendasi yang ada
             $annualSnapshot = [
@@ -152,6 +164,22 @@ class RecommendationOperationalRefreshService
                 'analysis_fingerprint' => $this->generateRefreshedFingerprint($rekomendasi, $currentApp),
             ]);
         });
+
+        // Pahan v2.8: Kirim notifikasi jika status berubah ke TAHAP_2_SIAP
+        $rekomendasi->refresh();
+        $newStatusStage = $rekomendasi->status_stage;
+
+        if ($oldStatusStage !== $newStatusStage && $newStatusStage === CurrentApplicationCalculator::TAHAP_2_SIAP) {
+            $admin = Auth::guard('admin')->user();
+            if ($admin) {
+                $admin->notify(
+                    RealisasiNotification::intervalTerpenuhi(
+                        $blok->nama_blok,
+                        route('rbs.detail', $blok)
+                    )
+                );
+            }
+        }
     }
 
     /**

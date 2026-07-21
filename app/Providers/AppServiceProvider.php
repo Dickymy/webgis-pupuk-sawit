@@ -16,15 +16,15 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Share notifikasi blok kritis (E3) dan admin ke semua view yang pakai layout app
+        // Share notifikasi dan admin ke semua view yang pakai layout app
         View::composer('layouts.app', function ($view) {
             $admin = Auth::guard('admin')->user();
 
+            // Blok defisiensi berat (notifikasi lama)
             $blokDarurat = BlokLahan::whereHas('rekomendasiRbsTerbaru', function ($q) {
                 $q->where('status_kebutuhan_dominan', 'Darurat');
             })->with(['anggota', 'kondisiTerbaru', 'rekomendasiRbsTerbaru'])->get();
 
-            // Filter out blocks where the latest conditions are newer than the latest recommendations (outdated)
             $blokDarurat = $blokDarurat->filter(function ($blok) {
                 $kondisi = $blok->kondisiTerbaru;
                 $rbs = $blok->rekomendasiRbsTerbaru;
@@ -38,8 +38,14 @@ class AppServiceProvider extends ServiceProvider
             $jumlahDarurat = $blokDarurat->count();
             $blokDaruratLimit = $blokDarurat->take(5);
 
+            // Pahan v2.8: Notifikasi database (unread count)
+            $unreadNotifCount = $admin ? $admin->unreadNotifications()->count() : 0;
+            $totalNotifBadge = $jumlahDarurat + $unreadNotifCount;
+
             $view->with('notifBlokDarurat', $blokDaruratLimit);
             $view->with('jumlahNotifDarurat', $jumlahDarurat);
+            $view->with('unreadNotifCount', $unreadNotifCount);
+            $view->with('totalNotifBadge', $totalNotifBadge);
             $view->with('admin', $admin);
         });
     }
