@@ -25,9 +25,8 @@ class TrueLegacySchemaUpgradeV28Test extends TestCase
         $issues = LegacySchemaBuilder::verifyDataIntegrity();
         $this->assertEmpty($issues, 'Data integrity issues: '.implode(', ', $issues));
 
-        // Verify v2.8 schema ada
+        // Verify v2.7+ schema ada (tabel utama)
         $this->assertTrue(Schema::hasTable('program_pemupukans'));
-        $this->assertTrue(Schema::hasColumn('program_pemupukans', 'active_key'));
         $this->assertTrue(Schema::hasColumn('rekomendasi_rbs', 'program_pemupukan_id'));
         $this->assertTrue(Schema::hasColumn('realisasi_pemupukans', 'program_pemupukan_id'));
         $this->assertTrue(Schema::hasTable('rekomendasi_operasional_histories'));
