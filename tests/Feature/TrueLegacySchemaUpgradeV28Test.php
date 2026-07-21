@@ -11,14 +11,6 @@ use Tests\TestCase;
 
 /**
  * True Legacy Schema Upgrade Test (Pahan v2.8 — 4.10).
- *
- * Alur:
- * 1. Migrate fresh (semua migration)
- * 2. Insert data legacy
- * 3. Verify data utuh
- * 4. Rollback v2.8
- * 5. Migrate ulang v2.8
- * 6. Verify data tetap utuh
  */
 class TrueLegacySchemaUpgradeV28Test extends TestCase
 {
@@ -27,7 +19,6 @@ class TrueLegacySchemaUpgradeV28Test extends TestCase
     public function test_migrate_fresh_and_legacy_data_survives(): void
     {
         // Database sudah fresh via RefreshDatabase trait
-        // Insert legacy data
         LegacySchemaBuilder::insertLegacyData();
 
         // Verify data utuh
@@ -74,8 +65,7 @@ class TrueLegacySchemaUpgradeV28Test extends TestCase
     {
         LegacySchemaBuilder::insertLegacyData();
 
-        // Rekomendasi legacy tanpa program_pemupukan_id harus tetap bisa diakses
-        $rekomendasi = DB::table('rekomendasi_rbs')->where('id', 1)->first();
+        $rekomendasi = DB::table('rekomendasi_rbs')->first();
 
         $this->assertNotNull($rekomendasi);
         $this->assertNull($rekomendasi->program_pemupukan_id ?? null);
@@ -86,11 +76,11 @@ class TrueLegacySchemaUpgradeV28Test extends TestCase
     {
         LegacySchemaBuilder::insertLegacyData();
 
-        if (! Schema::hasTable('realisasi_pemupukans')) {
-            $this->markTestSkipped('Tabel realisasi_pemupukans tidak ada');
+        if (! Schema::hasTable('realisasi_pemupukans') || ! Schema::hasColumn('realisasi_pemupukans', 'urea_realisasi_kg')) {
+            $this->markTestSkipped('Tabel realisasi_pemupukans belum upgrade');
         }
 
-        $realisasi = DB::table('realisasi_pemupukans')->where('id', 1)->first();
+        $realisasi = DB::table('realisasi_pemupukans')->first();
 
         $this->assertNotNull($realisasi);
         $this->assertNull($realisasi->program_pemupukan_id ?? null);

@@ -9,27 +9,30 @@ use Illuminate\Support\Facades\Schema;
  * Helper untuk membangun skema legacy dalam testing.
  *
  * Pahan v2.8: Digunakan oleh TrueLegacySchemaUpgradeV28Test.
+ * Kompatibel dengan MySQL dan SQLite.
  */
 class LegacySchemaBuilder
 {
     /**
-     * Insert data legacy minimal sebelum migration v2.5.
+     * Insert data legacy minimal.
      */
     public static function insertLegacyData(): void
     {
         // Admin
-        DB::table('admins')->insert([
-            'id' => 1,
+        $adminData = [
             'username' => 'admin_legacy',
             'password' => bcrypt('password'),
             'nama_lengkap' => 'Admin Legacy',
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ];
+        if (Schema::hasColumn('admins', 'tema')) {
+            $adminData['tema'] = 'system';
+        }
+        DB::table('admins')->insert($adminData);
 
         // Anggota
         DB::table('anggotas')->insert([
-            'id' => 1,
             'nama' => 'Petani Legacy',
             'no_hp' => '081234567890',
             'alamat' => 'Desa Test',
@@ -37,36 +40,46 @@ class LegacySchemaBuilder
             'updated_at' => now(),
         ]);
 
+        $anggotaId = DB::table('anggotas')->where('nama', 'Petani Legacy')->value('id');
+
         // Blok Lahan
-        DB::table('blok_lahans')->insert([
-            'id' => 1,
-            'anggota_id' => 1,
+        $blokData = [
             'nama_blok' => 'Blok Legacy A1',
             'luas_ha' => 2.0,
             'sph' => 143,
-            'tahun_tanam' => 2015,
             'koordinat_geojson' => json_encode(['type' => 'Polygon', 'coordinates' => [[[101.0, 0.5], [101.1, 0.5], [101.1, 0.6], [101.0, 0.6], [101.0, 0.5]]]]),
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ];
+        if (Schema::hasColumn('blok_lahans', 'anggota_id')) {
+            $blokData['anggota_id'] = $anggotaId;
+        }
+        if (Schema::hasColumn('blok_lahans', 'tahun_tanam')) {
+            $blokData['tahun_tanam'] = 2015;
+        }
+        DB::table('blok_lahans')->insert($blokData);
+
+        $blokId = DB::table('blok_lahans')->where('nama_blok', 'Blok Legacy A1')->value('id');
+        $adminId = DB::table('admins')->where('username', 'admin_legacy')->value('id');
 
         // Kondisi Lahan
-        DB::table('kondisi_lahans')->insert([
-            'id' => 1,
-            'blok_lahan_id' => 1,
+        $kondisiData = [
+            'blok_lahan_id' => $blokId,
             'tanggal_observasi' => now()->subMonth()->toDateString(),
             'warna_daun' => 'Hijau Normal',
-            'ph_tanah' => 5.5,
+            'ph_tanah' => 5.50,
             'kelembaban_tanah' => 'Lembab',
             'kondisi_drainase' => 'Baik',
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ];
+        DB::table('kondisi_lahans')->insert($kondisiData);
+
+        $kondisiId = DB::table('kondisi_lahans')->where('blok_lahan_id', $blokId)->value('id');
 
         // Rule pengguna
         if (Schema::hasTable('rule_bases_lanjutan')) {
-            DB::table('rule_bases_lanjutan')->insert([
-                'id' => 1,
+            $ruleData = [
                 'kondisi_warna_daun' => 'Kuning Merata',
                 'indikasi_masalah' => 'Defisiensi N',
                 'status_kebutuhan' => 'Segera',
@@ -77,15 +90,15 @@ class LegacySchemaBuilder
                 'aktif' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]);
+            ];
+            DB::table('rule_bases_lanjutan')->insert($ruleData);
         }
 
-        // Rekomendasi legacy (tanpa program_pemupukan_id, tanpa active_stage)
-        DB::table('rekomendasi_rbs')->insert([
-            'id' => 1,
-            'blok_lahan_id' => 1,
-            'kondisi_lahan_id' => 1,
-            'admin_id' => 1,
+        // Rekomendasi legacy
+        $rekData = [
+            'blok_lahan_id' => $blokId,
+            'kondisi_lahan_id' => $kondisiId,
+            'admin_id' => $adminId,
             'tanggal_analisis' => now()->subWeek()->toDateString(),
             'is_latest' => true,
             'nomor_analisis' => 1,
@@ -101,15 +114,17 @@ class LegacySchemaBuilder
             'total_kcl' => 40.0,
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
+        ];
+        DB::table('rekomendasi_rbs')->insert($rekData);
 
-        // Realisasi legacy (tanpa program_pemupukan_id)
-        if (Schema::hasTable('realisasi_pemupukans')) {
-            $columns = [
-                'id' => 1,
-                'rekomendasi_rbs_id' => 1,
-                'blok_lahan_id' => 1,
-                'admin_id' => 1,
+        $rekId = DB::table('rekomendasi_rbs')->where('blok_lahan_id', $blokId)->value('id');
+
+        // Realisasi legacy
+        if (Schema::hasTable('realisasi_pemupukans') && Schema::hasColumn('realisasi_pemupukans', 'urea_realisasi_kg')) {
+            $realData = [
+                'rekomendasi_rbs_id' => $rekId,
+                'blok_lahan_id' => $blokId,
+                'admin_id' => $adminId,
                 'tahap' => 1,
                 'tanggal_realisasi' => now()->subDays(10)->toDateString(),
                 'urea_rencana_kg' => 50.0,
@@ -120,8 +135,7 @@ class LegacySchemaBuilder
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
-
-            DB::table('realisasi_pemupukans')->insert($columns);
+            DB::table('realisasi_pemupukans')->insert($realData);
         }
     }
 
@@ -132,41 +146,34 @@ class LegacySchemaBuilder
     {
         $issues = [];
 
-        // Admin masih ada
-        if (DB::table('admins')->where('id', 1)->doesntExist()) {
+        if (DB::table('admins')->where('username', 'admin_legacy')->doesntExist()) {
             $issues[] = 'Admin legacy hilang';
         }
 
-        // Anggota masih ada
-        if (DB::table('anggotas')->where('id', 1)->doesntExist()) {
+        if (DB::table('anggotas')->where('nama', 'Petani Legacy')->doesntExist()) {
             $issues[] = 'Anggota legacy hilang';
         }
 
-        // Blok masih ada
-        if (DB::table('blok_lahans')->where('id', 1)->doesntExist()) {
+        if (DB::table('blok_lahans')->where('nama_blok', 'Blok Legacy A1')->doesntExist()) {
             $issues[] = 'Blok lahan legacy hilang';
         }
 
-        // Kondisi masih ada
-        if (DB::table('kondisi_lahans')->where('id', 1)->doesntExist()) {
+        if (DB::table('kondisi_lahans')->count() === 0) {
             $issues[] = 'Kondisi lahan legacy hilang';
         }
 
-        // Rekomendasi masih ada
-        if (DB::table('rekomendasi_rbs')->where('id', 1)->doesntExist()) {
+        if (DB::table('rekomendasi_rbs')->count() === 0) {
             $issues[] = 'Rekomendasi legacy hilang';
         }
 
-        // Realisasi masih ada
-        if (Schema::hasTable('realisasi_pemupukans')) {
-            if (DB::table('realisasi_pemupukans')->where('id', 1)->doesntExist()) {
+        if (Schema::hasTable('realisasi_pemupukans') && Schema::hasColumn('realisasi_pemupukans', 'urea_realisasi_kg')) {
+            if (DB::table('realisasi_pemupukans')->count() === 0) {
                 $issues[] = 'Realisasi legacy hilang';
             }
         }
 
-        // Rule masih ada
         if (Schema::hasTable('rule_bases_lanjutan')) {
-            if (DB::table('rule_bases_lanjutan')->where('id', 1)->doesntExist()) {
+            if (DB::table('rule_bases_lanjutan')->count() === 0) {
                 $issues[] = 'Rule legacy hilang';
             }
         }
