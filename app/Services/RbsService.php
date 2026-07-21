@@ -686,7 +686,7 @@ class RbsService
             'alasan_tahap' => $currentApp['reason'],
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.8'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.9'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -832,7 +832,7 @@ class RbsService
             'alasan_tahap' => 'Fase tanaman perlu diverifikasi sebelum tahap aktif dapat ditentukan.',
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.8'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.9'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -917,7 +917,7 @@ class RbsService
             'alasan_tahap' => 'Data kondisi belum lengkap untuk menentukan tahap aktif.',
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.8'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.9'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -1004,7 +1004,7 @@ class RbsService
             'alasan_tahap' => 'Data observasi belum cukup untuk diagnosis — tahap belum ditentukan.',
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.8'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.9'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];
@@ -1152,7 +1152,7 @@ class RbsService
             'alasan_tahap' => $currentApp['reason'],
             'metode_perhitungan_umur' => $plantContext['metode_perhitungan_umur'],
             'tanggal_referensi_umur' => $plantContext['tanggal_referensi'],
-            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.8'),
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.9'),
         ]);
 
         return ['sukses' => true, 'rekomendasi' => $hasil];

@@ -39,7 +39,7 @@ class RekomendasiRbsFactory extends Factory
             'status_kelayakan_aplikasi' => 'LAYAK_DIJADWALKAN',
             'active_stage' => 1,
             'status_stage' => 'TAHAP_1_SIAP',
-            'versi_mesin_rekomendasi' => 'pahan-v2.8',
+            'versi_mesin_rekomendasi' => config('fertilization.engine_version', 'pahan-v2.9'),
         ];
     }
 }

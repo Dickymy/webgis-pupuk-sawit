@@ -110,12 +110,11 @@ return [
         'identitas_blok' => 15, // luas, SPH, tahun/tanggal tanam
         'fase_terverifikasi' => 10,
         'ph_dan_metode' => 10,
-        'curah_hujan' => 15, // curah hujan bulanan + periode
+        'curah_hujan' => 20, // curah hujan bulanan + periode
         'tgl_pemupukan' => 10,
-        'data_visual' => 15, // daun, pelepah, defisiensi
+        'data_visual' => 20, // daun, pelepah, defisiensi
         'drainase_gulma_hama' => 10,
-        'rule_bersumber' => 10,
-        'validasi_ahli' => 5,
+        'rule_bersumber' => 5,
     ],
 
     /*
@@ -135,7 +134,7 @@ return [
     | Versi Mesin Rekomendasi
     |--------------------------------------------------------------------------
     */
-    'engine_version' => 'pahan-v2.8',
+    'engine_version' => 'pahan-v2.9',
 
     /*
     |--------------------------------------------------------------------------

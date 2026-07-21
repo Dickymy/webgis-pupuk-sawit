@@ -59,7 +59,7 @@ class RecommendationReliabilityService
             if ($umur !== null && $umur !== 3) {
                 $faseScore = 5; // Auto-suggest tapi belum diverifikasi
             }
-            $saran[] = 'Verifikasi fase tanaman (TBM/TM) untuk blok ini.';
+            $saran[] = 'Lengkapi fase tanaman pada data blok.';
         }
         $rincian['fase_terverifikasi'] = ['skor' => $faseScore, 'max' => $weights['fase_terverifikasi']];
         $totalScore += $faseScore;
@@ -80,15 +80,15 @@ class RecommendationReliabilityService
         $rincian['ph_dan_metode'] = ['skor' => $phScore, 'max' => $weights['ph_dan_metode']];
         $totalScore += $phScore;
 
-        // 4. Curah hujan bulanan + periode (max 15)
+        // 4. Curah hujan bulanan + periode (max 20)
         $hujanScore = 0;
         if ($kondisi->curah_hujan_mm_bulanan !== null) {
-            $hujanScore += 10;
+            $hujanScore += 12;
             if ($kondisi->periode_curah_hujan !== null) {
-                $hujanScore += 3;
+                $hujanScore += 4;
             }
             if ($kondisi->sumber_curah_hujan !== null) {
-                $hujanScore += 2;
+                $hujanScore += 4;
             }
         } elseif ($kondisi->curah_hujan_kategori !== null) {
             $hujanScore += 5; // Hanya kategori, kurang presisi
@@ -110,19 +110,19 @@ class RecommendationReliabilityService
         $rincian['tgl_pemupukan'] = ['skor' => $tglScore, 'max' => $weights['tgl_pemupukan']];
         $totalScore += $tglScore;
 
-        // 6. Data visual: daun, pelepah, defisiensi (max 15)
+        // 6. Data visual: daun, pelepah, defisiensi (max 20)
         $visualScore = 0;
         if ($kondisi->warna_daun !== null) {
-            $visualScore += 6;
+            $visualScore += 8;
         } else {
             $saran[] = 'Observasi warna daun tanaman.';
         }
 
         if ($kondisi->kondisi_pelepah !== null) {
-            $visualScore += 4;
+            $visualScore += 6;
         }
         if (! empty($kondisi->gejala_defisiensi)) {
-            $visualScore += 5;
+            $visualScore += 6;
         }
 
         $visualScore = min($visualScore, $weights['data_visual']);
@@ -141,7 +141,7 @@ class RecommendationReliabilityService
         $rincian['drainase_gulma_hama'] = ['skor' => $lingkunganScore, 'max' => $weights['drainase_gulma_hama']];
         $totalScore += $lingkunganScore;
 
-        // 8. Rule terpicu memiliki sumber (max 10)
+        // 8. Rule terpicu memiliki sumber (max 5)
         $ruleScore = 0;
         if (! empty($rulesTerpicu)) {
             $bersumber = collect($rulesTerpicu)->filter(fn ($r) => $r->sumber_penulis !== null || $r->tingkat_bukti === 'BUKU'
@@ -151,14 +151,6 @@ class RecommendationReliabilityService
         }
         $rincian['rule_bersumber'] = ['skor' => $ruleScore, 'max' => $weights['rule_bersumber']];
         $totalScore += $ruleScore;
-
-        // 9. Validasi ahli atau laboratorium (max 5)
-        $validasiScore = 0;
-        if ($kondisi->status_verifikasi_gejala === 'terverifikasi') {
-            $validasiScore = $weights['validasi_ahli'];
-        }
-        $rincian['validasi_ahli'] = ['skor' => $validasiScore, 'max' => $weights['validasi_ahli']];
-        $totalScore += $validasiScore;
 
         // Clamp
         $totalScore = max(0, min(100, $totalScore));

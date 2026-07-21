@@ -90,6 +90,6 @@ class RbsProgramIntegrationTest extends TestCase
         $service = app(RbsService::class);
         $result = $service->analisis($this->blok);
 
-        $this->assertEquals('pahan-v2.8', $result['rekomendasi']->versi_mesin_rekomendasi);
+        $this->assertEquals('pahan-v2.9', $result['rekomendasi']->versi_mesin_rekomendasi);
     }
 }

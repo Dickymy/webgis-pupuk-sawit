@@ -2,7 +2,7 @@
 
 > Sistem Pendukung Keputusan Pemupukan Kelapa Sawit  
 > Kelompok Tani Suluh Tani  
-> Engine Version: **pahan-v2.8**  
+> Engine Version: **pahan-v2.9**  
 > Framework: Laravel 11 · PHP 8.2 · MySQL 8 / SQLite  
 > Terakhir diperbarui: 21 Juli 2026
 
@@ -354,7 +354,7 @@
 
 | Metrik | Nilai |
 |--------|-------|
-| Versi mesin | pahan-v2.8 |
+| Versi mesin | pahan-v2.9 |
 | Total file PHP (app) | ~60 |
 | Total migrations | 43 |
 | Total tests | 235 |
