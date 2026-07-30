@@ -56,8 +56,7 @@
                 <div><p class="text-xs text-slate-400">Total KCl</p><p class="text-sm font-semibold text-slate-900">{{ number_format($rbs->total_kcl, 1) }} kg ({{ $rbs->karung_kcl }} karung)</p></div>
                 @endif
                 <div><p class="text-xs text-slate-400">Status</p>
-                    @php $sc = match($rbs->status_kebutuhan_dominan) { 'Darurat' => 'bg-red-50 text-red-700 border border-red-100', 'Segera' => 'bg-orange-50 text-orange-700 border border-orange-100', 'Normal' => 'bg-emerald-50 text-emerald-700 border border-emerald-100', 'Tunda' => 'bg-slate-100 text-slate-600 border border-slate-200', default => 'bg-slate-100 text-slate-500 border border-slate-200' }; @endphp
-                    <span class="inline-flex px-2.5 py-1 rounded-lg text-xs font-medium border {{ $sc }}">{{ $rbs->status_kebutuhan_dominan }}</span>
+                    <x-recommendation-status :recommendation="$rbs" />
                 </div>
             </div>
             @else

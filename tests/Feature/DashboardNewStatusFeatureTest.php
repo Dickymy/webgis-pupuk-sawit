@@ -69,6 +69,8 @@ class DashboardNewStatusFeatureTest extends TestCase
         $this->assertEquals('GEJALA_BERAT', $firstBlok['status_kondisi']);
         $this->assertArrayHasKey('status_kondisi_label', $firstBlok);
         $this->assertArrayHasKey('status_kelayakan', $firstBlok);
+        $this->assertSame('ADA_GEJALA', $firstBlok['status_peta']);
+        $this->assertSame('Ditemukan Gejala', $firstBlok['status_peta_label']);
         $this->assertArrayNotHasKey('status_rbs', $firstBlok);
     }
 
@@ -89,54 +91,40 @@ class DashboardNewStatusFeatureTest extends TestCase
         $this->assertArrayHasKey('layak_dijadwalkan', $stats);
     }
 
-    public function test_dashboard_view_has_no_legacy_filter_buttons(): void
+    public function test_dashboard_view_has_four_action_filters(): void
     {
         $response = $this->actingAs($this->admin, 'admin')->get(route('dashboard'));
         $response->assertStatus(200);
 
-        // Legacy status TIDAK boleh ada sebagai data-status pada filter button
-        $response->assertDontSee('data-status="Darurat"', false);
-        $response->assertDontSee('data-status="Segera"', false);
-        $response->assertDontSee('data-status="Normal"', false);
-        $response->assertDontSee('data-status="Tunda"', false);
+        foreach (['BELUM_DIPERIKSA', 'ADA_GEJALA', 'SIAP_DIPUPUK', 'DITUNDA'] as $status) {
+            $response->assertSee('data-status="'.$status.'"', false);
+        }
 
-        // Status baru HARUS ada
-        $response->assertSee('data-status="GEJALA_BERAT"', false);
-        $response->assertSee('data-status="TERINDIKASI_DEFISIENSI"', false);
-        $response->assertSee('data-status="TERINDIKASI_DEFISIENSI_RINGAN"', false);
-        $response->assertSee('data-status="NORMAL_VISUAL"', false);
-        $response->assertSee('data-status="BELUM_DIOBSERVASI"', false);
-
-        // Verifikasi TIDAK boleh ada sebagai filter button
-        $response->assertDontSee('data-status="PERLU_VERIFIKASI"', false);
+        foreach (['Darurat', 'Segera', 'Normal', 'Tunda', 'GEJALA_BERAT', 'TERINDIKASI_DEFISIENSI', 'NORMAL_VISUAL'] as $legacy) {
+            $response->assertDontSee('data-status="'.$legacy.'"', false);
+        }
     }
 
-    public function test_dashboard_legend_has_all_new_statuses(): void
+    public function test_dashboard_legend_uses_public_action_language(): void
     {
         $response = $this->actingAs($this->admin, 'admin')->get(route('dashboard'));
         $response->assertStatus(200);
 
-        $response->assertSee('Gejala Berat', false);
-        $response->assertSee('Terindikasi Defisiensi', false);
-        $response->assertSee('Defisiensi Ringan', false);
-        $response->assertSee('Normal Visual', false);
-        $response->assertSee('Belum Diobservasi', false);
-
-        // Verifikasi TIDAK boleh muncul di legend
-        $response->assertDontSee('Perlu Verifikasi', false);
+        $response->assertSee('Belum Diperiksa', false);
+        $response->assertSee('Ditemukan Gejala', false);
+        $response->assertSee('Siap Dipupuk', false);
+        $response->assertSee('Belum Saatnya Dipupuk', false);
+        $response->assertDontSee('Indikasi Visual N/K', false);
     }
 
-    public function test_dashboard_javascript_uses_status_kondisi_not_status_rbs(): void
+    public function test_dashboard_javascript_filters_by_action_status(): void
     {
         $response = $this->actingAs($this->admin, 'admin')->get(route('dashboard'));
         $content = $response->getContent();
 
-        // JavaScript TIDAK boleh menggunakan status_rbs sebagai filter
         $this->assertStringNotContainsString("b.status_rbs||'Belum Dianalisis'", $content);
-        $this->assertStringNotContainsString("activeStatuses = ['Darurat'", $content);
-
-        // JavaScript HARUS menggunakan status_kondisi
-        $this->assertStringContainsString("b.status_kondisi||'BELUM_DIOBSERVASI'", $content);
-        $this->assertStringContainsString("'GEJALA_BERAT'", $content);
+        $this->assertStringContainsString("b.status_peta||'BELUM_DIPERIKSA'", $content);
+        $this->assertStringContainsString("getColorStatusPeta(blok.status_peta||'BELUM_DIPERIKSA')", $content);
+        $this->assertStringContainsString("var activeStatuses = ['BELUM_DIPERIKSA', 'ADA_GEJALA', 'SIAP_DIPUPUK', 'DITUNDA'];", $content);
     }
 }

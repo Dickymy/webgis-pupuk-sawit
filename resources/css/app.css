@@ -929,3 +929,22 @@ html:not(.dark) {
     --color-dark-500: #64748b;
     --color-dark-400: #94a3b8;
 }
+
+/* Form observasi lapangan */
+.observation-card { border:1px solid rgb(226 232 240); border-radius:1rem; background:#fff; padding:1rem; box-shadow:0 1px 2px rgb(15 23 42 / .05); }
+.observation-heading { display:flex; align-items:flex-start; gap:.75rem; margin-bottom:1.25rem; }
+.observation-heading>span { display:flex; width:2rem; height:2rem; flex:none; align-items:center; justify-content:center; border-radius:999px; background:rgb(209 250 229); color:rgb(4 120 87); font-size:.875rem; font-weight:700; }
+.observation-heading h2 { color:rgb(15 23 42); font-size:1rem; font-weight:700; }
+.observation-heading p,.field-help { margin-top:.125rem; color:rgb(100 116 139); font-size:.75rem; line-height:1.25rem; }
+.field-label { display:block; margin-bottom:.375rem; color:rgb(51 65 85); font-size:.875rem; font-weight:600; }
+.field-label b { color:rgb(239 68 68); }.field-label em { color:rgb(148 163 184); font-style:normal; font-weight:400; }
+.field-error { margin-top:.375rem; color:rgb(220 38 38); font-size:.75rem; font-weight:500; }
+.supporting-details { margin-top:1.25rem; border:1px solid rgb(226 232 240); border-radius:.75rem; background:rgb(248 250 252 / .75); }
+.supporting-details summary { display:flex; min-height:3rem; cursor:pointer; list-style:none; align-items:center; justify-content:space-between; padding:.75rem 1rem; color:rgb(51 65 85); font-size:.875rem; font-weight:600; }
+.supporting-details small { color:rgb(148 163 184); font-weight:400; }.rain-panel { margin-top:1rem; border-width:1px; border-radius:.75rem; padding:1rem; }
+.check-card { display:flex; min-height:4rem; cursor:pointer; align-items:flex-start; gap:.75rem; border:1px solid rgb(226 232 240); border-radius:.75rem; padding:.75rem; }
+.check-card input { margin-top:.125rem; width:1rem; height:1rem; }.check-card strong { display:block; color:rgb(30 41 59); font-size:.875rem; }.check-card small { display:block; margin-top:.125rem; color:rgb(100 116 139); font-size:.75rem; }
+.primary-button,.secondary-button { display:inline-flex; min-height:3rem; align-items:center; justify-content:center; border-radius:.75rem; padding:.75rem 1.25rem; font-size:.875rem; font-weight:700; }
+.primary-button { background:rgb(5 150 105); color:#fff; }.primary-button:hover { background:rgb(4 120 87); }.secondary-button { border:1px solid rgb(203 213 225); color:rgb(51 65 85); }
+@media (min-width:640px){.observation-card{padding:1.5rem}}
+.dark .observation-card { border-color:rgb(51 65 85); background:rgb(30 41 59); }.dark .observation-heading h2 { color:#fff; }.dark .field-label,.dark .supporting-details summary { color:rgb(226 232 240); }.dark .supporting-details { border-color:rgb(51 65 85); background:rgb(15 23 42 / .5); }.dark .check-card { border-color:rgb(51 65 85); }.dark .check-card strong { color:rgb(241 245 249); }.dark .secondary-button { border-color:rgb(71 85 105); color:rgb(226 232 240); }

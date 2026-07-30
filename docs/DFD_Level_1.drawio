@@ -1,341 +1,438 @@
-<mxfile host="app.diagrams.net" modified="2026-06-24T00:00:00.000Z" agent="draw.io" version="24.0.0">
+<mxfile host="app.diagrams.net" modified="2026-07-22T00:00:00.000Z" agent="draw.io" version="24.0.0">
   <diagram id="dfd-level-1" name="DFD Level 1">
-    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="1654" math="0" shadow="0">
+    <mxGraphModel dx="1600" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="2339" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
 
         <!-- JUDUL -->
-        <mxCell id="title" value="DFD Level 1 — Sistem Rekomendasi Pemupukan Kelapa Sawit" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=17;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="550" y="30" width="1200" height="45" as="geometry" />
+        <mxCell id="title" value="DFD Level 1 — Sistem Rekomendasi Pemupukan Kelapa Sawit" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=15;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="30" width="600" height="35" as="geometry" />
         </mxCell>
 
-        <!-- ══════════════════════════════════ -->
-        <!-- ENTITAS EKSTERNAL                  -->
-        <!-- ══════════════════════════════════ -->
-        <mxCell id="e1" value="Admin&#xa;Kelompok Tani" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="60" y="670" width="150" height="70" as="geometry" />
+        <!-- ═══ ENTITAS ═══ -->
+        <mxCell id="e1" value="Admin / Pengelola" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="600" y="90" width="160" height="55" as="geometry" />
         </mxCell>
 
-        <mxCell id="e2" value="Open-Meteo API&#xa;(Cuaca Eksternal)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;fontStyle=1;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="2100" y="950" width="160" height="70" as="geometry" />
-        </mxCell>
-
-        <!-- ══════════════════════════════════ -->
-        <!-- PROSES — KOLOM KIRI               -->
-        <!-- ══════════════════════════════════ -->
-        <mxCell id="p1" value="1.0&#xa;&#xa;Autentikasi&#xa;Admin" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="360" y="100" width="190" height="100" as="geometry" />
-        </mxCell>
-
-        <mxCell id="p2" value="2.0&#xa;&#xa;Kelola Data&#xa;Anggota" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="360" y="310" width="190" height="100" as="geometry" />
-        </mxCell>
-
-        <mxCell id="p3" value="3.0&#xa;&#xa;Kelola&#xa;Blok Lahan" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="360" y="520" width="190" height="100" as="geometry" />
-        </mxCell>
-
-        <mxCell id="p4" value="4.0&#xa;&#xa;Kelola&#xa;Kondisi Lahan" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="360" y="730" width="190" height="100" as="geometry" />
-        </mxCell>
-
-        <mxCell id="p4b" value="4.1&#xa;&#xa;Fetch Data Cuaca&#xa;(Open-Meteo)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;verticalAlign=middle;dashed=1;" vertex="1" parent="1">
-          <mxGeometry x="360" y="950" width="190" height="100" as="geometry" />
-        </mxCell>
-
-        <mxCell id="p5" value="5.0&#xa;&#xa;Kelola&#xa;Rule Base" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="360" y="1170" width="190" height="100" as="geometry" />
-        </mxCell>
-
-        <!-- ══════════════════════════════════ -->
-        <!-- PROSES — KOLOM TENGAH (INTI RBS)  -->
-        <!-- ══════════════════════════════════ -->
-        <mxCell id="p6" value="6.0&#xa;&#xa;Analisis RBS&#xa;(Forward Chaining)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=13;fontStyle=1;verticalAlign=middle;strokeWidth=3;" vertex="1" parent="1">
-          <mxGeometry x="940" y="560" width="280" height="190" as="geometry" />
-        </mxCell>
-
-        <!-- ══════════════════════════════════ -->
-        <!-- PROSES — KOLOM KANAN (OUTPUT)     -->
-        <!-- ══════════════════════════════════ -->
-        <mxCell id="p7" value="7.0&#xa;&#xa;Visualisasi WebGIS&#xa;Dashboard" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="1590" y="310" width="200" height="110" as="geometry" />
-        </mxCell>
-
-        <mxCell id="p8" value="8.0&#xa;&#xa;Laporan &amp; Export&#xa;PDF / Teks" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;verticalAlign=middle;" vertex="1" parent="1">
-          <mxGeometry x="1590" y="710" width="200" height="110" as="geometry" />
-        </mxCell>
-
-        <!-- ══════════════════════════════════ -->
-        <!-- DATA STORES                        -->
-        <!-- ══════════════════════════════════ -->
-        <mxCell id="d1" value="D1  |  admins" style="shape=partialRectangle;top=0;left=0;right=0;bottom=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#000000;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="710" y="130" width="200" height="40" as="geometry" />
-        </mxCell>
-
-        <mxCell id="d2" value="D2  |  anggotas" style="shape=partialRectangle;top=0;left=0;right=0;bottom=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#000000;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="710" y="340" width="200" height="40" as="geometry" />
-        </mxCell>
-
-        <mxCell id="d3" value="D3  |  blok_lahans" style="shape=partialRectangle;top=0;left=0;right=0;bottom=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#000000;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="710" y="550" width="200" height="40" as="geometry" />
-        </mxCell>
-
-        <mxCell id="d4" value="D4  |  kondisi_lahans" style="shape=partialRectangle;top=0;left=0;right=0;bottom=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#000000;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="710" y="760" width="200" height="40" as="geometry" />
-        </mxCell>
-
-        <mxCell id="d5" value="D5  |  rule_bases_lanjutan" style="shape=partialRectangle;top=0;left=0;right=0;bottom=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#000000;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="710" y="1200" width="200" height="40" as="geometry" />
-        </mxCell>
-
-        <mxCell id="d6" value="D6  |  rekomendasi_rbs" style="shape=partialRectangle;top=0;left=0;right=0;bottom=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#000000;fontSize=11;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="1280" y="690" width="200" height="40" as="geometry" />
+        <mxCell id="e2" value="Open-Meteo API" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=11;fontStyle=1;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="590" width="130" height="45" as="geometry" />
         </mxCell>
 
 
-        <!-- ══════════════════════════════════ -->
-        <!-- ALIRAN: Admin → Proses             -->
-        <!-- ══════════════════════════════════ -->
-        <mxCell id="fa1" value="Username, password" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.2;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="e1" target="p1">
+        <!-- ═══ PROSES BARIS 1 (y=250) ═══ -->
+        <mxCell id="p1" value="1.0&#xa;Otentikasi&#xa;Login" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=11;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="120" y="230" width="130" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p2" value="2.0&#xa;Manajemen&#xa;Anggota" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=11;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="360" y="230" width="130" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p3" value="3.0&#xa;Manajemen&#xa;Blok Lahan" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=11;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="600" y="230" width="130" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p4" value="4.0&#xa;Manajemen&#xa;Rule Base" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=11;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="840" y="230" width="130" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p9" value="9.0&#xa;Realisasi&#xa;Pemupukan" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=11;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="230" width="130" height="80" as="geometry" />
+        </mxCell>
+
+
+        <!-- ═══ DATA STORE BARIS 1 (y=380) ═══ -->
+        <mxCell id="d1" value="D1 | Admins" style="shape=partialRectangle;top=1;left=0;right=0;bottom=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#000000;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="380" width="130" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d2" value="D2 | Anggota" style="shape=partialRectangle;top=1;left=0;right=0;bottom=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#000000;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="380" width="130" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d3" value="D3 | Blok Lahan" style="shape=partialRectangle;top=1;left=0;right=0;bottom=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#000000;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="600" y="380" width="130" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d4" value="D4 | Rule Base" style="shape=partialRectangle;top=1;left=0;right=0;bottom=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#000000;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="840" y="380" width="130" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d7" value="D7 | Realisasi Pemupukan" style="shape=partialRectangle;top=1;left=0;right=0;bottom=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#000000;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="380" width="170" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ═══ PROSES BARIS 2 (y=560) ═══ -->
+        <mxCell id="p5" value="5.0&#xa;Input Kondisi&#xa;Lahan" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=11;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="200" y="560" width="130" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d5" value="D5 | Kondisi Lahan" style="shape=partialRectangle;top=1;left=0;right=0;bottom=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#000000;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="190" y="710" width="150" height="30" as="geometry" />
+        </mxCell>
+
+
+        <!-- ═══ PROSES INTI (y=830) ═══ -->
+        <mxCell id="p6" value="6.0&#xa;Analisis&#xa;Rule-Based&#xa;System" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="540" y="810" width="170" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="d6" value="D6 | Rekomendasi RBS" style="shape=partialRectangle;top=1;left=0;right=0;bottom=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#000000;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="530" y="1000" width="170" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ═══ PROSES BARIS 3 (y=1100) ═══ -->
+        <mxCell id="p7" value="7.0&#xa;Visualisasi&#xa;WebGIS" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=11;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="200" y="1100" width="130" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p8" value="8.0&#xa;Pembuatan&#xa;Laporan" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=11;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="840" y="1100" width="130" height="80" as="geometry" />
+        </mxCell>
+
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- ALIRAN: Admin → Proses (semua garis penuh)         -->
+        <!-- Label = edgeLabel di atas garis (verticalAlign=bottom) -->
+        <!-- ═══════════════════════════════════════════════════ -->
+
+        <!-- Admin → P1 -->
+        <mxCell id="a01" value="Username &amp; Password" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;exitX=0;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;fontSize=9;fontStyle=0;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1" source="e1" target="p1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="fa2" value="Data anggota (nama, no HP, alamat)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.38;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="e1" target="p2">
+        <!-- Admin → P2 -->
+        <mxCell id="a02" value="Data Anggota" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;exitX=0.25;exitY=1;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;fontSize=9;fontStyle=0;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1" source="e1" target="p2">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="fa3" value="Data blok (nama, luas, SPH, GeoJSON, jenis tanah, topografi)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="e1" target="p3">
+        <!-- Admin → P3 -->
+        <mxCell id="a03" value="Data Blok Lahan" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;fontSize=9;fontStyle=0;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1" source="e1" target="p3">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="fa4" value="Data observasi (pH, warna daun, kelembaban, drainase, musim, dll)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.62;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="e1" target="p4">
+        <!-- Admin → P4 -->
+        <mxCell id="a04" value="Input Aturan" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;exitX=0.75;exitY=1;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;fontSize=9;fontStyle=0;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1" source="e1" target="p4">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="fa5" value="Data rule base (kondisi IF, output THEN, prioritas)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.8;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="e1" target="p5">
+        <!-- Admin → P9 -->
+        <mxCell id="a09" value="Data Realisasi" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;fontSize=9;fontStyle=0;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1" source="e1" target="p9">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="fa6" value="Perintah analisis RBS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="e1" target="p6">
+
+        <!-- Admin → P5: Input Observasi (belok kiri) -->
+        <mxCell id="a05" value="Input Observasi" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=9;fontStyle=0;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
+            <mxPoint x="600" y="117" as="sourcePoint" />
+            <mxPoint x="265" y="560" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="270" y="705" />
-              <mxPoint x="270" y="655" />
-              <mxPoint x="930" y="655" />
+              <mxPoint x="80" y="117" />
+              <mxPoint x="80" y="530" />
+              <mxPoint x="265" y="530" />
             </Array>
           </mxGeometry>
         </mxCell>
 
-        <!-- ══════════════════════════════════ -->
-        <!-- ALIRAN: Proses → Admin (output)    -->
-        <!-- ══════════════════════════════════ -->
-        <mxCell id="fo1" value="Sesi login" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=0;exitY=0.8;exitPerimeter=0;entryX=0.2;entryY=0;entryPerimeter=0;strokeColor=#000000;fontSize=9;dashed=1;" edge="1" parent="1" source="p1" target="e1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="fo2" value="Peta interaktif, popup status per blok" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=0;exitY=0.8;exitPerimeter=0;entryX=1;entryY=0.2;entryPerimeter=0;strokeColor=#000000;fontSize=9;dashed=1;" edge="1" parent="1" source="p7" target="e1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="fo3" value="Rekomendasi, dosis pupuk, confidence score, jadwal pemupukan" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=0;exitY=0.7;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;dashed=1;" edge="1" parent="1" source="p6" target="e1">
+        <!-- Admin → P6: Jalankan Analisis (belok tengah-kiri) -->
+        <mxCell id="a06" value="Jalankan Analisis" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=9;fontStyle=0;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
+            <mxPoint x="680" y="145" as="sourcePoint" />
+            <mxPoint x="625" y="810" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="930" y="723" />
-              <mxPoint x="270" y="723" />
-              <mxPoint x="270" y="715" />
+              <mxPoint x="680" y="170" />
+              <mxPoint x="480" y="170" />
+              <mxPoint x="480" y="780" />
+              <mxPoint x="625" y="780" />
             </Array>
           </mxGeometry>
         </mxCell>
 
-        <mxCell id="fo4" value="Laporan PDF, rekap kebutuhan pupuk" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=0;exitY=0.8;exitPerimeter=0;entryX=1;entryY=0.8;entryPerimeter=0;strokeColor=#000000;fontSize=9;dashed=1;" edge="1" parent="1" source="p8" target="e1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-
-        <!-- ══════════════════════════════════ -->
-        <!-- ALIRAN: Proses → Data Store        -->
-        <!-- ══════════════════════════════════ -->
-        <mxCell id="fs1" value="Simpan/verifikasi kredensial" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="p1" target="d1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="fs2" value="CRUD data anggota" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="p2" target="d2">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="fs3" value="CRUD blok lahan + GeoJSON" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="p3" target="d3">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="fs4" value="CRUD data observasi kondisi lahan" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="p4" target="d4">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="fs5" value="CRUD rule base (IF-THEN, prioritas, aktif)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="p5" target="d5">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="fs6" value="Simpan rekomendasi (histori, is_latest, confidence)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.6;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="p6" target="d6">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <!-- ══════════════════════════════════ -->
-        <!-- ALIRAN: Data Store → Proses (baca) -->
-        <!-- ══════════════════════════════════ -->
-        <mxCell id="fr3" value="Data blok (SPH, luas, koordinat, umur)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=0;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.3;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="d3" target="p6">
+        <!-- Admin → P8: Permintaan Laporan (belok kanan) -->
+        <mxCell id="a08" value="Permintaan Laporan" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=9;fontStyle=0;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
+            <mxPoint x="760" y="130" as="sourcePoint" />
+            <mxPoint x="905" y="1100" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="680" y="570" />
-              <mxPoint x="680" y="613" />
-              <mxPoint x="930" y="613" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="fr4" value="Kondisi terbaru (pH, warna daun, musim, dll)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=0;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="d4" target="p6">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="680" y="780" />
-              <mxPoint x="680" y="655" />
-              <mxPoint x="930" y="655" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="fr5" value="Rule aktif terurut prioritas" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=0;exitY=0.5;exitPerimeter=0;entryX=1;entryY=0.8;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="d5" target="p6">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="680" y="1220" />
-              <mxPoint x="680" y="707" />
-              <mxPoint x="930" y="707" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="fr6" value="Rekomendasi terbaru per blok" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0.5;entryY=1;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="d6" target="p7">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1510" y="710" />
-              <mxPoint x="1510" y="450" />
-              <mxPoint x="1690" y="450" />
-              <mxPoint x="1690" y="420" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="fr7" value="Rekomendasi + kondisi + blok untuk laporan" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=0;exitPerimeter=0;entryX=0.5;entryY=1;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="d6" target="p8">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1380" y="680" />
-              <mxPoint x="1380" y="830" />
-              <mxPoint x="1690" y="830" />
-              <mxPoint x="1690" y="820" />
+              <mxPoint x="760" y="155" />
+              <mxPoint x="1280" y="155" />
+              <mxPoint x="1280" y="1060" />
+              <mxPoint x="905" y="1060" />
             </Array>
           </mxGeometry>
         </mxCell>
 
 
-        <!-- ══════════════════════════════════ -->
-        <!-- ALIRAN: Proses → Proses (internal) -->
-        <!-- ══════════════════════════════════ -->
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- ALIRAN: Proses → Admin (Output, garis penuh)       -->
+        <!-- ═══════════════════════════════════════════════════ -->
 
-        <!-- P4 → P4b: Koordinat centroid untuk fetch cuaca -->
-        <mxCell id="fp1" value="Koordinat centroid blok" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=1;exitPerimeter=0;entryX=0.5;entryY=0;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="p4" target="p4b">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <!-- P4b → P4: Hasil cuaca sebagai nilai default form -->
-        <mxCell id="fp2" value="curah_hujan_kategori, musim_saat_ini (default form)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.3;exitPerimeter=0;entryX=1;entryY=0.7;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="p4b" target="p4">
+        <!-- P1 → Admin: Status Akses -->
+        <mxCell id="o01" value="Status Akses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=9;fontStyle=0;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
+            <mxPoint x="210" y="230" as="sourcePoint" />
+            <mxPoint x="610" y="97" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="590" y="979" />
-              <mxPoint x="590" y="815" />
+              <mxPoint x="210" y="200" />
+              <mxPoint x="350" y="200" />
+              <mxPoint x="350" y="97" />
             </Array>
           </mxGeometry>
         </mxCell>
 
-        <!-- P4b → Open-Meteo: Kirim koordinat -->
-        <mxCell id="fp3" value="Koordinat (lat, lng)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="p4b" target="e2">
+        <!-- P7 → Admin: Tampilan Peta (naik kiri) -->
+        <mxCell id="o07" value="Tampilan Peta" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=9;fontStyle=0;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="1140" as="sourcePoint" />
+            <mxPoint x="600" y="125" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="620" y="1000" />
-              <mxPoint x="2170" y="1000" />
-              <mxPoint x="2170" y="985" />
+              <mxPoint x="50" y="1140" />
+              <mxPoint x="50" y="125" />
             </Array>
           </mxGeometry>
         </mxCell>
 
-        <!-- Open-Meteo → P4b: Data iklim -->
-        <mxCell id="fp4" value="Presipitasi 30 hari, ET0 (evapotranspirasi)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=0;exitY=0.3;exitPerimeter=0;entryX=1;entryY=0.8;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="e2" target="p4b">
+        <!-- P8 → Admin: Laporan PDF (naik kanan) -->
+        <mxCell id="o08" value="Laporan PDF" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=9;fontStyle=0;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
+            <mxPoint x="970" y="1130" as="sourcePoint" />
+            <mxPoint x="760" y="107" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="2070" y="964" />
-              <mxPoint x="620" y="964" />
+              <mxPoint x="1320" y="1130" />
+              <mxPoint x="1320" y="107" />
             </Array>
           </mxGeometry>
         </mxCell>
 
-        <!-- P6 → P7: Status analisis + data peta -->
-        <mxCell id="fp5" value="Status RBS, GeoJSON polygon, dosis pupuk" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=0.5;exitY=0;exitPerimeter=0;entryX=0.5;entryY=1;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="p6" target="p7">
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- ALIRAN: Proses ↔ Data Store                        -->
+        <!-- ═══════════════════════════════════════════════════ -->
+
+        <!-- P1 → D1: Validasi -->
+        <mxCell id="s01" value="Validasi" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;exitX=0.3;exitY=1;exitPerimeter=0;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
+            <mxPoint x="159" y="310" as="sourcePoint" />
+            <mxPoint x="159" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- D1 → P1: Kredensial -->
+        <mxCell id="r01" value="Kredensial" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="211" y="380" as="sourcePoint" />
+            <mxPoint x="211" y="310" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P2 → D2: Simpan Anggota -->
+        <mxCell id="s02" value="Simpan Anggota" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="425" y="310" as="sourcePoint" />
+            <mxPoint x="425" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P3 → D3: Simpan Blok -->
+        <mxCell id="s03" value="Simpan Blok" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="665" y="310" as="sourcePoint" />
+            <mxPoint x="665" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P4 → D4: Simpan Rule -->
+        <mxCell id="s04" value="Simpan Rule" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="905" y="310" as="sourcePoint" />
+            <mxPoint x="905" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P9 → D7: Simpan Realisasi -->
+        <mxCell id="s09" value="Simpan Realisasi" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1145" y="310" as="sourcePoint" />
+            <mxPoint x="1145" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P5 → D5: Simpan Kondisi -->
+        <mxCell id="s05" value="Simpan Kondisi" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="265" y="640" as="sourcePoint" />
+            <mxPoint x="265" y="710" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+        <!-- P6 → D6: Simpan Rekomendasi -->
+        <mxCell id="s06" value="Simpan Rekomendasi" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="625" y="920" as="sourcePoint" />
+            <mxPoint x="625" y="1000" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- ALIRAN: Data Store → P6 (input ke analisis)        -->
+        <!-- ═══════════════════════════════════════════════════ -->
+
+        <!-- D3 → P6: Data Blok -->
+        <mxCell id="r03" value="Data Blok" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="645" y="410" as="sourcePoint" />
+            <mxPoint x="600" y="810" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="1080" y="540" />
-              <mxPoint x="1080" y="460" />
-              <mxPoint x="1690" y="460" />
-              <mxPoint x="1690" y="420" />
+              <mxPoint x="645" y="460" />
+              <mxPoint x="600" y="460" />
             </Array>
           </mxGeometry>
         </mxCell>
 
-        <!-- P6 → P8: Hasil rekomendasi untuk laporan -->
-        <mxCell id="fp6" value="Hasil rekomendasi (masalah, pupuk, jadwal, confidence score)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitPerimeter=0;entryX=0;entryY=0.5;entryPerimeter=0;strokeColor=#000000;fontSize=9;" edge="1" parent="1" source="p6" target="p8">
+        <!-- D4 → P6: Aturan Pemupukan -->
+        <mxCell id="r04" value="Aturan Pemupukan" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
+            <mxPoint x="885" y="410" as="sourcePoint" />
+            <mxPoint x="680" y="820" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="1250" y="655" />
-              <mxPoint x="1250" y="765" />
-              <mxPoint x="1570" y="765" />
+              <mxPoint x="885" y="460" />
+              <mxPoint x="740" y="460" />
+              <mxPoint x="740" y="770" />
+              <mxPoint x="680" y="770" />
             </Array>
           </mxGeometry>
         </mxCell>
 
-        <!-- ══════════════════════════════════ -->
-        <!-- LEGENDA                            -->
-        <!-- ══════════════════════════════════ -->
-        <mxCell id="leg_bg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1">
-          <mxGeometry x="60" y="1400" width="960" height="140" as="geometry" />
-        </mxCell>
-        <mxCell id="leg_title" value="Legenda:" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="80" y="1410" width="100" height="25" as="geometry" />
-        </mxCell>
-
-        <mxCell id="leg1" value="Entitas Eksternal" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="80" y="1440" width="140" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="leg2" value="Proses" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="240" y="1435" width="130" height="50" as="geometry" />
-        </mxCell>
-        <mxCell id="leg3" value="Proses Inti (tebal)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=10;fontStyle=1;strokeWidth=3;" vertex="1" parent="1">
-          <mxGeometry x="390" y="1435" width="130" height="50" as="geometry" />
-        </mxCell>
-        <mxCell id="leg4" value="Sub-Proses / Integrasi API" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=10;dashed=1;" vertex="1" parent="1">
-          <mxGeometry x="540" y="1435" width="150" height="50" as="geometry" />
-        </mxCell>
-        <mxCell id="leg5" value="D  |  Data Store" style="shape=partialRectangle;top=0;left=0;right=0;bottom=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#000000;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="710" y="1445" width="160" height="35" as="geometry" />
+        <!-- D5 → P6: Kondisi Lahan -->
+        <mxCell id="r05" value="Kondisi Lahan" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="265" y="740" as="sourcePoint" />
+            <mxPoint x="540" y="870" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="265" y="870" />
+            </Array>
+          </mxGeometry>
         </mxCell>
 
-        <mxCell id="leg6a" value="" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;strokeWidth=1;endArrow=block;endFill=1;" edge="1" parent="1">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="80" y="1510"/><mxPoint x="200" y="1510"/></Array></mxGeometry>
+        <!-- D2 → P3: Daftar Anggota -->
+        <mxCell id="r02" value="Daftar Anggota" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="490" y="395" as="sourcePoint" />
+            <mxPoint x="620" y="310" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="540" y="395" />
+              <mxPoint x="540" y="440" />
+              <mxPoint x="560" y="440" />
+              <mxPoint x="560" y="300" />
+              <mxPoint x="620" y="300" />
+            </Array>
+          </mxGeometry>
         </mxCell>
-        <mxCell id="leg6b" value="Aliran data input / simpan" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="210" y="1500" width="180" height="25" as="geometry" />
+
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- ALIRAN: D6 → P7, P8, P9                            -->
+        <!-- ═══════════════════════════════════════════════════ -->
+
+        <!-- D6 → P7: Status Lahan -->
+        <mxCell id="r06a" value="Status Lahan" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="530" y="1020" as="sourcePoint" />
+            <mxPoint x="265" y="1100" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="430" y="1020" />
+              <mxPoint x="430" y="1070" />
+              <mxPoint x="265" y="1070" />
+            </Array>
+          </mxGeometry>
         </mxCell>
-        <mxCell id="leg7a" value="" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#000000;strokeWidth=1;endArrow=block;endFill=1;dashed=1;" edge="1" parent="1">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="420" y="1510"/><mxPoint x="540" y="1510"/></Array></mxGeometry>
+
+        <!-- D6 → P8: Data Rekomendasi -->
+        <mxCell id="r06b" value="Data Rekomendasi" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="700" y="1020" as="sourcePoint" />
+            <mxPoint x="905" y="1100" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="800" y="1020" />
+              <mxPoint x="800" y="1070" />
+              <mxPoint x="905" y="1070" />
+            </Array>
+          </mxGeometry>
         </mxCell>
-        <mxCell id="leg7b" value="Aliran data output ke Admin" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="550" y="1500" width="200" height="25" as="geometry" />
+
+        <!-- D6 → P9: Rekomendasi (naik ke kanan-atas) -->
+        <mxCell id="r06c" value="Rekomendasi" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="700" y="1010" as="sourcePoint" />
+            <mxPoint x="1145" y="310" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1000" y="1010" />
+              <mxPoint x="1000" y="500" />
+              <mxPoint x="1145" y="500" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- ALIRAN: Open-Meteo API                             -->
+        <!-- ═══════════════════════════════════════════════════ -->
+
+        <!-- P5 → Open-Meteo: Koordinat -->
+        <mxCell id="api_out" value="Koordinat (lat, lng)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="330" y="580" as="sourcePoint" />
+            <mxPoint x="1100" y="600" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="380" y="580" />
+              <mxPoint x="380" y="510" />
+              <mxPoint x="1050" y="510" />
+              <mxPoint x="1050" y="600" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Open-Meteo → P5: Data Cuaca -->
+        <mxCell id="api_in" value="Data Cuaca" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;strokeColor=#000000;endArrow=block;endFill=1;fontSize=8;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1100" y="625" as="sourcePoint" />
+            <mxPoint x="330" y="620" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1050" y="625" />
+              <mxPoint x="1050" y="660" />
+              <mxPoint x="380" y="660" />
+              <mxPoint x="380" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ═══════════════════════════════════════════════════ -->
+        <!-- LEGENDA                                            -->
+        <!-- ═══════════════════════════════════════════════════ -->
+
+        <mxCell id="leg_title" value="Legenda:" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1240" width="70" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="leg1" value="Entitas Eksternal" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="120" y="1265" width="110" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="leg2" value="Proses" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="250" y="1262" width="80" height="33" as="geometry" />
+        </mxCell>
+        <mxCell id="leg3" value="D | Data Store" style="shape=partialRectangle;top=1;left=0;right=0;bottom=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="350" y="1268" width="110" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="leg4" style="endArrow=block;endFill=1;html=1;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="490" y="1280" as="sourcePoint" />
+            <mxPoint x="560" y="1280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg4_lbl" value="Aliran Data" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="565" y="1271" width="70" height="18" as="geometry" />
         </mxCell>
 
       </root>

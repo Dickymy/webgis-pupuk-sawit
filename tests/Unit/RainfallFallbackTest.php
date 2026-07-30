@@ -4,12 +4,8 @@ namespace Tests\Unit;
 
 use App\Models\KondisiLahan;
 use App\Services\FertilizationWindowService;
-use Carbon\Carbon;
 use Tests\TestCase;
 
-/**
- * Test fallback curah hujan — kategori tanpa numerik tidak langsung layak.
- */
 class RainfallFallbackTest extends TestCase
 {
     private FertilizationWindowService $service;
@@ -20,113 +16,62 @@ class RainfallFallbackTest extends TestCase
         $this->service = new FertilizationWindowService;
     }
 
-    private function makeKondisi(array $attrs = []): KondisiLahan
+    private function makeKondisi(?float $millimeters = null, ?string $category = null): KondisiLahan
     {
         $kondisi = new KondisiLahan;
-        $kondisi->curah_hujan_mm_bulanan = $attrs['curah_hujan_mm_bulanan'] ?? null;
-        $kondisi->curah_hujan_kategori = $attrs['curah_hujan_kategori'] ?? null;
-        $kondisi->tanggal_pemupukan_terakhir = isset($attrs['tanggal_pemupukan_terakhir'])
-            ? Carbon::parse($attrs['tanggal_pemupukan_terakhir'])
-            : null;
-        $kondisi->kondisi_drainase = $attrs['kondisi_drainase'] ?? null;
+        $kondisi->curah_hujan_mm_bulanan = $millimeters;
+        $kondisi->curah_hujan_kategori = $category;
 
         return $kondisi;
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // Numerik: batas ketat
-    // ═══════════════════════════════════════════════════════════════
-
-    public function test_99mm_tunda(): void
+    public function test_99mm_perlu_verifikasi(): void
     {
-        $kondisi = $this->makeKondisi(['curah_hujan_mm_bulanan' => 99]);
-        $result = $this->service->evaluate($kondisi);
+        $result = $this->service->evaluate($this->makeKondisi(99));
         $this->assertFalse($result['layak']);
-        $this->assertEquals(FertilizationWindowService::TUNDA_HUJAN_RENDAH, $result['status']);
+        $this->assertSame(FertilizationWindowService::PERLU_VERIFIKASI_DATA, $result['status']);
     }
 
-    public function test_100mm_layak(): void
+    public function test_100mm_dan_250mm_layak(): void
     {
-        $kondisi = $this->makeKondisi(['curah_hujan_mm_bulanan' => 100]);
-        $result = $this->service->evaluate($kondisi);
-        $this->assertTrue($result['layak']);
+        foreach ([100, 250] as $rainfall) {
+            $result = $this->service->evaluate($this->makeKondisi($rainfall));
+            $this->assertTrue($result['layak']);
+        }
     }
 
-    public function test_250mm_layak(): void
+    public function test_251mm_perlu_verifikasi(): void
     {
-        $kondisi = $this->makeKondisi(['curah_hujan_mm_bulanan' => 250]);
-        $result = $this->service->evaluate($kondisi);
-        $this->assertTrue($result['layak']);
-    }
-
-    public function test_251mm_tunda(): void
-    {
-        $kondisi = $this->makeKondisi(['curah_hujan_mm_bulanan' => 251]);
-        $result = $this->service->evaluate($kondisi);
+        $result = $this->service->evaluate($this->makeKondisi(251));
         $this->assertFalse($result['layak']);
-        $this->assertEquals(FertilizationWindowService::TUNDA_HUJAN_TINGGI, $result['status']);
+        $this->assertSame(FertilizationWindowService::PERLU_VERIFIKASI_DATA, $result['status']);
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // Kategori tanpa angka → PERLU_VERIFIKASI_DATA
-    // ═══════════════════════════════════════════════════════════════
-
-    public function test_kategori_rendah_tanpa_angka_perlu_verifikasi(): void
+    public function test_kategori_rendah_dan_normal_tanpa_angka_perlu_verifikasi(): void
     {
-        $kondisi = $this->makeKondisi([
-            'curah_hujan_kategori' => 'Rendah',
-            'curah_hujan_mm_bulanan' => null,
-        ]);
-        $result = $this->service->evaluate($kondisi);
-        $this->assertFalse($result['layak']);
-        $this->assertEquals(FertilizationWindowService::PERLU_VERIFIKASI_DATA, $result['status']);
-    }
-
-    public function test_kategori_normal_tanpa_angka_perlu_verifikasi(): void
-    {
-        $kondisi = $this->makeKondisi([
-            'curah_hujan_kategori' => 'Normal',
-            'curah_hujan_mm_bulanan' => null,
-        ]);
-        $result = $this->service->evaluate($kondisi);
-        $this->assertFalse($result['layak']);
-        $this->assertEquals(FertilizationWindowService::PERLU_VERIFIKASI_DATA, $result['status']);
+        foreach (['Rendah', 'Normal'] as $category) {
+            $result = $this->service->evaluate($this->makeKondisi(null, $category));
+            $this->assertFalse($result['layak']);
+            $this->assertSame(FertilizationWindowService::PERLU_VERIFIKASI_DATA, $result['status']);
+        }
     }
 
     public function test_kategori_sangat_rendah_tunda(): void
     {
-        $kondisi = $this->makeKondisi([
-            'curah_hujan_kategori' => 'Sangat Rendah',
-            'curah_hujan_mm_bulanan' => null,
-        ]);
-        $result = $this->service->evaluate($kondisi);
-        $this->assertFalse($result['layak']);
-        $this->assertEquals(FertilizationWindowService::TUNDA_HUJAN_RENDAH, $result['status']);
+        $result = $this->service->evaluate($this->makeKondisi(null, 'Sangat Rendah'));
+        $this->assertSame(FertilizationWindowService::TUNDA_HUJAN_RENDAH, $result['status']);
     }
 
     public function test_kategori_sangat_tinggi_tunda(): void
     {
-        $kondisi = $this->makeKondisi([
-            'curah_hujan_kategori' => 'Sangat Tinggi',
-            'curah_hujan_mm_bulanan' => null,
-        ]);
-        $result = $this->service->evaluate($kondisi);
-        $this->assertFalse($result['layak']);
-        $this->assertEquals(FertilizationWindowService::TUNDA_HUJAN_TINGGI, $result['status']);
+        $result = $this->service->evaluate($this->makeKondisi(null, 'Sangat Tinggi'));
+        $this->assertSame(FertilizationWindowService::TUNDA_HUJAN_TINGGI, $result['status']);
     }
-
-    // ═══════════════════════════════════════════════════════════════
-    // Data kosong → PERLU_VERIFIKASI_DATA
-    // ═══════════════════════════════════════════════════════════════
 
     public function test_data_hujan_kosong_perlu_verifikasi(): void
     {
-        $kondisi = $this->makeKondisi([
-            'curah_hujan_kategori' => null,
-            'curah_hujan_mm_bulanan' => null,
-        ]);
-        $result = $this->service->evaluate($kondisi);
+        $result = $this->service->evaluate($this->makeKondisi());
         $this->assertFalse($result['layak']);
-        $this->assertEquals(FertilizationWindowService::PERLU_VERIFIKASI_DATA, $result['status']);
+        $this->assertSame(FertilizationWindowService::PERLU_VERIFIKASI_DATA, $result['status']);
     }
 }

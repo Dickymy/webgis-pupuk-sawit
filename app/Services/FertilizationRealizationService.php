@@ -18,12 +18,10 @@ use Carbon\Carbon;
  * - Toleransi pembulatan: 0.01 kg
  * - Urea dan KCl dievaluasi secara independen
  *
- * Referensi: Pahan, 2013. Bab 9, hal. 157-159.
+ * Jeda tahap menggunakan parameter operasional yang diturunkan dari frekuensi 2-3 aplikasi/tahun PPKS (2021).
  */
 class FertilizationRealizationService
 {
-    private const MIN_INTERVAL_DAYS = 60;
-
     /**
      * Toleransi pembulatan untuk menentukan apakah rencana terpenuhi.
      */
@@ -121,9 +119,9 @@ class FertilizationRealizationService
 
         if ($tahap1Tanggal) {
             $tglTahap1 = Carbon::parse($tahap1Tanggal);
-            $tanggalMinTahap2 = $tglTahap1->copy()->addDays(self::MIN_INTERVAL_DAYS)->toDateString();
+            $tanggalMinTahap2 = $tglTahap1->copy()->addDays((int) config('fertilization.window.min_interval_days', 120))->toDateString();
             $intervalHari = (int) $tglTahap1->diffInDays($analysisDate);
-            $intervalTerpenuhi = $intervalHari >= self::MIN_INTERVAL_DAYS;
+            $intervalTerpenuhi = $intervalHari >= (int) config('fertilization.window.min_interval_days', 120);
         }
 
         return [
@@ -272,9 +270,9 @@ class FertilizationRealizationService
 
         if ($tahap1Tanggal) {
             $tglTahap1 = Carbon::parse($tahap1Tanggal);
-            $tanggalMinTahap2 = $tglTahap1->copy()->addDays(self::MIN_INTERVAL_DAYS)->toDateString();
+            $tanggalMinTahap2 = $tglTahap1->copy()->addDays((int) config('fertilization.window.min_interval_days', 120))->toDateString();
             $intervalHari = (int) $tglTahap1->diffInDays($analysisDate);
-            $intervalTerpenuhi = $intervalHari >= self::MIN_INTERVAL_DAYS;
+            $intervalTerpenuhi = $intervalHari >= (int) config('fertilization.window.min_interval_days', 120);
         }
 
         return [

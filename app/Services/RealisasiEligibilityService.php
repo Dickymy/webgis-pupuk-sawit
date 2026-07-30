@@ -12,7 +12,7 @@ use App\Models\RekomendasiRbs;
  * Form realisasi hanya boleh dibuka jika status layak.
  * Rencana, tahap, dan tahun program dihitung server — bukan dari browser.
  *
- * Referensi: Pahan, 2013. Bab 9, hal. 157-159.
+ * Waktu aplikasi mengacu pada PPKS (2021; 2025); interval tahap adalah adaptasi operasional sistem.
  */
 class RealisasiEligibilityService
 {
@@ -35,8 +35,8 @@ class RealisasiEligibilityService
      * Status yang ditolak beserta alasan penolakan.
      */
     private const REJECTION_REASONS = [
-        CurrentApplicationCalculator::MENUNGGU_INTERVAL => 'Menunggu interval minimal 60 hari setelah Tahap 1 selesai.',
-        CurrentApplicationCalculator::MENUNGGU_KELAYAKAN => 'Kondisi kelayakan aplikasi belum terpenuhi (curah hujan, drainase, atau interval).',
+        CurrentApplicationCalculator::MENUNGGU_INTERVAL => 'Tahap berikutnya belum dapat dicatat karena jarak waktu minimum pada jadwal belum terpenuhi.',
+        CurrentApplicationCalculator::MENUNGGU_KELAYAKAN => 'Kondisi lapangan belum mendukung pemupukan (curah hujan, saluran air, atau jarak waktu).',
         CurrentApplicationCalculator::SELESAI_TAHUNAN => 'Kebutuhan tahunan telah terpenuhi. Tidak ada sisa pupuk untuk diaplikasikan.',
         CurrentApplicationCalculator::PERLU_VERIFIKASI_REALISASI => 'Data realisasi perlu diverifikasi sebelum pencatatan baru.',
     ];
@@ -73,6 +73,19 @@ class RealisasiEligibilityService
             return $this->reject(
                 'Realisasi tidak dapat dicatat dari rekomendasi historis. Gunakan rekomendasi terbaru pada program aktif.'
             );
+        }
+
+        $dataBelumCukup = in_array($rekomendasi->status_kondisi_tanaman, ['PERLU_VERIFIKASI', 'BELUM_DIOBSERVASI'], true)
+            || $rekomendasi->status_kelayakan_aplikasi === 'PERLU_VERIFIKASI_DATA';
+
+        if ($dataBelumCukup) {
+            $result = $this->reject(
+                'Data observasi belum cukup untuk realisasi. Lengkapi observasi lalu hitung ulang rekomendasi.'
+            );
+            $result['status_stage'] = CurrentApplicationCalculator::MENUNGGU_KELAYAKAN;
+            $result['active_stage'] = $rekomendasi->active_stage ?? 1;
+
+            return $result;
         }
 
         // Pahan v2.8: Tentukan program pemupukan aktif

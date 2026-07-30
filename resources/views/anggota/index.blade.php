@@ -1,26 +1,34 @@
 @extends('layouts.app')
 
-@section('title', 'Anggota Kelompok Tani')
-@section('page-title', 'Anggota Kelompok Tani')
-@section('page-subtitle', 'Data anggota pemilik lahan')
+@section('title', 'Data Kebun')
+@section('page-title', 'Data Kebun')
+@section('page-subtitle', 'Kelola blok lahan dan anggota kelompok tani')
 
 @section('content')
 <div class="space-y-3">
-    {{-- Header: count left, search + button in one row --}}
-    <div class="space-y-2">
-        <p class="text-xs text-slate-500"><span class="font-bold text-slate-800">{{ $anggotas->total() }}</span> anggota terdaftar</p>
-        <div class="flex items-center gap-2">
-            <input type="text" id="search-anggota" placeholder="Cari nama anggota..."
-                class="flex-1 min-w-0 px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500">
+    <section class="rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm dark:border-slate-700 dark:bg-slate-800" aria-label="Kontrol data anggota">
+        <div class="flex flex-col gap-2 xl:flex-row xl:items-center">
+            @include('components.data-kebun-tabs')
+
+            <p class="shrink-0 px-1 text-xs text-slate-500 dark:text-slate-400">
+                <span class="font-bold text-slate-800 dark:text-slate-100">{{ $anggotas->total() }}</span> anggota terdaftar
+            </p>
+
+            <div class="relative min-w-0 flex-1 xl:ml-auto xl:max-w-[300px]">
+                <div class="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                    <svg class="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                <input type="search" id="search-anggota" placeholder="Cari nama anggota..." aria-label="Cari nama anggota"
+                    class="min-h-10 w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-xs text-slate-700 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
+            </div>
+
             <a href="{{ route('anggota.create') }}"
-               class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold rounded-lg transition-all flex-shrink-0">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <span class="hidden sm:inline">Tambah Anggota</span>
-                <span class="sm:hidden">Tambah</span>
+               class="inline-flex min-h-10 w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 sm:w-auto">
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Tambah Anggota
             </a>
         </div>
-    </div>
-
+    </section>
     <div class="bg-white border border-slate-200 shadow-sm rounded-2xl">
         {{-- Desktop Table --}}
         <div class="overflow-x-auto hidden sm:block rounded-t-2xl">

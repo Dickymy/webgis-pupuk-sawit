@@ -150,7 +150,7 @@ class PahanDoseReferenceTest extends TestCase
     // 15.2 Curah Hujan
     // ═══════════════════════════════════════════════════════════════
 
-    public function test_curah_hujan_99_mm_tunda(): void
+    public function test_curah_hujan_99_mm_perlu_verifikasi(): void
     {
         $kondisi = new KondisiLahan;
         $kondisi->curah_hujan_mm_bulanan = 99;
@@ -162,7 +162,7 @@ class PahanDoseReferenceTest extends TestCase
         $result = $windowService->evaluate($kondisi);
 
         $this->assertFalse($result['layak']);
-        $this->assertEquals('TUNDA_HUJAN_RENDAH', $result['status']);
+        $this->assertEquals('PERLU_VERIFIKASI_DATA', $result['status']);
     }
 
     public function test_curah_hujan_100_mm_layak(): void
@@ -193,7 +193,7 @@ class PahanDoseReferenceTest extends TestCase
         $this->assertTrue($result['layak']);
     }
 
-    public function test_curah_hujan_251_mm_tunda(): void
+    public function test_curah_hujan_251_mm_perlu_verifikasi(): void
     {
         $kondisi = new KondisiLahan;
         $kondisi->curah_hujan_mm_bulanan = 251;
@@ -205,7 +205,7 @@ class PahanDoseReferenceTest extends TestCase
         $result = $windowService->evaluate($kondisi);
 
         $this->assertFalse($result['layak']);
-        $this->assertEquals('TUNDA_HUJAN_TINGGI', $result['status']);
+        $this->assertEquals('PERLU_VERIFIKASI_DATA', $result['status']);
     }
 
     public function test_curah_hujan_kosong_perlu_verifikasi(): void
@@ -226,57 +226,34 @@ class PahanDoseReferenceTest extends TestCase
     // 15.3 Interval
     // ═══════════════════════════════════════════════════════════════
 
-    public function test_interval_59_hari_tunda(): void
+    public function test_interval_119_hari_tunda(): void
     {
         $kondisi = new KondisiLahan;
         $kondisi->curah_hujan_mm_bulanan = 150;
-        $kondisi->curah_hujan_kategori = null;
-        $kondisi->tanggal_pemupukan_terakhir = now()->subDays(59);
+        $kondisi->tanggal_pemupukan_terakhir = now()->subDays(119);
         $kondisi->kondisi_drainase = 'Baik';
 
-        $windowService = app(FertilizationWindowService::class);
-        $result = $windowService->evaluate($kondisi);
+        $result = app(FertilizationWindowService::class)->evaluate($kondisi);
 
         $this->assertFalse($result['layak']);
         $this->assertEquals('TUNDA_INTERVAL', $result['status']);
     }
 
-    public function test_interval_60_hari_layak(): void
+    public function test_interval_120_hari_layak(): void
     {
         $kondisi = new KondisiLahan;
         $kondisi->curah_hujan_mm_bulanan = 150;
-        $kondisi->curah_hujan_kategori = null;
-        $kondisi->tanggal_pemupukan_terakhir = now()->subDays(60);
+        $kondisi->tanggal_pemupukan_terakhir = now()->subDays(120);
         $kondisi->kondisi_drainase = 'Baik';
 
-        $windowService = app(FertilizationWindowService::class);
-        $result = $windowService->evaluate($kondisi);
+        $result = app(FertilizationWindowService::class)->evaluate($kondisi);
 
         $this->assertTrue($result['layak']);
+        $this->assertEquals('LAYAK_DIJADWALKAN', $result['status']);
+        $this->assertFalse($result['terlambat']);
     }
 
-    public function test_interval_lebih_120_hari_terlambat_tanpa_multiplier(): void
-    {
-        $kondisi = new KondisiLahan;
-        $kondisi->curah_hujan_mm_bulanan = 150;
-        $kondisi->curah_hujan_kategori = null;
-        $kondisi->tanggal_pemupukan_terakhir = now()->subDays(130);
-        $kondisi->kondisi_drainase = 'Baik';
-
-        $windowService = app(FertilizationWindowService::class);
-        $result = $windowService->evaluate($kondisi);
-
-        // Masih layak (terlambat tapi layak dijadwalkan)
-        $this->assertTrue($result['layak']);
-        $this->assertTrue($result['terlambat']);
-        // Status = TERLAMBAT_PERLU_DIJADWALKAN, bukan peningkatan dosis
-        $this->assertEquals('TERLAMBAT_PERLU_DIJADWALKAN', $result['status']);
-    }
-
-    // ═══════════════════════════════════════════════════════════════
     // 15.4 Perhitungan
-    // ═══════════════════════════════════════════════════════════════
-
     public function test_jumlah_pokok_luas_kali_sph(): void
     {
         $blok = $this->makeBlok(['luas_ha' => 5.0, 'sph' => 136, 'tahun_tanam' => now()->year - 10, 'fase_tanaman' => 'TM']);

@@ -38,24 +38,17 @@
             · {{ $rekomendasiRbs->tanggal_analisis->format('d F Y') }}
             · Oleh: <span class="font-semibold text-slate-700">{{ $rekomendasiRbs->admin->nama_lengkap }}</span>
         </p>
-        {{-- Badges Validitas + Confidence --}}
+        @php
+            $currentDataReady = $observationCompleteness['can_run_diagnosis'] ?? $rekomendasiRbs->data_cukup;
+            $dataPendukungKurang = collect($observationCompleteness['missing_fields'] ?? $rekomendasiRbs->data_kurang ?? [])->filter()->values();
+        @endphp
+        {{-- Status ketersediaan data --}}
         <div class="flex flex-wrap items-center gap-2 mt-3">
-            @php
-                $validitasColor = match($rekomendasiRbs->validitas_rekomendasi) {
-                    'Cukup Kuat'    => 'bg-blue-100 text-blue-800',
-                    'Terverifikasi' => 'bg-green-100 text-green-800',
-                    default         => 'bg-amber-100 text-amber-800',
-                };
-                $confColor = match($rekomendasiRbs->confidence_label) {
-                    'Tinggi' => 'bg-green-100 text-green-800',
-                    'Sedang' => 'bg-blue-100 text-blue-800',
-                    default  => 'bg-amber-100 text-amber-800',
-                };
-            @endphp
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $validitasColor }}">{{ $rekomendasiRbs->validitas_rekomendasi }}</span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $confColor }}">Keandalan: {{ $rekomendasiRbs->confidence_label }} ({{ $rekomendasiRbs->confidence_score }}%)</span>
-            @if(!$rekomendasiRbs->data_cukup)
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-800">⚠ Data Belum Cukup</span>
+            <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold {{ $currentDataReady ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
+                {{ $currentDataReady ? 'Data analisis tersedia' : 'Data analisis belum lengkap' }}
+            </span>
+            @if($dataPendukungKurang->isNotEmpty())
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-700">Data pendukung perlu dilengkapi</span>
             @endif
         </div>
     </div>
@@ -71,7 +64,7 @@
     {{-- Info Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-50 pb-2">Info Lahan <span class="text-[9px] text-slate-400 normal-case font-normal">(data saat analisis)</span></h3>
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-50 pb-2">Informasi Lahan <span class="text-[9px] text-slate-400 normal-case font-normal">(data saat analisis)</span></h3>
             @php
                 // Pahan v2.6: Gunakan snapshot; fallback ke data blok terkini untuk legacy
                 $luasDisplay = $rekomendasiRbs->luas_ha_snapshot ?? $rekomendasiRbs->blokLahan->luas_ha;
@@ -87,7 +80,7 @@
 
         @if($rekomendasiRbs->blokLahan->tahun_tanam)
         <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-50 pb-2">Kriteria Agronomis <span class="text-[9px] text-slate-400 normal-case font-normal">(snapshot saat analisis)</span></h3>
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-50 pb-2">Kriteria Agronomis <span class="text-[9px] text-slate-400 normal-case font-normal">(data saat analisis)</span></h3>
             @php
                 // Pahan v2.7: Gunakan snapshot umur/fase; fallback ke data blok terkini untuk legacy
                 $umurDisplay = $rekomendasiRbs->umur_tanaman_snapshot ?? $rekomendasiRbs->blokLahan->umur_tanaman;
@@ -388,7 +381,7 @@
 
     {{-- Masalah & Rekomendasi --}}
     <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-        <h3 class="text-sm font-extrabold text-slate-800 mb-4">Masalah Teridentifikasi & Rekomendasi</h3>
+        <h3 class="text-sm font-extrabold text-slate-800 mb-4">Temuan dan Rekomendasi</h3>
 
         @if($rekomendasiRbs->masalah_teridentifikasi)
         <div class="mb-4">
@@ -427,7 +420,7 @@
 
     {{-- Info Analisis --}}
     <div class="text-xs text-slate-400 text-right">
-        {{ $rekomendasiRbs->jumlah_rule_terpicu }} rule terpicu · Dianalisis {{ $rekomendasiRbs->tanggal_analisis->diffForHumans() }}
+        {{ $rekomendasiRbs->jumlah_rule_terpicu }} aturan sesuai · Dianalisis {{ $rekomendasiRbs->tanggal_analisis->diffForHumans() }}
     </div>
 
     {{-- Button Kembali di bawah --}}

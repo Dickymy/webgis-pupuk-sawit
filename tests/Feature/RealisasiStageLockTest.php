@@ -17,7 +17,7 @@ use Tests\TestCase;
  *
  * - Tahap 1 baru setelah Tahap 1 selesai → ditolak (eligibility = MENUNGGU_INTERVAL)
  * - Tahap 2 sebelum Tahap 1 selesai → ditolak
- * - Tahap 2 sebelum 60 hari → ditolak
+ * - Tahap 2 sebelum 120 hari → ditolak
  * - Realisasi saat program selesai → ditolak
  */
 class RealisasiStageLockTest extends TestCase
@@ -84,7 +84,7 @@ class RealisasiStageLockTest extends TestCase
     /** Setelah Tahap 1 selesai (30 hari lalu), realisasi ditolak (menunggu interval) */
     public function test_form_rejected_during_interval_wait(): void
     {
-        // Tahap 1 selesai 30 hari lalu (< 60 hari)
+        // Tahap 1 selesai 30 hari lalu (< 120 hari)
         RealisasiPemupukan::create([
             'rekomendasi_rbs_id' => $this->rekomendasi->id,
             'blok_lahan_id' => $this->blok->id,

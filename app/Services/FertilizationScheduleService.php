@@ -13,20 +13,16 @@ use App\Models\KondisiLahan;
  * 2. Data hujan numerik tersedia.
  * 3. Tahap 1 berstatus "Rencana".
  * 4. Tahap 2 berstatus "Menunggu Realisasi Tahap 1".
- * 5. Tahap 2 minimal 60 hari setelah realisasi tahap 1.
+ * 5. Tahap 2 mengikuti jeda minimum operasional pada konfigurasi aplikasi.
  * 6. Jangan membuat tanggal pasti tanpa data.
  * 7. Jangan menentukan Maret/September otomatis.
  * 8. Default: 50% / 50%.
  * 9. Pemisahan Urea-KCl 2-3 minggu dinonaktifkan (bukan aturan Pahan).
  *
- * Referensi: Pahan, 2013. Bab 9, hal. 157-159.
+ * Waktu hujan mengacu PPKS (2021; 2025); pembagian tahap adalah adaptasi desain penelitian.
  */
 class FertilizationScheduleService
 {
-    private const SPLIT_RATIO = [50, 50];
-
-    private const MIN_INTERVAL_DAYS = 60;
-
     /**
      * Generate jadwal pemupukan berdasarkan konteks tanaman dan kelayakan.
      *

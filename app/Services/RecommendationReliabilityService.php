@@ -4,19 +4,20 @@ namespace App\Services;
 
 use App\Models\BlokLahan;
 use App\Models\KondisiLahan;
+use App\Models\RealisasiPemupukan;
 
 /**
- * RecommendationReliabilityService — Menghitung skor Kelengkapan & Keandalan Data.
+ * RecommendationReliabilityService — Menghitung kelengkapan data pendukung.
  *
  * Skor ini BUKAN menyatakan akurasi agronomis. Skor hanya menggambarkan
- * seberapa lengkap dan andal data yang mendasari rekomendasi.
+ * seberapa lengkap data yang mendasari rekomendasi.
  *
  * Referensi bobot: Lihat config/fertilization.php → reliability_weights
  */
 class RecommendationReliabilityService
 {
     /**
-     * Hitung skor kelengkapan dan keandalan data.
+     * Hitung kelengkapan data pendukung.
      *
      * @return array{
      *   score: int,
@@ -32,16 +33,16 @@ class RecommendationReliabilityService
         $saran = [];
         $totalScore = 0;
 
-        // 1. Identitas blok: luas, SPH, tahun/tanggal tanam (max 15)
+        // 1. Identitas blok: luas, SPH, tahun/tanggal tanam (max 20)
         $identitasScore = 0;
         if ($blok->luas_ha > 0) {
-            $identitasScore += 5;
+            $identitasScore += 7;
         }
         if ($blok->sph > 0) {
-            $identitasScore += 5;
+            $identitasScore += 7;
         }
         if ($blok->tahun_tanam) {
-            $identitasScore += 5;
+            $identitasScore += 6;
         } else {
             $saran[] = 'Lengkapi tahun tanam blok lahan.';
         }
@@ -64,94 +65,70 @@ class RecommendationReliabilityService
         $rincian['fase_terverifikasi'] = ['skor' => $faseScore, 'max' => $weights['fase_terverifikasi']];
         $totalScore += $faseScore;
 
-        // 3. pH dan metode pengukuran (max 10)
-        $phScore = 0;
-        if ($kondisi->ph_tanah !== null) {
-            $phScore += 6;
-            if ($kondisi->metode_pengukuran_ph !== null && $kondisi->metode_pengukuran_ph !== 'estimasi') {
-                $phScore += 4;
-            } else {
-                $saran[] = 'Gunakan pH meter atau kertas lakmus untuk pengukuran pH lebih akurat.';
-            }
-        } else {
-            $saran[] = 'Lakukan pengukuran pH tanah.';
-        }
-        $phScore = min($phScore, $weights['ph_dan_metode']);
-        $rincian['ph_dan_metode'] = ['skor' => $phScore, 'max' => $weights['ph_dan_metode']];
-        $totalScore += $phScore;
-
-        // 4. Curah hujan bulanan + periode (max 20)
+        // 3. Data curah hujan (max 30). Musim hanya konteks dan tidak
+        // menambah nilai kelengkapan karena bukan hasil pengukuran.
         $hujanScore = 0;
         if ($kondisi->curah_hujan_mm_bulanan !== null) {
-            $hujanScore += 12;
+            $hujanScore += 20;
             if ($kondisi->periode_curah_hujan !== null) {
-                $hujanScore += 4;
+                $hujanScore += 5;
             }
             if ($kondisi->sumber_curah_hujan !== null) {
-                $hujanScore += 4;
+                $hujanScore += 5;
             }
         } elseif ($kondisi->curah_hujan_kategori !== null) {
-            $hujanScore += 5; // Hanya kategori, kurang presisi
-            $saran[] = 'Masukkan nilai curah hujan bulanan (mm) untuk presisi lebih tinggi.';
+            $hujanScore += 10;
+            $saran[] = 'Gunakan data curah hujan dalam mm jika catatan pengukuran tersedia.';
         } else {
-            $saran[] = 'Lengkapi data curah hujan bulanan.';
+            $saran[] = 'Lengkapi data curah hujan untuk menilai waktu pemupukan.';
         }
+
         $hujanScore = min($hujanScore, $weights['curah_hujan']);
         $rincian['curah_hujan'] = ['skor' => $hujanScore, 'max' => $weights['curah_hujan']];
         $totalScore += $hujanScore;
 
-        // 5. Tanggal pemupukan terakhir (max 10)
+        // 4. Tanggal pemupukan terakhir (max 15)
         $tglScore = 0;
-        if ($kondisi->tanggal_pemupukan_terakhir !== null) {
+        $hasFertilizationHistory = $kondisi->tanggal_pemupukan_terakhir !== null
+            || ($blok->exists && RealisasiPemupukan::query()
+                ->where('blok_lahan_id', $blok->id)
+                ->aktif()
+                ->exists());
+        if ($hasFertilizationHistory) {
             $tglScore = $weights['tgl_pemupukan'];
         } else {
-            $saran[] = 'Catat tanggal pemupukan terakhir untuk evaluasi interval.';
+            $saran[] = 'Catat tanggal pemupukan terakhir untuk pemeriksaan jarak waktu.';
         }
         $rincian['tgl_pemupukan'] = ['skor' => $tglScore, 'max' => $weights['tgl_pemupukan']];
         $totalScore += $tglScore;
 
-        // 6. Data visual: daun, pelepah, defisiensi (max 20)
+        // 5. Fakta daun (max 15). Foto hanya dokumentasi dan tidak
+        // menentukan kelengkapan fakta untuk diagnosis.
         $visualScore = 0;
         if ($kondisi->warna_daun !== null) {
-            $visualScore += 8;
+            $visualScore = $weights['data_visual'];
         } else {
-            $saran[] = 'Observasi warna daun tanaman.';
+            $saran[] = 'Periksa kondisi daun tanaman.';
         }
-
-        if ($kondisi->kondisi_pelepah !== null) {
-            $visualScore += 6;
-        }
-        if (! empty($kondisi->gejala_defisiensi)) {
-            $visualScore += 6;
-        }
-
         $visualScore = min($visualScore, $weights['data_visual']);
         $rincian['data_visual'] = ['skor' => $visualScore, 'max' => $weights['data_visual']];
         $totalScore += $visualScore;
 
-        // 7. Drainase, gulma, hama (max 10)
+        // 6. Kondisi lapangan yang memengaruhi kesiapan aplikasi (max 10)
         $lingkunganScore = 0;
+        if ($kondisi->kelembaban_tanah !== null) {
+            $lingkunganScore += 5;
+        } else {
+            $saran[] = 'Catat kelembapan tanah saat observasi.';
+        }
         if ($kondisi->kondisi_drainase !== null) {
             $lingkunganScore += 5;
+        } else {
+            $saran[] = 'Periksa kondisi drainase blok.';
         }
-        // Gulma dan hama selalu terisi (boolean default)
-        $lingkunganScore += 5;
-
-        $lingkunganScore = min($lingkunganScore, $weights['drainase_gulma_hama']);
-        $rincian['drainase_gulma_hama'] = ['skor' => $lingkunganScore, 'max' => $weights['drainase_gulma_hama']];
+        $lingkunganScore = min($lingkunganScore, $weights['kondisi_lapangan']);
+        $rincian['kondisi_lapangan'] = ['skor' => $lingkunganScore, 'max' => $weights['kondisi_lapangan']];
         $totalScore += $lingkunganScore;
-
-        // 8. Rule terpicu memiliki sumber (max 5)
-        $ruleScore = 0;
-        if (! empty($rulesTerpicu)) {
-            $bersumber = collect($rulesTerpicu)->filter(fn ($r) => $r->sumber_penulis !== null || $r->tingkat_bukti === 'BUKU'
-            )->count();
-            $total = count($rulesTerpicu);
-            $ruleScore = $total > 0 ? (int) round(($bersumber / $total) * $weights['rule_bersumber']) : 0;
-        }
-        $rincian['rule_bersumber'] = ['skor' => $ruleScore, 'max' => $weights['rule_bersumber']];
-        $totalScore += $ruleScore;
-
         // Clamp
         $totalScore = max(0, min(100, $totalScore));
 
@@ -179,6 +156,6 @@ class RecommendationReliabilityService
             }
         }
 
-        return 'Data Tidak Cukup';
+        return 'Perlu Dilengkapi';
     }
 }

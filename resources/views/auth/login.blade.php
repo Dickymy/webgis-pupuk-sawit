@@ -83,7 +83,7 @@
 
                 {{-- Password --}}
                 <div>
-                    <label for="password" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Password</label>
+                    <label for="password" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Kata Sandi</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                             <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,7 +96,7 @@
                             name="password"
                             autocomplete="current-password"
                             required
-                            placeholder="Masukkan password"
+                            placeholder="Masukkan kata sandi"
                             class="w-full pl-10 pr-4 py-2.5 bg-white border {{ $errors->has('password') ? 'border-red-500' : 'border-slate-200' }} rounded-xl text-base text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
                         >
                     </div>

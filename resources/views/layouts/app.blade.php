@@ -120,7 +120,6 @@
             /* Fix: form container tidak overflow di mobile */
             .max-w-4xl, form, .space-y-4, .space-y-6 {
                 min-width: 0;
-                overflow-x: hidden;
             }
             /* Fix: grid tidak meluber */
             .grid {
@@ -140,21 +139,25 @@
         img { max-width: 100%; height: auto; }
         /* Touch target minimum untuk checkbox/toggle di HP */
         input[type="checkbox"] { min-width: 18px; min-height: 18px; cursor: pointer; }
-        /* Fix: semua child element tidak boleh exceed parent */
-        *, *::before, *::after { max-width: 100%; }
-        /* Exclude elements that need to overflow (tables, maps, pagination, etc) */
-        table, table *, .leaflet-container, .leaflet-container *, svg, canvas, video, iframe, nav, nav *, [id$="-dropdown"], [id$="-dropdown"] *, .notif-dropdown-panel, .notif-dropdown-panel *, button, button * { max-width: none; }
+        /*
+         * Jangan memberi max-width pada semua elemen. Aturan universal akan
+         * mengalahkan utility Tailwind seperti max-w-sm/max-w-4xl dan membuat
+         * dialog, form, serta filter melebar penuh pada desktop.
+         */
         /* Fix khusus select di Android: pastikan tidak overflow dan teks tidak keluar */
         select {
             max-width: 100% !important;
             box-sizing: border-box !important;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            white-space: nowrap;
-            /* Fix double arrow: hapus arrow bawaan semua browser */
+        }
+        /* Class custom-select: pakai arrow custom SVG, sembunyikan arrow bawaan browser */
+        .custom-select {
             -webkit-appearance: none !important;
             -moz-appearance: none !important;
             appearance: none !important;
+            background-image: none !important;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
         }
         /* Fix: form grid tidak overflow di mobile */
         form .grid, form > div {
@@ -176,21 +179,42 @@
             table { width: 100% !important; font-size: 11px; }
             .shadow-sm, .shadow-lg { box-shadow: none !important; }
         }
-        /* Notification dropdown: override max-width constraint */
-        .notif-dropdown-panel,
-        .notif-dropdown-panel * {
-            max-width: none !important;
+        /* Panel notifikasi tetap berada di dalam viewport sempit. */
+        .notif-dropdown-panel {
+            width: 320px;
+            max-width: calc(100vw - 32px) !important;
         }
-        /* Dropdown panels (absolute positioned) harus bebas dari max-width */
-        [id$="-dropdown"],
-        [id$="-drop"] {
-            max-width: none !important;
+        @media (max-width: 640px) {
+            .notif-dropdown-panel {
+                position: fixed !important;
+                top: 64px !important;
+                right: 16px !important;
+                left: 16px !important;
+                width: auto !important;
+                max-width: none !important;
+            }
         }
         /* Clean Map: Hide leaflet attribution on mobile */
         @media (max-width: 640px) {
             .leaflet-control-attribution {
                 display: none !important;
             }
+        }
+        /* Navigasi dan target sentuh khusus ponsel */
+        @media (max-width: 1023px) {
+            .mobile-safe-main {
+                padding-bottom: calc(6rem + env(safe-area-inset-bottom)) !important;
+            }
+            #btn-back-top {
+                bottom: calc(5.75rem + env(safe-area-inset-bottom)) !important;
+            }
+        }
+        .mobile-bottom-nav {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .mobile-bottom-nav a {
+            min-height: 58px;
+            -webkit-tap-highlight-color: transparent;
         }
     </style>
 </head>
@@ -216,33 +240,23 @@
         </div>
 
         {{-- Navigation --}}
-        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-            <p class="px-3 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Utama</p>
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Menu utama">
+            <p class="px-3 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Menu Utama</p>
 
             <a href="{{ route('dashboard') }}"
                class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('dashboard') ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-emerald-700 dark:hover:text-emerald-400' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
                 </svg>
-                Peta Lahan (WebGIS)
-            </a>
-
-            <p class="px-3 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 mt-4">Data Master</p>
-
-            <a href="{{ route('anggota.index') }}"
-               class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('anggota.*') ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-emerald-700 dark:hover:text-emerald-400' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                Anggota Kelompok Tani
+                Dashboard
             </a>
 
             <a href="{{ route('blok-lahan.index') }}"
-               class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('blok-lahan.*') ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-emerald-700 dark:hover:text-emerald-400' }}">
+               class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('blok-lahan.*', 'anggota.*') ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-emerald-700 dark:hover:text-emerald-400' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
                 </svg>
-                Manajemen Blok Lahan
+                Data Kebun
             </a>
 
             <a href="{{ route('kondisi-lahan.index') }}"
@@ -250,26 +264,15 @@
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                Kondisi Lahan
+                Observasi
             </a>
-
-            <a href="{{ route('rule-base.index') }}"
-               class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('rule-base.*') ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-emerald-700 dark:hover:text-emerald-400' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                Rule Base
-            </a>
-
-            <p class="px-3 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 mt-4">Analisis</p>
 
             <a href="{{ route('rbs.index') }}"
                class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('rbs.*') ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-emerald-700 dark:hover:text-emerald-400' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                 </svg>
-                Analisis Pemupukan
+                Rekomendasi Pupuk
             </a>
 
             <a href="{{ route('realisasi-pemupukan.index') }}"
@@ -277,7 +280,7 @@
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                 </svg>
-                Realisasi Pemupukan
+                Realisasi Pupuk
             </a>
 
             <a href="{{ route('laporan.index') }}"
@@ -285,40 +288,44 @@
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                Laporan & Rekap
+                Laporan
             </a>
 
-            <p class="px-3 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 mt-4">Lainnya</p>
+            <p class="px-3 pt-4 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Referensi</p>
 
-            <a href="{{ route('settings.index') }}"
-               class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('settings.*') ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-emerald-700 dark:hover:text-emerald-400' }}">
+            <a href="{{ route('rule-base.index') }}"
+               class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 {{ request()->routeIs('rule-base.*') ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-emerald-700 dark:hover:text-emerald-400' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.25c-2.4-1.42-5.23-1.58-7.75-.45A1.75 1.75 0 003 7.4v10.35c0 1.23 1.25 2.08 2.4 1.64A9.2 9.2 0 0112 19.5m0-13.25c2.4-1.42 5.23-1.58 7.75-.45A1.75 1.75 0 0121 7.4v10.35c0 1.23-1.25 2.08-2.4 1.64A9.2 9.2 0 0012 19.5m0-13.25V19.5"/>
                 </svg>
-                Pengaturan
+                Rule Based
             </a>
-
         </nav>
-
-        {{-- Admin Info --}}
-        <div class="px-4 py-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/50">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center flex-shrink-0">
+        {{-- Menu akun pendukung --}}
+        <div class="relative border-t border-slate-100 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-900/50" id="account-wrapper">
+            <button type="button" onclick="toggleAccountDropdown()" class="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-white dark:hover:bg-slate-800" aria-label="Buka menu akun" aria-expanded="false" id="account-menu-button">
+                <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600">
                     <span class="text-xs font-bold text-white">{{ strtoupper(substr(Auth::guard('admin')->user()->nama_lengkap ?? 'A', 0, 1)) }}</span>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">{{ Auth::guard('admin')->user()->nama_lengkap ?? 'Admin' }}</p>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ Auth::guard('admin')->user()->username ?? '' }}</p>
+                <div class="min-w-0 flex-1">
+                    <p class="truncate text-xs font-semibold text-slate-800 dark:text-slate-200">{{ Auth::guard('admin')->user()->nama_lengkap ?? 'Admin' }}</p>
+                    <p class="truncate text-[10px] text-slate-500 dark:text-slate-400">Akun dan tampilan</p>
                 </div>
-                <form method="POST" action="{{ route('logout') }}" id="logout-form">
-                    @csrf
-                    <button type="button" onclick="confirmLogout()" title="Logout" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                        </svg>
-                    </button>
-                </form>
+                <svg class="h-4 w-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7"/></svg>
+            </button>
+            <div id="account-dropdown" class="absolute bottom-full left-3 right-3 z-50 mb-2 hidden overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800">
+                <a href="{{ route('settings.index') }}" class="flex items-center gap-2.5 px-4 py-3 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-emerald-700 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-emerald-400">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4 2 2 0 000-4zm-6 12a2 2 0 100-4 2 2 0 000 4zm0 0v2m0-6V4m6 6v10m6-2a2 2 0 100-4 2 2 0 000 4zm0 0v2m0-6V4"/></svg>
+                    <span>Kata sandi &amp; tema aplikasi</span>
+                </a>
+                <button type="button" onclick="confirmLogout()" class="flex w-full items-center gap-2.5 border-t border-slate-100 px-4 py-3 text-left text-xs font-medium text-red-600 hover:bg-red-50 dark:border-slate-700 dark:text-red-400 dark:hover:bg-red-900/20">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    <span>Keluar</span>
+                </button>
             </div>
+            <form method="POST" action="{{ route('logout') }}" id="logout-form">
+                @csrf
+            </form>
         </div>
     </aside>
 
@@ -330,7 +337,7 @@
         {{-- Top Bar --}}
         <header class="sticky top-0 z-30 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
             <div class="flex items-center gap-3 sm:gap-4 min-w-0">
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 flex-shrink-0">
+                <button onclick="toggleSidebar()" aria-label="Buka menu navigasi" title="Buka menu" class="lg:hidden p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
@@ -383,7 +390,7 @@
                                     <div class="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 text-[10px] mt-0.5">🚨</div>
                                     <div class="min-w-0 flex-1">
                                         <p class="text-[11px] font-semibold text-slate-800 truncate">{{ $nb->nama_blok }} <span class="font-normal text-slate-400">· {{ $nb->anggota?->nama ?? '-' }}</span></p>
-                                        <p class="text-[10px] text-red-600">Defisiensi berat · {{ $latestRbs?->tanggal_analisis?->diffForHumans() }}</p>
+                                        <p class="text-[10px] text-red-600">Indikasi visual perlu diperiksa · {{ $latestRbs?->tanggal_analisis?->diffForHumans() }}</p>
                                     </div>
                                 </a>
                                 @endforeach
@@ -405,6 +412,7 @@
                     </div>
                 </div>
 
+
                 <div class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 text-right leading-tight hidden sm:block">
                     {{ now()->setTimezone('Asia/Makassar')->translatedFormat('l, d F Y') }}
                 </div>
@@ -423,11 +431,34 @@
         @endif
 
         {{-- Page Content --}}
-        <main class="flex-1 p-3 sm:p-6">
+        <main class="mobile-safe-main flex-1 p-3 sm:p-6">
             @yield('content')
         </main>
     </div>
 </div>
+
+<nav class="mobile-bottom-nav fixed inset-x-0 bottom-0 z-[800] grid grid-cols-4 border-t border-slate-200 bg-white/95 px-1 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur-lg dark:border-slate-700 dark:bg-slate-900/95 lg:hidden" aria-label="Navigasi utama ponsel">
+    <a href="{{ route('dashboard') }}" class="relative flex flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-semibold {{ request()->routeIs('dashboard') ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400' }}" @if(request()->routeIs('dashboard')) aria-current="page" @endif>
+        @if(request()->routeIs('dashboard'))<span class="absolute top-0 h-0.5 w-8 rounded-full bg-emerald-600"></span>@endif
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0 7-7 7 7m-14 0v9a1 1 0 001 1h3m10-10 2 2m-2-2v9a1 1 0 01-1 1h-3m-6 0a1 1 0 001 1h2a1 1 0 001-1m-4 0v-4a1 1 0 011-1h2a1 1 0 011 1v4"/></svg>
+        <span>Dashboard</span>
+    </a>
+    <a href="{{ route('kondisi-lahan.index') }}" class="relative flex flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-semibold {{ request()->routeIs('kondisi-lahan.*') ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400' }}" @if(request()->routeIs('kondisi-lahan.*')) aria-current="page" @endif>
+        @if(request()->routeIs('kondisi-lahan.*'))<span class="absolute top-0 h-0.5 w-8 rounded-full bg-emerald-600"></span>@endif
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span>Observasi</span>
+    </a>
+    <a href="{{ route('rbs.index') }}" class="relative flex flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-semibold {{ request()->routeIs('rbs.*', 'rule-base.*') ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400' }}" @if(request()->routeIs('rbs.*', 'rule-base.*')) aria-current="page" @endif>
+        @if(request()->routeIs('rbs.*', 'rule-base.*'))<span class="absolute top-0 h-0.5 w-8 rounded-full bg-emerald-600"></span>@endif
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+        <span>Rekomendasi</span>
+    </a>
+    <a href="{{ route('realisasi-pemupukan.index') }}" class="relative flex flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-semibold {{ request()->routeIs('realisasi-pemupukan.*') ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400' }}" @if(request()->routeIs('realisasi-pemupukan.*')) aria-current="page" @endif>
+        @if(request()->routeIs('realisasi-pemupukan.*'))<span class="absolute top-0 h-0.5 w-8 rounded-full bg-emerald-600"></span>@endif
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9 2 2 4-4"/></svg>
+        <span>Realisasi</span>
+    </a>
+</nav>
 
 <script>
     function toggleSidebar() {
@@ -487,7 +518,7 @@
 
     // Helper untuk form delete dengan custom confirm
     function confirmDelete(formEl, nama) {
-        showConfirm('Yakin ingin menghapus "' + nama + '"? Data terkait akan ikut terhapus.', function() {
+        showConfirm('Yakin ingin menghapus "' + nama + '"? Data yang sudah memiliki histori akan dilindungi sistem.', function() {
             formEl.submit();
         });
     }
@@ -508,6 +539,34 @@
         } else {
             btnBackTop.style.opacity = '0';
             btnBackTop.style.pointerEvents = 'none';
+        }
+    });
+
+    // Menu akun
+    function toggleAccountDropdown() {
+        var dropdown = document.getElementById('account-dropdown');
+        var button = document.getElementById('account-menu-button');
+        var arrow = button.querySelector('svg:last-of-type');
+        var isHidden = dropdown.classList.toggle('hidden');
+        var isOpen = !isHidden;
+        button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        // Rotasi panah
+        if (arrow) {
+            arrow.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+            arrow.style.transition = 'transform 0.2s ease';
+        }
+    }
+    document.addEventListener('click', function(e) {
+        var wrapper = document.getElementById('account-wrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+            var dropdown = document.getElementById('account-dropdown');
+            var button = document.getElementById('account-menu-button');
+            if (dropdown) dropdown.classList.add('hidden');
+            if (button) {
+                button.setAttribute('aria-expanded', 'false');
+                var arrow = button.querySelector('svg:last-of-type');
+                if (arrow) { arrow.style.transform = 'rotate(0deg)'; arrow.style.transition = 'transform 0.2s ease'; }
+            }
         }
     });
 

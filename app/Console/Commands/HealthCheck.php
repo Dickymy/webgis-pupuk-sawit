@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\ProgramPemupukan;
 use App\Models\RealisasiPemupukan;
 use App\Models\RekomendasiRbs;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -55,7 +56,7 @@ class HealthCheck extends Command
         $this->checkRealisasiTanpaRekomendasi();
         $this->checkMismatchProgram();
         $this->checkTahap2TanpaTahap1();
-        $this->checkTahap2Sebelum60Hari();
+        $this->checkTahap2SebelumIntervalMinimum();
         $this->checkTanggalMasaDepan();
         $this->checkSelesaiDiBawahRencana();
         $this->checkBatalTerhitung();
@@ -344,8 +345,9 @@ class HealthCheck extends Command
         }
     }
 
-    private function checkTahap2Sebelum60Hari(): void
+    private function checkTahap2SebelumIntervalMinimum(): void
     {
+        $minInterval = (int) config('fertilization.window.min_interval_days', 120);
         $tahap2Records = RealisasiPemupukan::where('tahap', 2)
             ->where('status_realisasi', '!=', 'BATAL')
             ->get();
@@ -353,23 +355,25 @@ class HealthCheck extends Command
         $issues = 0;
         foreach ($tahap2Records as $record) {
             $tahap1Terakhir = RealisasiPemupukan::where('blok_lahan_id', $record->blok_lahan_id)
+                ->when($record->program_pemupukan_id, fn ($query, $programId) => $query->where('program_pemupukan_id', $programId))
                 ->where('tahap', 1)
                 ->where('status_realisasi', '!=', 'BATAL')
+                ->whereDate('tanggal_realisasi', '<=', $record->tanggal_realisasi)
                 ->max('tanggal_realisasi');
 
             if ($tahap1Terakhir && $record->tanggal_realisasi) {
-                $diff = $record->tanggal_realisasi->diffInDays($tahap1Terakhir);
-                if ($diff < 60) {
+                $diff = Carbon::parse($tahap1Terakhir)->diffInDays($record->tanggal_realisasi, true);
+                if ($diff < $minInterval) {
                     $issues++;
                 }
             }
         }
 
         if ($issues > 0) {
-            $this->error("   ✗ {$issues} realisasi Tahap 2 < 60 hari setelah Tahap 1");
+            $this->error("   ✗ {$issues} realisasi Tahap 2 < {$minInterval} hari setelah Tahap 1");
             $this->issueCount++;
         } else {
-            $this->line('   ✓ Interval 60 hari terpenuhi');
+            $this->line("   ✓ Interval {$minInterval} hari terpenuhi");
         }
     }
 
@@ -390,7 +394,7 @@ class HealthCheck extends Command
     private function checkSelesaiDiBawahRencana(): void
     {
         $issues = RealisasiPemupukan::where('status_realisasi', 'SELESAI')
-            ->whereRaw('(urea_realisasi_kg < urea_rencana_kg * 0.99 AND kcl_realisasi_kg < kcl_rencana_kg * 0.99)')
+            ->whereRaw('(urea_realisasi_kg < urea_rencana_kg * 0.99 OR kcl_realisasi_kg < kcl_rencana_kg * 0.99)')
             ->count();
 
         if ($issues > 0) {
@@ -501,13 +505,6 @@ class HealthCheck extends Command
         $version = config('fertilization.engine_version');
         $this->line("   ✓ Engine version: {$version}");
 
-        $multiplierEnabled = config('fertilization.legacy_multipliers.enabled', false);
-        if ($multiplierEnabled) {
-            $this->error('   ✗ Legacy multipliers masih aktif!');
-            $this->issueCount++;
-        } else {
-            $this->line('   ✓ Legacy multipliers nonaktif');
-        }
     }
 
     private function checkBackupNotPublic(): void

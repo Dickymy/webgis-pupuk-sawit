@@ -27,6 +27,7 @@ class ProductionSafetyTest extends TestCase
     {
         // Ensure no command does migrate:fresh outside testing
         $commands = File::allFiles(app_path('Console/Commands'));
+        $this->assertNotEmpty($commands, 'Direktori command harus berisi file yang dapat diaudit.');
 
         foreach ($commands as $file) {
             $content = File::get($file->getPathname());
@@ -60,6 +61,16 @@ class ProductionSafetyTest extends TestCase
             'withoutMiddleware',
             $content,
             'Global middleware should not disable CSRF'
+        );
+        $this->assertStringNotContainsString(
+            "validateCsrfTokens(except: ['*'])",
+            $content,
+            'CSRF tidak boleh dikecualikan untuk seluruh route'
+        );
+        $this->assertStringContainsString(
+            '$middleware->validateCsrfTokens();',
+            $content,
+            'Middleware CSRF harus diaktifkan secara eksplisit'
         );
     }
 }

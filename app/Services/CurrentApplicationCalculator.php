@@ -14,11 +14,11 @@ namespace App\Services;
  * 1. Belum ada realisasi Tahap 1 dan layak → aplikasi saat ini = 50% kebutuhan tahunan (TAHAP_1_SIAP)
  * 2. Tidak layak → aplikasi saat ini = 0 (MENUNGGU_KELAYAKAN)
  * 3. Tahap 1 sebagian → aplikasi saat ini = sisa rencana Tahap 1 (TAHAP_1_SEBAGIAN)
- * 4. Tahap 1 selesai, interval belum 60 hari → 0 (MENUNGGU_INTERVAL)
+ * 4. Tahap 1 selesai, interval operasional belum terpenuhi → 0 (MENUNGGU_INTERVAL)
  * 5. Tahap 1 selesai, interval terpenuhi, layak → sisa tahunan (TAHAP_2_SIAP)
  * 6. Kebutuhan tahunan terpenuhi → 0 (SELESAI_TAHUNAN)
  *
- * Referensi: Pahan, 2013. Bab 9, hal. 157-159.
+ * Frekuensi 2-3 aplikasi/tahun mengacu PPKS (2021); pembagian dua tahap adalah adaptasi desain penelitian.
  */
 class CurrentApplicationCalculator
 {
@@ -37,7 +37,7 @@ class CurrentApplicationCalculator
 
     public const PERLU_VERIFIKASI_REALISASI = 'PERLU_VERIFIKASI_REALISASI';
 
-    private const SPLIT_RATIO = 0.50; // 50% per tahap
+    private const SPLIT_RATIO = 0.50; // Adaptasi operasional: dua tahap sama besar, tidak mengubah dosis tahunan.
 
     /**
      * Hitung aplikasi saat ini berdasarkan konteks.
@@ -96,7 +96,7 @@ class CurrentApplicationCalculator
             $statusStage = self::MENUNGGU_KELAYAKAN;
 
             return $this->buildResult($stage, $statusStage, 0, 0, $sisaUrea, $sisaKcl, $tanggalMinTahap2,
-                'Pemupukan ditunda karena kondisi kelayakan belum terpenuhi.');
+                'Blok belum siap dipupuk karena kondisi lapangan belum memenuhi syarat.');
         }
 
         // KASUS 3: Tahap 1 ada tapi SEBAGIAN (belum selesai) → sisa rencana Tahap 1
@@ -109,7 +109,7 @@ class CurrentApplicationCalculator
             $sisaKclTahap1 = max(0, round($rencanaTahap1Kcl - $kclRealisasiTahap1, 2));
 
             return $this->buildResult(1, self::TAHAP_1_SEBAGIAN, $sisaUreaTahap1, $sisaKclTahap1, $sisaUrea, $sisaKcl, null,
-                'Tahap 1 direalisasikan sebagian. Sisa rencana Tahap 1 masih perlu diaplikasikan.');
+                'Tahap 1 baru dilakukan sebagian. Sisa rencana Tahap 1 masih perlu dipupuk.');
         }
 
         // KASUS 1: Belum ada realisasi Tahap 1, layak → 50% kebutuhan tahunan
@@ -118,18 +118,18 @@ class CurrentApplicationCalculator
             $kclAplikasi = round($totalKclTahunan * self::SPLIT_RATIO, 2);
 
             return $this->buildResult(1, self::TAHAP_1_SIAP, $ureaAplikasi, $kclAplikasi, $sisaUrea, $sisaKcl, null,
-                'Tahap 1 siap diaplikasikan (50% kebutuhan tahunan).');
+                'Tahap 1 siap dipupuk (50% kebutuhan tahunan).');
         }
 
-        // KASUS 4: Tahap 1 sudah direalisasikan selesai, interval belum 60 hari
+        // KASUS 4: Tahap 1 sudah direalisasikan selesai, interval operasional belum terpenuhi
         if ($tahap1Selesai && ! $intervalTerpenuhi) {
             return $this->buildResult(2, self::MENUNGGU_INTERVAL, 0, 0, $sisaUrea, $sisaKcl, $tanggalMinTahap2,
-                'Menunggu interval minimal 60 hari setelah realisasi Tahap 1.');
+                'Menunggu jarak waktu minimum '.config('fertilization.window.min_interval_days', 120).' hari setelah realisasi Tahap 1.');
         }
 
         // KASUS 5: Tahap 1 selesai, interval terpenuhi, layak → sisa aktual
         return $this->buildResult(2, self::TAHAP_2_SIAP, $sisaUrea, $sisaKcl, $sisaUrea, $sisaKcl, $tanggalMinTahap2,
-            'Tahap 2 siap diaplikasikan (sisa kebutuhan tahunan setelah realisasi Tahap 1).');
+            'Tahap 2 siap dipupuk (sisa kebutuhan tahunan setelah realisasi Tahap 1).');
     }
 
     /**
@@ -163,13 +163,13 @@ class CurrentApplicationCalculator
     public static function labelStatusStage(?string $status): string
     {
         return match ($status) {
-            self::TAHAP_1_SIAP => 'Tahap 1 Siap Diaplikasikan',
-            self::TAHAP_1_SEBAGIAN => 'Tahap 1 Direalisasikan Sebagian',
-            self::MENUNGGU_INTERVAL => 'Menunggu Interval Minimal 60 Hari',
-            self::MENUNGGU_KELAYAKAN => 'Menunggu Kelayakan Aplikasi',
-            self::TAHAP_2_SIAP => 'Tahap 2 Siap Diaplikasikan',
-            self::SELESAI_TAHUNAN => 'Kebutuhan Tahunan Telah Terpenuhi',
-            self::PERLU_VERIFIKASI_REALISASI => 'Periksa Data Realisasi',
+            self::TAHAP_1_SIAP => 'Tahap 1 Siap Dipupuk',
+            self::TAHAP_1_SEBAGIAN => 'Tahap 1 Sudah Dicatat Sebagian',
+            self::MENUNGGU_INTERVAL => 'Menunggu Jarak Waktu '.config('fertilization.window.min_interval_days', 120).' Hari',
+            self::MENUNGGU_KELAYAKAN => 'Menunggu Kondisi Lapangan Mendukung',
+            self::TAHAP_2_SIAP => 'Tahap 2 Siap Dipupuk',
+            self::SELESAI_TAHUNAN => 'Program Pemupukan Tahun Ini Selesai',
+            self::PERLU_VERIFIKASI_REALISASI => 'Periksa Catatan Pelaksanaan',
             default => $status ?? '-',
         };
     }

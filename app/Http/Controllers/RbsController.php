@@ -6,19 +6,31 @@ use App\Models\Anggota;
 use App\Models\BlokLahan;
 use App\Models\RekomendasiRbs;
 use App\Notifications\RealisasiNotification;
+use App\Services\ObservationCompletenessService;
 use App\Services\RbsService;
+use App\Services\RealisasiEligibilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class RbsController extends Controller
 {
-    public function __construct(private RbsService $rbsService) {}
+    public function __construct(
+        private RbsService $rbsService,
+        private RealisasiEligibilityService $eligibilityService,
+        private ObservationCompletenessService $completenessService,
+    ) {}
 
     /**
      * Daftar blok + status analisis RBS (grouped by anggota, dengan filter).
      */
     public function index(Request $request)
     {
+        $status = $request->query('status', 'semua');
+        $statusValid = ['semua', 'perlu-tindakan', 'belum-observasi', 'perlu-rekomendasi', 'siap-realisasi', 'menunggu-interval', 'menunggu', 'selesai'];
+        if (! in_array($status, $statusValid, true)) {
+            $status = 'semua';
+        }
+
         $query = BlokLahan::with([
             'anggota',
             'kondisiTerbaru',
@@ -36,6 +48,38 @@ class RbsController extends Controller
         }
 
         $allFiltered = $query->orderBy('anggota_id')->orderBy('nama_blok')->get();
+        $allFiltered->each(fn ($blok) => $blok->setAttribute(
+            'operational_eligibility',
+            $this->operationalEligibility($blok)
+        ));
+        $allFiltered = $allFiltered->filter(function ($blok) use ($status) {
+            $kondisi = $blok->kondisiTerbaru;
+            $rekomendasi = $blok->rekomendasiRbsTerbaru;
+            $eligibility = $blok->operational_eligibility;
+            $perluDiperbarui = $kondisi && $rekomendasi
+                && $kondisi->updated_at->gt($rekomendasi->updated_at);
+            $dataBelumCukup = $this->recommendationNeedsObservation($rekomendasi);
+
+            return match ($status) {
+                'perlu-tindakan' => ! $kondisi
+                    || ! $rekomendasi
+                    || $perluDiperbarui
+                    || $dataBelumCukup
+                    || ($eligibility['boleh_mencatat'] ?? false),
+                'belum-observasi' => ! $kondisi,
+                'perlu-rekomendasi' => $kondisi && (! $rekomendasi || $perluDiperbarui || $dataBelumCukup),
+                'siap-realisasi' => (bool) ($eligibility['boleh_mencatat'] ?? false),
+                'menunggu-interval' => ($eligibility['status_stage'] ?? null) === 'MENUNGGU_INTERVAL',
+                'menunggu' => in_array($eligibility['status_stage'] ?? null, [
+                    'MENUNGGU_INTERVAL',
+                    'MENUNGGU_KELAYAKAN',
+                    'PERLU_VERIFIKASI_REALISASI',
+                ], true),
+                'selesai' => ($eligibility['status_stage'] ?? null) === 'SELESAI_TAHUNAN'
+                    || $rekomendasi?->is_program_selesai === true,
+                default => true,
+            };
+        })->values();
 
         // Group by anggota — sort: anggota yang baru input/update blok di atas
         $grouped = $allFiltered->groupBy('anggota_id')->map(function ($bloks) {
@@ -59,12 +103,28 @@ class RbsController extends Controller
 
         // Stats (global)
         $allBloks = BlokLahan::with('rekomendasiRbsTerbaru', 'kondisiTerbaru')->get();
+        $allBloks->each(fn ($blok) => $blok->setAttribute(
+            'operational_eligibility',
+            $this->operationalEligibility($blok)
+        ));
         $stats = [
             'total' => $allBloks->count(),
             'sudah_analisis' => $allBloks->filter(fn ($b) => $b->rekomendasiRbsTerbaru)->count(),
-            'darurat' => $allBloks->filter(fn ($b) => $b->rekomendasiRbsTerbaru?->status_kebutuhan_dominan === 'Darurat')->count(),
-            'segera' => $allBloks->filter(fn ($b) => $b->rekomendasiRbsTerbaru?->status_kebutuhan_dominan === 'Segera')->count(),
+            'darurat' => $allBloks->filter(fn ($b) => $b->rekomendasiRbsTerbaru?->status_kondisi_tanaman === 'GEJALA_BERAT')->count(),
+            'segera' => $allBloks->filter(fn ($b) => in_array($b->rekomendasiRbsTerbaru?->status_kondisi_tanaman, ['TERINDIKASI_DEFISIENSI_RINGAN', 'TERINDIKASI_DEFISIENSI'], true))->count(),
             'belum_kondisi' => $allBloks->filter(fn ($b) => ! $b->kondisiTerbaru)->count(),
+            'perlu_rekomendasi' => $allBloks->filter(function ($b) {
+                if (! $b->kondisiTerbaru) {
+                    return false;
+                }
+
+                return ! $b->rekomendasiRbsTerbaru
+                    || $b->kondisiTerbaru->updated_at->gt($b->rekomendasiRbsTerbaru->updated_at)
+                    || $this->recommendationNeedsObservation($b->rekomendasiRbsTerbaru);
+            })->count(),
+            'siap_realisasi' => $allBloks->filter(
+                fn ($b) => (bool) ($b->operational_eligibility['boleh_mencatat'] ?? false)
+            )->count(),
         ];
 
         // Blok options for filter
@@ -72,7 +132,41 @@ class RbsController extends Controller
             ? BlokLahan::where('anggota_id', $request->anggota_id)->orderBy('nama_blok')->get()
             : collect();
 
-        return view('rbs.index', compact('grouped', 'anggotas', 'blokFilter', 'stats'));
+        return view('rbs.index', compact('grouped', 'anggotas', 'blokFilter', 'stats', 'status'));
+    }
+
+    /**
+     * Gunakan kalkulasi dinamis untuk rekomendasi yang sudah terhubung ke program.
+     * Data historis/legacy tanpa program tetap memakai snapshot rekomendasinya.
+     */
+    private function recommendationNeedsObservation(?RekomendasiRbs $rekomendasi): bool
+    {
+        return $rekomendasi
+            && (in_array($rekomendasi->status_kondisi_tanaman, ['PERLU_VERIFIKASI', 'BELUM_DIOBSERVASI'], true)
+                || $rekomendasi->status_kelayakan_aplikasi === 'PERLU_VERIFIKASI_DATA');
+    }
+
+    private function operationalEligibility(BlokLahan $blok): ?array
+    {
+        $rekomendasi = $blok->rekomendasiRbsTerbaru;
+        if (! $rekomendasi) {
+            return null;
+        }
+
+        $evaluated = $this->eligibilityService->evaluate($rekomendasi);
+        if ($rekomendasi->program_pemupukan_id && ! empty($evaluated['status_stage'])) {
+            return $evaluated;
+        }
+
+        return [
+            'boleh_mencatat' => $rekomendasi->is_tahap_siap
+                && (($rekomendasi->urea_aplikasi_saat_ini ?? 0) > 0
+                    || ($rekomendasi->kcl_aplikasi_saat_ini ?? 0) > 0),
+            'status_stage' => $rekomendasi->status_stage,
+            'active_stage' => $rekomendasi->active_stage,
+            'urea_rencana_kg' => $rekomendasi->urea_aplikasi_saat_ini ?? 0,
+            'kcl_rencana_kg' => $rekomendasi->kcl_aplikasi_saat_ini ?? 0,
+        ];
     }
 
     /**
@@ -88,7 +182,7 @@ class RbsController extends Controller
 
             return redirect()
                 ->route('rbs.detail', $blokLahan)
-                ->with('success', "Analisis RBS blok '{$blokLahan->nama_blok}' berhasil. Status: {$hasil['rekomendasi']->status_kebutuhan_dominan}.");
+                ->with('success', "Analisis RBS blok '{$blokLahan->nama_blok}' berhasil. Kondisi: {$hasil['rekomendasi']->label_kondisi_tanaman}.");
         } catch (\Exception $e) {
             return redirect()->route('rbs.index')
                 ->with('error', $e->getMessage());
@@ -137,7 +231,11 @@ class RbsController extends Controller
             ->limit(20)
             ->get();
 
-        return view('rbs.detail', compact('blokLahan', 'historiRekomendasi'));
+        $observationCompleteness = $blokLahan->kondisiTerbaru
+            ? $this->completenessService->evaluate($blokLahan->kondisiTerbaru)
+            : null;
+
+        return view('rbs.detail', compact('blokLahan', 'historiRekomendasi', 'observationCompleteness'));
     }
 
     /**
@@ -156,7 +254,8 @@ class RbsController extends Controller
         }
 
         return response()->json([
-            'status' => $rbs->status_kebutuhan_dominan,
+            'status' => $rbs->label_kondisi_tanaman,
+            'kelayakan' => $rbs->label_kelayakan,
             'warna_badge' => $rbs->warna_badge,
             'tanggal' => $rbs->tanggal_analisis->format('d/m/Y'),
             'masalah' => $rbs->masalah_teridentifikasi,

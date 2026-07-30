@@ -49,29 +49,30 @@ class AuditPahanV2 extends Command
         }
 
         // 4. Rule tanpa kode
-        $ruleTanpaKode = RuleBaseLanjutan::whereNull('kode_rule')
-            ->orWhere('kode_rule', '')
+        $ruleTanpaKode = RuleBaseLanjutan::aktif()
+            ->where(fn ($query) => $query->whereNull('kode_rule')->orWhere('kode_rule', ''))
             ->count();
-        $this->line("Rule tanpa kode_rule: {$ruleTanpaKode}");
+        $this->line("Rule aktif tanpa kode_rule: {$ruleTanpaKode}");
         if ($ruleTanpaKode > 0) {
             $issues[] = "Ada {$ruleTanpaKode} rule tanpa kode";
         }
 
         // 5. Rule tanpa sumber
-        $ruleTanpaSumber = RuleBaseLanjutan::whereNull('sumber_penulis')
+        $ruleTanpaSumber = RuleBaseLanjutan::aktif()
+            ->whereNull('sumber_penulis')
             ->whereNull('sumber_judul')
             ->count();
-        $this->line("Rule tanpa sumber: {$ruleTanpaSumber}");
+        $this->line("Rule aktif tanpa sumber: {$ruleTanpaSumber}");
         if ($ruleTanpaSumber > 0) {
             $issues[] = "Ada {$ruleTanpaSumber} rule tanpa sumber";
         }
 
         // 6. Rule PERLU_VALIDASI_AHLI
-        $rulePerluValidasi = RuleBaseLanjutan::where('status_validasi', 'PERLU_VALIDASI_AHLI')->count();
-        $this->line("Rule PERLU_VALIDASI_AHLI: {$rulePerluValidasi}");
+        $rulePerluValidasi = RuleBaseLanjutan::aktif()->where('status_validasi', 'PERLU_VALIDASI_AHLI')->count();
+        $this->line("Rule aktif PERLU_VALIDASI_AHLI: {$rulePerluValidasi}");
 
         // 7. Rule yang masih mengandung teks dosis legacy
-        $ruleWithLegacyDose = RuleBaseLanjutan::where(function ($q) {
+        $ruleWithLegacyDose = RuleBaseLanjutan::aktif()->where(function ($q) {
             $q->where('dosis_anjuran', 'LIKE', '%kurangi dosis%')
                 ->orWhere('dosis_anjuran', 'LIKE', '%Kurangi dosis%')
                 ->orWhere('dosis_anjuran', 'LIKE', '%dosis penuh%')
@@ -79,7 +80,7 @@ class AuditPahanV2 extends Command
                 ->orWhere('saran_tindakan', 'LIKE', '%kurangi dosis%')
                 ->orWhere('saran_tindakan', 'LIKE', '%Kurangi dosis%');
         })->count();
-        $this->line("Rule dengan teks dosis legacy: {$ruleWithLegacyDose}");
+        $this->line("Rule aktif dengan teks dosis legacy: {$ruleWithLegacyDose}");
         if ($ruleWithLegacyDose > 0) {
             $issues[] = "Ada {$ruleWithLegacyDose} rule dengan teks dosis legacy yang berpotensi konflik";
         }

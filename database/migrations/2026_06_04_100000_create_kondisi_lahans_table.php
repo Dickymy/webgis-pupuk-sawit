@@ -31,6 +31,10 @@ return new class extends Migration
                 'Oranye/Kemerahan',
                 'Coklat Ujung',
                 'Bercak Nekrotik',
+                'Daun Bawah Menguning',
+                'Bercak Kuning/Transparan pada Daun Tua',
+                'Tepi Daun Tua Menguning pada Bagian Terbuka',
+                'Daun Muda Berbentuk Kait atau Memendek',
             ])->nullable();
             $table->enum('kondisi_pelepah', ['Normal', 'Patah/Menggantung', 'Kering Prematur', 'Pertumbuhan Terhambat'])->nullable();
             $table->json('gejala_defisiensi')->nullable()->comment('array: N,P,K,Mg,B,Fe,Zn');

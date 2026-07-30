@@ -15,7 +15,7 @@ class GeoUploadController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
-            'geo_file' => ['required', 'file', 'max:10240'], // max 10MB
+            'geo_file' => ['required', 'file', 'max:10240', 'mimetypes:application/zip,application/x-zip-compressed,application/json,text/plain,application/octet-stream'], // max 10MB
         ], [
             'geo_file.required' => 'File wajib dipilih.',
             'geo_file.max' => 'Ukuran file maksimal 10 MB.',
@@ -41,9 +41,11 @@ class GeoUploadController extends Controller
                 ], 422);
             }
         } catch (\Exception $e) {
+            report($e);
+
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memproses file: '.$e->getMessage(),
+                'message' => 'Gagal memproses file. Pastikan format dan isi file sesuai ketentuan.',
             ], 422);
         }
     }
@@ -89,12 +91,48 @@ class GeoUploadController extends Controller
         mkdir($tempDir, 0755, true);
 
         try {
-            // Extract ZIP
+            // Validasi isi ZIP sebelum ekstraksi untuk mencegah path traversal dan zip bomb.
             $zip = new \ZipArchive;
             if ($zip->open($file->getRealPath()) !== true) {
                 throw new \Exception('Gagal membuka file ZIP.');
             }
-            $zip->extractTo($tempDir);
+
+            if ($zip->numFiles > 100) {
+                $zip->close();
+                throw new \Exception('ZIP berisi terlalu banyak file.');
+            }
+
+            $allowedEntries = [];
+            $totalUncompressedSize = 0;
+            $allowedExtensions = ['shp', 'shx', 'dbf', 'prj', 'cpg'];
+            for ($index = 0; $index < $zip->numFiles; $index++) {
+                $stat = $zip->statIndex($index);
+                $entryName = str_replace('\\', '/', (string) ($stat['name'] ?? ''));
+
+                if ($entryName === '' || str_starts_with($entryName, '/') || preg_match('#(^|/)\.\.(/|$)#', $entryName)) {
+                    $zip->close();
+                    throw new \Exception('ZIP mengandung path file yang tidak aman.');
+                }
+
+                if (str_ends_with($entryName, '/')) {
+                    continue;
+                }
+
+                $totalUncompressedSize += (int) ($stat['size'] ?? 0);
+                if ($totalUncompressedSize > 50 * 1024 * 1024) {
+                    $zip->close();
+                    throw new \Exception('Ukuran hasil ekstraksi ZIP terlalu besar.');
+                }
+
+                if (in_array(strtolower(pathinfo($entryName, PATHINFO_EXTENSION)), $allowedExtensions, true)) {
+                    $allowedEntries[] = $entryName;
+                }
+            }
+
+            if ($allowedEntries === [] || ! $zip->extractTo($tempDir, $allowedEntries)) {
+                $zip->close();
+                throw new \Exception('File shapefile tidak dapat diekstrak.');
+            }
             $zip->close();
 
             // Find .shp file in extracted contents

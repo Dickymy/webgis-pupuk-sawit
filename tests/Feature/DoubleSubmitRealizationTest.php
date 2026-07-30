@@ -32,7 +32,9 @@ class DoubleSubmitRealizationTest extends TestCase
             'tanggal_observasi' => now()->subDays(5)->toDateString(),
             'curah_hujan_mm_bulanan' => 150, // Dalam rentang 100-250
             'kondisi_drainase' => 'Baik',
-            'tanggal_pemupukan_terakhir' => now()->subDays(90), // > 60 hari
+            'kelembaban_tanah' => 'Lembab',
+            'curah_hujan_kategori' => null,
+            'tanggal_pemupukan_terakhir' => now()->subDays(150), // > 120 hari
         ]);
 
         $program = ProgramPemupukan::create([

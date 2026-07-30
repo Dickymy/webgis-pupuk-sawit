@@ -1,126 +1,124 @@
 @extends('layouts.app')
 
-@section('title', 'Tentang Rule Base')
-@section('page-title', 'Tentang Rule Base')
-@section('page-subtitle', 'Penjelasan aturan yang digunakan sistem analisis RBS')
+@section('title', 'Penjelasan Rule Based')
+@section('page-title', 'Penjelasan Rule Based')
+@section('page-subtitle', 'Cara sistem mengolah observasi menjadi rekomendasi')
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-5">
-    <a href="{{ route('rule-base.index') }}" class="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        Kembali ke Rule Base
-    </a>
+<div class="w-full space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <a href="{{ route('rule-base.index') }}" class="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-emerald-400 hover:text-emerald-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Kembali
+        </a>
+        <span class="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:ring-emerald-800">7 rule aktif: 4 gejala daun + 3 waktu</span>
+    </div>
 
-    {{-- Penjelasan Utama --}}
-    <div class="bg-white border border-emerald-100 rounded-2xl shadow-sm p-5 sm:p-6">
-        <div class="flex items-start gap-3 mb-4">
-            <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-            </div>
-            <div>
-                <h2 class="text-lg font-bold text-slate-800">Rule-Based System (RBS)</h2>
-                <p class="text-xs text-emerald-600 font-medium">Metode Forward Chaining — 25 rule aktif</p>
-            </div>
+    <section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-800 dark:bg-emerald-900/20">
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Cara kerja sistem</h2>
+        <p class="mt-1 max-w-5xl text-sm leading-6 text-slate-700 dark:text-slate-200">
+            Sistem mencocokkan data observasi dengan rule berbentuk IF–THEN menggunakan metode forward chaining. Rule yang syaratnya terpenuhi akan menghasilkan keterangan kondisi lahan dan saran tindakan. Admin dapat menambah atau memperbarui rule, lalu menggunakannya setelah kondisi, hasil, dan sumber acuannya diperiksa.
+        </p>
+        <div class="mt-4 grid gap-2 sm:grid-cols-3">
+            @foreach([
+                ['1', 'Catat observasi', 'Warna daun dan kondisi lapangan'],
+                ['2', 'Cocokkan rule', 'Fakta diperiksa pada rule yang digunakan'],
+                ['3', 'Tampilkan hasil', 'Kondisi, saran, dosis, dan jadwal'],
+            ] as [$number, $title, $description])
+                <div class="flex items-center gap-3 rounded-xl border border-emerald-200 bg-white p-3 dark:border-emerald-800 dark:bg-slate-900">
+                    <span class="inline-flex h-8 w-8 flex-none items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">{{ $number }}</span>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ $title }}</h3>
+                        <p class="text-xs leading-5 text-slate-600 dark:text-slate-300">{{ $description }}</p>
+                    </div>
+                </div>
+            @endforeach
         </div>
+    </section>
 
-        <div class="space-y-3 text-sm text-slate-600 leading-relaxed">
-            <p>
-                Rule Base yang ditampilkan di menu ini adalah aturan-aturan <strong>Rule-Based System (RBS)</strong> yang digunakan secara aktif oleh sistem untuk menganalisis kondisi lahan dan menghasilkan rekomendasi pemupukan.
+    <section class="grid gap-4 xl:grid-cols-2">
+        <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <p class="text-xs font-bold uppercase tracking-wide text-emerald-600">Empat rule kondisi daun</p>
+            <h2 class="mt-1 text-base font-bold text-slate-900 dark:text-white">Gejala yang diperiksa</h2>
+            <div class="mt-4 divide-y divide-slate-200 dark:divide-slate-700">
+                @foreach([
+                    ['VIS-N-01', 'Daun bagian bawah menguning', 'Kemungkinan kekurangan nitrogen'],
+                    ['VIS-K-02', 'Bercak kuning atau transparan pada daun tua', 'Kemungkinan kekurangan kalium'],
+                    ['VIS-MG-01', 'Tepi daun tua pada bagian terbuka menguning', 'Perlu pemeriksaan kemungkinan kekurangan magnesium'],
+                    ['VIS-B-01', 'Daun muda berbentuk kait atau memendek', 'Perlu pemeriksaan kemungkinan kekurangan boron'],
+                ] as [$code, $condition, $result])
+                    <div class="py-3 first:pt-0 last:pb-0">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-200">{{ $code }}</span>
+                            <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ $condition }}</p>
+                        </div>
+                        <p class="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">Hasil: {{ $result }}.</p>
+                    </div>
+                @endforeach
+            </div>
+        </article>
+
+        <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <p class="text-xs font-bold uppercase tracking-wide text-blue-600">Tiga rule waktu pemupukan</p>
+            <h2 class="mt-1 text-base font-bold text-slate-900 dark:text-white">Curah hujan yang diperiksa</h2>
+            <div class="mt-4 space-y-3">
+                @foreach([
+                    ['WAKTU-HUJAN-RENDAH', 'Di bawah 60 mm/bulan', 'Pemupukan ditunda'],
+                    ['WAKTU-HUJAN-OPTIMAL', '100–250 mm/bulan', 'Dapat dipupuk jika kondisi lapangan memenuhi syarat'],
+                    ['WAKTU-HUJAN-TINGGI', 'Di atas 300 mm/bulan', 'Pemupukan ditunda'],
+                ] as [$code, $condition, $result])
+                    <div class="rounded-xl border border-slate-200 p-3 dark:border-slate-700">
+                        <span class="text-[10px] font-bold text-blue-600 dark:text-blue-300">{{ $code }}</span>
+                        <div class="mt-1 flex flex-wrap items-center justify-between gap-2">
+                            <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ $condition }}</p>
+                            <p class="text-xs text-slate-600 dark:text-slate-300">{{ $result }}</p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            <p class="mt-4 text-xs leading-5 text-slate-500 dark:text-slate-400">Curah hujan digunakan untuk menentukan waktu pelaksanaan, bukan untuk mengubah dosis pupuk.</p>
+        </article>
+    </section>
+
+    <section class="grid gap-4 lg:grid-cols-2">
+        <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <p class="text-xs font-bold uppercase tracking-wide text-emerald-600">Acuan rekomendasi pupuk</p>
+            <h2 class="mt-1 text-base font-bold text-slate-900 dark:text-white">Iyung Pahan (2013)</h2>
+            <p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                Dosis Urea dan KCl mengacu pada Iyung Pahan (2013). Sistem memilih dosis berdasarkan umur atau fase tanaman, kemudian menghitung kebutuhan blok dari jumlah pokok.
             </p>
-            <p>
-                Setiap rule memiliki <strong>kondisi (IF)</strong> berupa kombinasi parameter seperti warna daun, pH tanah, kelembaban, musim, gejala defisiensi, dll. Jika semua kondisi yang diisi cocok dengan data observasi lapangan (logika AND), maka rule <strong>terpicu</strong> dan menghasilkan <strong>output (THEN)</strong> berupa indikasi masalah, jenis pupuk, dosis, dan saran tindakan.
+            <p class="mt-3 rounded-xl bg-slate-50 p-3 text-xs leading-5 text-slate-600 dark:bg-slate-900/50 dark:text-slate-300">
+                Rule gejala daun tidak menambah atau mengurangi dosis Urea dan KCl secara otomatis.
             </p>
-            <p>
-                Sistem juga menghitung <strong>dosis Urea & KCl</strong> secara numerik berdasarkan formula agronomis (umur tanaman × jenis tanah × topografi × koreksi waktu pemupukan terakhir).
-            </p>
-        </div>
-    </div>
+        </article>
 
-    {{-- Alur Analisis --}}
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-6">
-        <h3 class="text-sm font-bold text-slate-800 mb-4">Alur Analisis RBS</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
-                <div class="text-lg mb-1">📋</div>
-                <p class="text-xs font-bold text-blue-800">1. Input Kondisi</p>
-                <p class="text-[10px] text-blue-600 mt-0.5">Admin input data observasi lapangan</p>
-            </div>
-            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-center">
-                <div class="text-lg mb-1">⚡</div>
-                <p class="text-xs font-bold text-amber-800">2. Evaluasi Rule</p>
-                <p class="text-[10px] text-amber-600 mt-0.5">Semua rule aktif dievaluasi (AND logic)</p>
-            </div>
-            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center">
-                <div class="text-lg mb-1">🧮</div>
-                <p class="text-xs font-bold text-emerald-800">3. Hitung Dosis</p>
-                <p class="text-[10px] text-emerald-600 mt-0.5">Formula: base × tanah × topografi × waktu</p>
-            </div>
-            <div class="bg-purple-50 border border-purple-200 rounded-xl p-3 text-center">
-                <div class="text-lg mb-1">📊</div>
-                <p class="text-xs font-bold text-purple-800">4. Rekomendasi</p>
-                <p class="text-[10px] text-purple-600 mt-0.5">Status + masalah + pupuk + saran</p>
-            </div>
-        </div>
-    </div>
+        <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <p class="text-xs font-bold uppercase tracking-wide text-amber-600">Batas penggunaan</p>
+            <h2 class="mt-1 text-base font-bold text-slate-900 dark:text-white">Hasil visual adalah indikasi awal, bukan diagnosis pasti</h2>
+            <ul class="mt-3 space-y-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                <li>• Hasil bergantung pada data observasi yang diisi pengguna.</li>
+                <li>• Gejala daun yang mirip perlu diperiksa kembali di lapangan.</li>
+                <li>• Analisis daun atau tanah dapat digunakan jika diperlukan untuk memastikan kondisi hara.</li>
+            </ul>
+        </article>
+    </section>
 
-    {{-- Status Kebutuhan --}}
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-6">
-        <h3 class="text-sm font-bold text-slate-800 mb-4">4 Level Status Kebutuhan</h3>
-        <p class="text-xs text-slate-500 mb-4">Status ditentukan oleh rule dengan prioritas tertinggi yang terpicu. Hierarki: Defisiensi Berat > Perlu Pupuk > Sehat > Tunda Pupuk.</p>
-
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="bg-red-50 border border-red-200 rounded-xl p-3 text-center">
-                <p class="text-sm font-bold text-red-700">Defisiensi Berat</p>
-                <p class="text-[10px] text-red-600 mt-1">Masalah berat (pH sangat rendah, penyakit, dll). Atasi masalah dulu sebelum pupuk.</p>
-                <p class="text-[9px] text-red-500 mt-1 font-medium">Prioritas: 1–2</p>
+    <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <h2 class="text-base font-bold text-slate-900 dark:text-white">Acuan yang digunakan</h2>
+        <div class="mt-3 grid gap-3 lg:grid-cols-3">
+            <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                <p class="text-sm font-semibold text-slate-900 dark:text-white">Iyung Pahan (2013)</p>
+                <p class="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">Acuan dosis Urea dan KCl.</p>
             </div>
-            <div class="bg-orange-50 border border-orange-200 rounded-xl p-3 text-center">
-                <p class="text-sm font-bold text-orange-700">Perlu Pupuk</p>
-                <p class="text-[10px] text-orange-600 mt-1">Defisiensi hara terdeteksi. Segera aplikasikan pupuk sesuai rekomendasi.</p>
-                <p class="text-[9px] text-orange-500 mt-1 font-medium">Prioritas: 2–3</p>
-            </div>
-            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center">
-                <p class="text-sm font-bold text-emerald-700">Sehat</p>
-                <p class="text-[10px] text-emerald-600 mt-1">Kondisi normal. Lanjutkan pemupukan standar sesuai jadwal rutin.</p>
-                <p class="text-[9px] text-emerald-500 mt-1 font-medium">Prioritas: 4–9</p>
-            </div>
-            <div class="bg-slate-100 border border-slate-200 rounded-xl p-3 text-center">
-                <p class="text-sm font-bold text-slate-600">Tunda Pupuk</p>
-                <p class="text-[10px] text-slate-500 mt-1">Kondisi tidak mendukung (tergenang, terlalu kering, tanaman tua renta).</p>
-                <p class="text-[9px] text-slate-500 mt-1 font-medium">Prioritas: 1–8</p>
-            </div>
+            <a href="https://doi.org/10.22302/iopri.war.warta.v30i1.129" target="_blank" rel="noopener noreferrer" class="rounded-xl border border-slate-200 p-4 transition hover:border-emerald-400 dark:border-slate-700 dark:hover:border-emerald-700">
+                <p class="text-sm font-semibold text-slate-900 dark:text-white">Warta PPKS (2025)</p>
+                <p class="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">Acuan gejala visual tanaman dan prinsip pemupukan.</p>
+            </a>
+            <a href="https://doi.org/10.22302/iopri.war.warta.v26i2.48" target="_blank" rel="noopener noreferrer" class="rounded-xl border border-slate-200 p-4 transition hover:border-emerald-400 dark:border-slate-700 dark:hover:border-emerald-700">
+                <p class="text-sm font-semibold text-slate-900 dark:text-white">Warta PPKS (2021)</p>
+                <p class="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">Acuan waktu pemupukan berdasarkan curah hujan.</p>
+            </a>
         </div>
-    </div>
-
-    {{-- Cara Kerja Kondisi IF --}}
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 sm:p-6">
-        <h3 class="text-sm font-bold text-slate-800 mb-3">Cara Kerja Kondisi (IF)</h3>
-        <div class="space-y-2 text-xs text-slate-600">
-            <div class="flex items-start gap-2">
-                <span class="text-emerald-600 font-bold flex-shrink-0">•</span>
-                <p>Field yang <strong>dikosongkan</strong> (tidak dicek) berarti rule tidak mempertimbangkan parameter tersebut — bersifat wildcard.</p>
-            </div>
-            <div class="flex items-start gap-2">
-                <span class="text-emerald-600 font-bold flex-shrink-0">•</span>
-                <p>Field yang <strong>diisi</strong> harus cocok dengan data observasi agar rule terpicu (logika <strong>AND</strong> — semua harus cocok).</p>
-            </div>
-            <div class="flex items-start gap-2">
-                <span class="text-emerald-600 font-bold flex-shrink-0">•</span>
-                <p><strong>pH Tanah</strong> menggunakan range check: nilai pH observasi harus berada di antara min dan max yang ditentukan.</p>
-            </div>
-            <div class="flex items-start gap-2">
-                <span class="text-emerald-600 font-bold flex-shrink-0">•</span>
-                <p><strong>Defisiensi</strong> menggunakan array-contains check: jika rule menetapkan "N", maka gejala defisiensi observasi harus mengandung "N".</p>
-            </div>
-            <div class="flex items-start gap-2">
-                <span class="text-emerald-600 font-bold flex-shrink-0">•</span>
-                <p><strong>Prioritas 1–10:</strong> angka semakin kecil = semakin penting. Rule dengan prioritas 1 akan muncul paling atas di hasil analisis.</p>
-            </div>
-            <div class="flex items-start gap-2">
-                <span class="text-emerald-600 font-bold flex-shrink-0">•</span>
-                <p>Rule bisa di-<strong>nonaktifkan</strong> tanpa dihapus. Rule nonaktif tidak dievaluasi saat analisis.</p>
-            </div>
-        </div>
-    </div>
+    </section>
 </div>
 @endsection

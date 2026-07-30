@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use App\Services\CurrentApplicationCalculator;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class CurrentApplicationCalculatorTest extends TestCase
 {
@@ -60,7 +60,7 @@ class CurrentApplicationCalculatorTest extends TestCase
         $this->assertEquals('MENUNGGU_KELAYAKAN', $result['status_stage']);
     }
 
-    public function test_menunggu_interval_when_tahap_1_done_but_less_than_60_days(): void
+    public function test_menunggu_interval_when_tahap_1_done_but_less_than_120_days(): void
     {
         $result = $this->calculator->calculate([
             'annual_snapshot' => [

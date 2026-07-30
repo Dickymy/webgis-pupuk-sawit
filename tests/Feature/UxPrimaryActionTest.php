@@ -43,5 +43,7 @@ class UxPrimaryActionTest extends TestCase
             ->get(route('realisasi-pemupukan.index'));
 
         $response->assertOk();
+        $response->assertSee('Belum Siap Dipupuk');
+        $response->assertDontSee('Menunggu Jadwal');
     }
 }

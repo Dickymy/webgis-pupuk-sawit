@@ -26,7 +26,6 @@ class UpdateRealisasiPemupukanRequest extends FormRequest
             'status_realisasi' => ['required', 'string', Rule::in([
                 RealisasiPemupukan::STATUS_SELESAI,
                 RealisasiPemupukan::STATUS_SEBAGIAN,
-                RealisasiPemupukan::STATUS_BATAL,
             ])],
             'catatan_pelaksana' => ['nullable', 'string', 'max:1000'],
             'confirmed_over_plan' => ['nullable', 'boolean'],
@@ -41,6 +40,12 @@ class UpdateRealisasiPemupukanRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            $urea = (float) $this->input('urea_realisasi_kg', 0);
+            $kcl = (float) $this->input('kcl_realisasi_kg', 0);
+            if ($urea <= 0 && $kcl <= 0) {
+                $validator->errors()->add('urea_realisasi_kg', 'Minimal salah satu pupuk (Urea atau KCl) harus lebih dari 0. Gunakan aksi pembatalan jika realisasi dibatalkan.');
+            }
+
             $this->validateOverPlanConfirmation($validator);
             $this->validateAnnualLimit($validator);
         });
@@ -83,7 +88,9 @@ class UpdateRealisasiPemupukanRequest extends FormRequest
 
         $blok = $realisasi->blokLahan;
         $realizationService = app(FertilizationRealizationService::class);
-        $summary = $realizationService->getRealizationSummary($blok, $rekomendasi->id);
+        $summary = $rekomendasi->programPemupukan
+            ? $realizationService->getRealizationSummaryForProgram($rekomendasi->programPemupukan)
+            : $realizationService->getRealizationSummary($blok, $rekomendasi->id);
 
         // Kurangi realisasi saat ini (karena akan diupdate)
         $totalUreaSebelum = $summary['total_urea_realisasi'] - (float) $realisasi->urea_realisasi_kg;

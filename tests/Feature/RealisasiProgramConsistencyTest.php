@@ -48,6 +48,7 @@ class RealisasiProgramConsistencyTest extends TestCase
             'curah_hujan_mm_bulanan' => 180,
             'curah_hujan_kategori' => 'Normal',
             'kondisi_drainase' => 'Baik',
+            'kelembaban_tanah' => 'Lembab',
         ]);
 
         $this->program = ProgramPemupukan::create([

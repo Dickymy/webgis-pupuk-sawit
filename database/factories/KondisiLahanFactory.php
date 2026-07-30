@@ -15,7 +15,7 @@ class KondisiLahanFactory extends Factory
         return [
             'blok_lahan_id' => BlokLahan::factory(),
             'tanggal_observasi' => $this->faker->dateTimeBetween('-30 days', 'now')->format('Y-m-d'),
-            'warna_daun' => $this->faker->randomElement(['Hijau Normal', 'Hijau Pucat', 'Kuning Merata', 'Kuning Tepi']),
+            'warna_daun' => $this->faker->randomElement(config('observation.leaf_conditions')),
             'ph_tanah' => $this->faker->randomFloat(2, 4.0, 7.0),
             'kelembaban_tanah' => $this->faker->randomElement(['Sangat Kering', 'Kering', 'Normal', 'Lembab', 'Sangat Lembab']),
             'curah_hujan_mm_bulanan' => $this->faker->numberBetween(50, 350),

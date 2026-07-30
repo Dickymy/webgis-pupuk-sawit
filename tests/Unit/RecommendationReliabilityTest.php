@@ -43,21 +43,20 @@ class RecommendationReliabilityTest extends TestCase
         $blok = $this->makeBlok();
         $kondisi = $this->makeKondisi([
             'warna_daun' => 'Kuning Merata',
-            'ph_tanah' => 5.5,
-            'metode_pengukuran_ph' => 'pH_meter',
             'curah_hujan_mm_bulanan' => 150,
             'periode_curah_hujan' => '2026-06-01 s/d 2026-06-30',
             'sumber_curah_hujan' => 'open-meteo',
             'tanggal_pemupukan_terakhir' => now()->subDays(90),
+            'musim_saat_ini' => 'Musim Hujan',
+            'kelembaban_tanah' => 'Normal',
             'kondisi_drainase' => 'Baik',
-            'kondisi_pelepah' => 'Normal',
-            'gejala_defisiensi' => ['N'],
+            'foto_observasi_path' => 'observasi/daun.jpg',
         ]);
 
         $result = $this->service->calculate($blok, $kondisi, []);
 
-        $this->assertGreaterThanOrEqual(70, $result['score']);
-        $this->assertContains($result['kategori'], ['Cukup Kuat', 'Kuat secara Data']);
+        $this->assertSame(100, $result['score']);
+        $this->assertSame('Lengkap', $result['kategori']);
     }
 
     public function test_data_minimal_menghasilkan_skor_rendah(): void
@@ -68,7 +67,7 @@ class RecommendationReliabilityTest extends TestCase
         $result = $this->service->calculate($blok, $kondisi, []);
 
         $this->assertLessThan(50, $result['score']);
-        $this->assertEquals('Data Tidak Cukup', $result['kategori']);
+        $this->assertEquals('Perlu Dilengkapi', $result['kategori']);
     }
 
     public function test_kategori_konsisten_dengan_config(): void
@@ -82,5 +81,41 @@ class RecommendationReliabilityTest extends TestCase
             $this->assertArrayHasKey('max', $cat);
             $this->assertArrayHasKey('label', $cat);
         }
+    }
+
+    public function test_foto_hanya_dokumentasi_dan_tidak_mengubah_skor(): void
+    {
+        $blok = $this->makeBlok();
+        $kondisi = $this->makeKondisi([
+            'warna_daun' => 'Hijau Normal',
+            'curah_hujan_mm_bulanan' => 150,
+            'periode_curah_hujan' => '30 hari terakhir',
+            'sumber_curah_hujan' => 'manual',
+            'tanggal_pemupukan_terakhir' => now()->subDays(90),
+            'kelembaban_tanah' => 'Normal',
+            'kondisi_drainase' => 'Baik',
+        ]);
+
+        $tanpaFoto = $this->service->calculate($blok, $kondisi);
+        $kondisi->foto_observasi_path = 'observasi/dokumentasi.jpg';
+        $denganFoto = $this->service->calculate($blok, $kondisi);
+
+        $this->assertSame($tanpaFoto['score'], $denganFoto['score']);
+        $this->assertSame($tanpaFoto['kategori'], $denganFoto['kategori']);
+    }
+
+    public function test_rule_terpicu_tidak_mengubah_kelengkapan_data(): void
+    {
+        $blok = $this->makeBlok();
+        $kondisi = $this->makeKondisi(['warna_daun' => 'Hijau Normal']);
+
+        $tanpaRule = $this->service->calculate($blok, $kondisi, []);
+        $denganRule = $this->service->calculate($blok, $kondisi, [(object) [
+            'sumber_penulis' => 'Iyung Pahan',
+            'tingkat_bukti' => 'BUKU',
+        ]]);
+
+        $this->assertSame($tanpaRule['score'], $denganRule['score']);
+        $this->assertArrayNotHasKey('rule_bersumber', $denganRule['rincian']);
     }
 }

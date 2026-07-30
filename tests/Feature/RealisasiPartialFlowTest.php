@@ -17,7 +17,7 @@ use Tests\TestCase;
  * Test alur realisasi sebagian dan tahap (Pahan v2.6).
  *
  * Skenario B: Tahap 1 Sebagian — tidak pindah ke Tahap 2
- * Skenario C: Tahap 2 — interval 60 hari
+ * Skenario C: Tahap 2 — interval 120 hari
  */
 class RealisasiPartialFlowTest extends TestCase
 {
@@ -122,8 +122,8 @@ class RealisasiPartialFlowTest extends TestCase
         $this->assertEquals(172.0, $result['urea_aplikasi_saat_ini']);
     }
 
-    /** Tahap 2 tidak siap sebelum 60 hari */
-    public function test_stage_2_not_ready_before_60_days(): void
+    /** Tahap 2 tidak siap sebelum 120 hari */
+    public function test_stage_2_not_ready_before_120_days(): void
     {
         // Buat realisasi Tahap 1 selesai (30 hari lalu)
         RealisasiPemupukan::create([
@@ -159,8 +159,8 @@ class RealisasiPartialFlowTest extends TestCase
         $this->assertEquals(0, $result['urea_aplikasi_saat_ini']);
     }
 
-    /** Tahap 2 siap setelah 60 hari */
-    public function test_stage_2_ready_after_60_days(): void
+    /** Tahap 2 siap setelah 120 hari */
+    public function test_stage_2_ready_after_120_days(): void
     {
         RealisasiPemupukan::create([
             'rekomendasi_rbs_id' => $this->rekomendasi->id,
@@ -168,7 +168,7 @@ class RealisasiPartialFlowTest extends TestCase
             'admin_id' => $this->admin->id,
             'tahun_program' => now()->year,
             'tahap' => 1,
-            'tanggal_realisasi' => now()->subDays(65)->toDateString(),
+            'tanggal_realisasi' => now()->subDays(125)->toDateString(),
             'urea_rencana_kg' => 272.0,
             'kcl_rencana_kg' => 340.0,
             'urea_realisasi_kg' => 272.0,

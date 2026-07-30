@@ -20,9 +20,9 @@ class AppServiceProvider extends ServiceProvider
         View::composer('layouts.app', function ($view) {
             $admin = Auth::guard('admin')->user();
 
-            // Blok defisiensi berat (notifikasi lama)
+            // Blok dengan gejala berat berdasarkan status diagnosis terbaru
             $blokDarurat = BlokLahan::whereHas('rekomendasiRbsTerbaru', function ($q) {
-                $q->where('status_kebutuhan_dominan', 'Darurat');
+                $q->where('status_kondisi_tanaman', 'GEJALA_BERAT');
             })->with(['anggota', 'kondisiTerbaru', 'rekomendasiRbsTerbaru'])->get();
 
             $blokDarurat = $blokDarurat->filter(function ($blok) {
@@ -38,7 +38,7 @@ class AppServiceProvider extends ServiceProvider
             $jumlahDarurat = $blokDarurat->count();
             $blokDaruratLimit = $blokDarurat->take(5);
 
-            // Pahan v2.8: Notifikasi database (unread count)
+            // Gabungkan notifikasi blok darurat dan notifikasi akun yang belum dibaca.
             $unreadNotifCount = $admin ? $admin->unreadNotifications()->count() : 0;
             $totalNotifBadge = $jumlahDarurat + $unreadNotifCount;
 

@@ -48,6 +48,50 @@ class RealisasiPemupukanController extends Controller
      */
     public function index(Request $request)
     {
+        $tab = $request->query('tab', 'siap');
+        if (! in_array($tab, ['siap', 'menunggu', 'riwayat'], true)) {
+            $tab = 'siap';
+        }
+
+        $latestQuery = RekomendasiRbs::with([
+            'blokLahan.anggota',
+            'blokLahan.kondisiTerbaru',
+            'programPemupukan',
+        ])->where('is_latest', true);
+
+        if ($request->filled('anggota_id')) {
+            $latestQuery->whereHas('blokLahan', fn ($q) => $q->where('anggota_id', $request->anggota_id));
+        }
+
+        $operasional = $latestQuery->get()->map(function ($rekomendasi) {
+            return [
+                'rekomendasi' => $rekomendasi,
+                'eligibility' => $this->eligibilityService->evaluate($rekomendasi),
+            ];
+        });
+
+        $siapItems = $operasional->filter(fn ($item) => $item['eligibility']['boleh_mencatat'])->values();
+        $menungguItems = $operasional->filter(fn ($item) => in_array($item['eligibility']['status_stage'], [
+            CurrentApplicationCalculator::MENUNGGU_INTERVAL,
+            CurrentApplicationCalculator::MENUNGGU_KELAYAKAN,
+            CurrentApplicationCalculator::PERLU_VERIFIKASI_REALISASI,
+        ], true))->values();
+
+        $groupOperasional = function ($items) {
+            return $items->groupBy(fn ($item) => $item['rekomendasi']->blokLahan?->anggota_id ?? 0)
+                ->map(function ($groupItems) {
+                    return [
+                        'anggota' => $groupItems->first()['rekomendasi']->blokLahan?->anggota,
+                        'items' => $groupItems->values(),
+                    ];
+                })
+                ->sortBy(fn ($group) => $group['anggota']?->nama ?? 'zzz')
+                ->values();
+        };
+
+        $groupedSiap = $groupOperasional($siapItems);
+        $groupedMenunggu = $groupOperasional($menungguItems);
+
         $query = RealisasiPemupukan::with(['rekomendasiRbs.blokLahan.anggota', 'blokLahan.anggota', 'admin']);
 
         if ($request->filled('anggota_id')) {
@@ -60,13 +104,10 @@ class RealisasiPemupukanController extends Controller
 
         $realisasis = $query->orderByDesc('tanggal_realisasi')->get();
 
-        // Group by anggota
         $grouped = $realisasis->groupBy(function ($r) {
             return $r->blokLahan?->anggota_id ?? 0;
         })->map(function ($items) {
             $anggota = $items->first()->blokLahan?->anggota;
-
-            // Sort: aktif (Selesai, Sebagian) di atas, Batal di bawah, lalu by tanggal desc
             $sorted = $items->sortBy(function ($r) {
                 $priority = match ($r->status_realisasi) {
                     'SEBAGIAN' => 0,
@@ -85,8 +126,15 @@ class RealisasiPemupukanController extends Controller
         })->sortBy(fn ($g) => $g['anggota']?->nama ?? 'zzz')->values();
 
         $anggotas = Anggota::orderBy('nama')->get();
+        $workflowStats = [
+            'siap' => $siapItems->count(),
+            'menunggu' => $menungguItems->count(),
+            'riwayat' => $realisasis->count(),
+        ];
 
-        return view('realisasi_pemupukan.index', compact('grouped', 'anggotas'));
+        return view('realisasi_pemupukan.index', compact(
+            'grouped', 'groupedSiap', 'groupedMenunggu', 'anggotas', 'workflowStats', 'tab'
+        ));
     }
 
     /**
@@ -322,7 +370,9 @@ class RealisasiPemupukanController extends Controller
         $blok = $realisasiPemupukan->blokLahan;
         $rekomendasiRbs = $realisasiPemupukan->rekomendasiRbs;
 
-        $realizationSummary = $this->realizationService->getRealizationSummary($blok, $rekomendasiRbs->id);
+        $realizationSummary = $rekomendasiRbs->programPemupukan
+            ? $this->realizationService->getRealizationSummaryForProgram($rekomendasiRbs->programPemupukan)
+            : $this->realizationService->getRealizationSummary($blok, $rekomendasiRbs->id);
 
         return view('realisasi_pemupukan.edit', compact(
             'realisasiPemupukan',
@@ -372,7 +422,9 @@ class RealisasiPemupukanController extends Controller
         if ($statusRealisasi === RealisasiPemupukan::STATUS_SELESAI) {
             $blok = $realisasiPemupukan->blokLahan;
             $rekomendasi = $realisasiPemupukan->rekomendasiRbs;
-            $summary = $this->realizationService->getRealizationSummary($blok, $rekomendasi->id);
+            $summary = $rekomendasi->programPemupukan
+                ? $this->realizationService->getRealizationSummaryForProgram($rekomendasi->programPemupukan)
+                : $this->realizationService->getRealizationSummary($blok, $rekomendasi->id);
 
             // Kurangi record saat ini dari total (akan diupdate)
             $summaryAdjusted = $summary;

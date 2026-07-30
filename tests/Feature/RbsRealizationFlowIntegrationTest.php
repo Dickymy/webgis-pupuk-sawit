@@ -86,7 +86,7 @@ class RbsRealizationFlowIntegrationTest extends TestCase
         $this->assertEquals(340.0, $result['kcl_aplikasi_saat_ini']);
     }
 
-    public function test_tahap_2_not_ready_before_60_days(): void
+    public function test_tahap_2_not_ready_before_120_days(): void
     {
         $calculator = app(CurrentApplicationCalculator::class);
         $realizationService = app(FertilizationRealizationService::class);
@@ -121,18 +121,18 @@ class RbsRealizationFlowIntegrationTest extends TestCase
         $this->assertEquals(0.0, $result['kcl_aplikasi_saat_ini']);
     }
 
-    public function test_tahap_2_ready_after_60_days_with_actual_remaining(): void
+    public function test_tahap_2_ready_after_120_days_with_actual_remaining(): void
     {
         $calculator = app(CurrentApplicationCalculator::class);
         $realizationService = app(FertilizationRealizationService::class);
 
-        // Simulasi realisasi Tahap 1, 70 hari lalu (jumlah memenuhi rencana)
+        // Simulasi realisasi Tahap 1, 130 hari lalu (jumlah memenuhi rencana)
         RealisasiPemupukan::create([
             'rekomendasi_rbs_id' => $this->createRbs()->id,
             'blok_lahan_id' => $this->blok->id,
             'admin_id' => $this->admin->id,
             'tahap' => 1,
-            'tanggal_realisasi' => now()->subDays(70)->toDateString(),
+            'tanggal_realisasi' => now()->subDays(130)->toDateString(),
             'urea_rencana_kg' => 272.0,
             'kcl_rencana_kg' => 340.0,
             'urea_realisasi_kg' => 272.0,
@@ -169,7 +169,7 @@ class RbsRealizationFlowIntegrationTest extends TestCase
             'blok_lahan_id' => $this->blok->id,
             'admin_id' => $this->admin->id,
             'tahap' => 1,
-            'tanggal_realisasi' => now()->subDays(120)->toDateString(),
+            'tanggal_realisasi' => now()->subDays(160)->toDateString(),
             'urea_rencana_kg' => 272.0,
             'kcl_rencana_kg' => 340.0,
             'urea_realisasi_kg' => 272.0,

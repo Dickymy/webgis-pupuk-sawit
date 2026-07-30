@@ -22,15 +22,15 @@
             <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $rekomendasiRbs->tanggal_analisis->format('d/m/Y') }}</span>
         </div>
         <div>
-            <span class="text-slate-400 block">Fase Snapshot</span>
+            <span class="text-slate-400 block">Fase Tanaman</span>
             <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $rekomendasiRbs->label_fase }}</span>
         </div>
         <div>
-            <span class="text-slate-400 block">Umur Snapshot</span>
+            <span class="text-slate-400 block">Umur Tanaman</span>
             <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $rekomendasiRbs->umur_tanaman_snapshot ?? '-' }} tahun</span>
         </div>
         <div>
-            <span class="text-slate-400 block">Tahap Aktif Sistem</span>
+            <span class="text-slate-400 block">Tahap Pelaksanaan</span>
             <span class="font-semibold text-emerald-700 dark:text-emerald-400">Tahap {{ $eligibility['active_stage'] }}</span>
         </div>
     </div>
@@ -78,9 +78,9 @@
         <input type="hidden" name="submission_token" value="{{ $submissionToken }}">
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {{-- Tahap Aktif Sistem (TEKS, bukan pilihan) --}}
+            {{-- Tahap Pelaksanaan (TEKS, bukan pilihan) --}}
             <div>
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tahap Aktif Sistem</label>
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Tahap Pelaksanaan</label>
                 <div class="w-full text-sm bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 font-semibold text-slate-800 dark:text-slate-200">
                     Tahap {{ $tahapDefault }}
                 </div>
@@ -97,19 +97,19 @@
 
             {{-- Rencana Resmi Sistem (TEKS, tidak bisa diedit) --}}
             <div>
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Urea Rencana Resmi (kg)</label>
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Rencana Urea Tahap Ini</label>
                 <div class="w-full text-sm bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 font-bold text-amber-700">
                     {{ number_format($ureaRencana, 2) }} kg
                 </div>
-                <p class="text-[10px] text-slate-400 mt-0.5">Dihitung server dari kebutuhan tahunan dan realisasi sebelumnya.</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">Berdasarkan rekomendasi dan realisasi sebelumnya.</p>
             </div>
 
             <div>
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">KCl Rencana Resmi (kg)</label>
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Rencana KCl Tahap Ini</label>
                 <div class="w-full text-sm bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 font-bold text-cyan-700">
                     {{ number_format($kclRencana, 2) }} kg
                 </div>
-                <p class="text-[10px] text-slate-400 mt-0.5">Dihitung server dari kebutuhan tahunan dan realisasi sebelumnya.</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">Berdasarkan rekomendasi dan realisasi sebelumnya.</p>
             </div>
 
             {{-- Urea Realisasi --}}
@@ -128,17 +128,16 @@
                 @error('kcl_realisasi_kg')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
             </div>
 
-            {{-- Status Realisasi --}}
+            {{-- Status ditentukan otomatis dari jumlah aktual terhadap rencana tahap. --}}
             <div>
                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Status Realisasi</label>
-                <select name="status_realisasi" class="w-full text-sm border-slate-300 dark:border-slate-600 dark:bg-slate-700 rounded-lg @error('status_realisasi') border-red-500 @enderror">
-                    <option value="SELESAI" {{ old('status_realisasi') === 'SELESAI' ? 'selected' : '' }}>Selesai</option>
-                    <option value="SEBAGIAN" {{ old('status_realisasi') === 'SEBAGIAN' ? 'selected' : '' }}>Sebagian</option>
-                </select>
-                <p class="text-[10px] text-slate-400 mt-0.5">Status Selesai hanya diterima jika jumlah memenuhi rencana tahap.</p>
+                <input type="hidden" name="status_realisasi" value="{{ old('status_realisasi', 'SELESAI') }}">
+                <div id="status-realisasi-label" class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-800 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200">
+                    {{ old('status_realisasi', 'SELESAI') === 'SEBAGIAN' ? 'Sebagian' : 'Selesai' }}
+                </div>
+                <p class="text-[10px] text-slate-400 mt-0.5">Ditentukan otomatis dari jumlah aktual yang dicatat.</p>
                 @error('status_realisasi')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
             </div>
-
             {{-- Catatan --}}
             <div class="sm:col-span-2">
                 <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Catatan Pelaksana</label>
@@ -194,6 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const ureaInput = document.querySelector('[name="urea_realisasi_kg"]');
     const kclInput = document.querySelector('[name="kcl_realisasi_kg"]');
     const statusSelect = document.querySelector('[name="status_realisasi"]');
+    const statusLabel = document.getElementById('status-realisasi-label');
     const overPlanSection = document.getElementById('over-plan-section');
     const overrideSection = document.getElementById('override-annual-section');
 
@@ -226,6 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
             selisihDiv.textContent = msg;
             // Auto-select SEBAGIAN
             statusSelect.value = 'SEBAGIAN';
+            statusLabel.textContent = 'Sebagian';
         } else if (lebihDariRencana) {
             selisihDiv.classList.remove('hidden', 'bg-blue-50', 'border-blue-200', 'text-blue-700');
             selisihDiv.classList.add('bg-amber-50', 'border', 'border-amber-200', 'text-amber-700');
@@ -234,9 +235,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (selisihKcl > 0) msg += ' KCl: +' + selisihKcl.toFixed(1) + ' kg.';
             selisihDiv.textContent = msg;
             statusSelect.value = 'SELESAI';
+            statusLabel.textContent = 'Selesai';
         } else {
             selisihDiv.classList.add('hidden');
             statusSelect.value = 'SELESAI';
+            statusLabel.textContent = 'Selesai';
         }
 
         const overPlan = lebihDariRencana;

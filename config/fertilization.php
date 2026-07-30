@@ -90,43 +90,46 @@ return [
     |--------------------------------------------------------------------------
     */
     'window' => [
-        // Curah hujan bulanan (mm/bulan)
-        'rainfall_min_mm' => 100,
-        'rainfall_max_mm' => 250,
+        // Curah hujan bulanan (mm/bulan).
+        // PPKS 2025: rentang optimal 100-250 mm/bulan.
+        // Pradiko dkk. (PPKS 2021): tunda pada <60 atau >300 mm/bulan.
+        'rainfall_optimal_min_mm' => 100,
+        'rainfall_optimal_max_mm' => 250,
+        'rainfall_defer_below_mm' => 60,
+        'rainfall_defer_above_mm' => 300,
 
-        // Interval minimum antar aplikasi sejenis (hari)
-        'min_interval_days' => 60,
+        // Jeda minimum operasional. PPKS merekomendasikan 2-3 aplikasi/tahun;
+        // 120 hari dipakai sebagai batas minimum untuk mencegah >3 tahap/tahun.
+        // Ini adalah adaptasi desain penelitian, bukan angka dosis dari Pahan.
+        'min_interval_days' => 120,
 
-        // Batas hari keterlambatan pemupukan
-        'late_threshold_days' => 120,
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Bobot Skor Kelengkapan & Keandalan Data
+    | Bobot Kelengkapan Data Pendukung
     |--------------------------------------------------------------------------
     */
     'reliability_weights' => [
-        'identitas_blok' => 15, // luas, SPH, tahun/tanggal tanam
+        'identitas_blok' => 20, // luas, SPH, tahun/tanggal tanam
         'fase_terverifikasi' => 10,
-        'ph_dan_metode' => 10,
-        'curah_hujan' => 20, // curah hujan bulanan + periode
-        'tgl_pemupukan' => 10,
-        'data_visual' => 20, // daun, pelepah, defisiensi
-        'drainase_gulma_hama' => 10,
-        'rule_bersumber' => 5,
+        'curah_hujan' => 30, // angka/kategori, periode, dan sumber
+        'tgl_pemupukan' => 15,
+        'data_visual' => 15, // kondisi daun; foto hanya dokumentasi
+        'kondisi_lapangan' => 10, // kelembapan dan drainase
+
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Kategori Keandalan
+    | Kategori Kelengkapan Data Pendukung
     |--------------------------------------------------------------------------
     */
     'reliability_categories' => [
-        ['min' => 0,  'max' => 49,  'label' => 'Data Tidak Cukup'],
-        ['min' => 50, 'max' => 69,  'label' => 'Estimasi Awal'],
-        ['min' => 70, 'max' => 84,  'label' => 'Cukup Kuat'],
-        ['min' => 85, 'max' => 100, 'label' => 'Kuat secara Data'],
+        ['min' => 0,  'max' => 69,  'label' => 'Perlu Dilengkapi'],
+        ['min' => 70, 'max' => 89,  'label' => 'Cukup Lengkap'],
+        ['min' => 90, 'max' => 100, 'label' => 'Lengkap'],
+
     ],
 
     /*
@@ -136,53 +139,4 @@ return [
     */
     'engine_version' => 'pahan-v2.9',
 
-    /*
-    |--------------------------------------------------------------------------
-    | Legacy Multipliers (NONAKTIF — disimpan untuk dokumentasi)
-    |--------------------------------------------------------------------------
-    |
-    | Multiplier berikut telah dinonaktifkan dari perhitungan produksi.
-    | Alasan: Angka multiplier belum memiliki sumber yang cukup kuat
-    | dari buku Iyung Pahan (2013).
-    |
-    | Jika diperlukan, gunakan mekanisme expert_adjustment.
-    |
-    */
-    'legacy_multipliers' => [
-        'enabled' => false,
-        'soil' => [
-            'Tanah Lempung' => ['urea' => 1.0,  'kcl' => 1.0],
-            'Tanah Lempung Berpasir' => ['urea' => 1.1,  'kcl' => 1.15],
-            'Tanah Berpasir' => ['urea' => 1.25, 'kcl' => 1.35],
-            'Tanah Liat' => ['urea' => 0.9,  'kcl' => 0.9],
-            'Tanah Gambut' => ['urea' => 0.7,  'kcl' => 1.5],
-            'Tanah Aluvial' => ['urea' => 1.0,  'kcl' => 1.0],
-            'Tanah Podsolik Merah Kuning (PMK)' => ['urea' => 1.15, 'kcl' => 1.2],
-            'Tanah Laterit' => ['urea' => 1.15, 'kcl' => 1.2],
-            'Tanah Berbatu' => ['urea' => 1.2,  'kcl' => 1.2],
-        ],
-        'topography' => [
-            'Datar 0-15°' => ['urea' => 1.0, 'kcl' => 1.0],
-            'Bergelombang 15-30°' => ['urea' => 1.1, 'kcl' => 1.1],
-            'Curam >30°' => ['urea' => 1.2, 'kcl' => 1.2],
-        ],
-        'time' => [
-            'recent_days' => 60,
-            'recent_factor' => 0.75,
-            'normal_factor' => 1.0,
-            'late_days' => 120,
-            'late_factor' => 1.25,
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Expert Adjustment Limits
-    |--------------------------------------------------------------------------
-    */
-    'expert_adjustment' => [
-        'min_factor' => 0.50,
-        'max_factor' => 2.00,
-        'default' => 1.00,
-    ],
 ];

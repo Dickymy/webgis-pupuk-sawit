@@ -143,15 +143,16 @@ class RekomendasiRbs extends Model
         return $this->belongsTo(Admin::class, 'admin_id');
     }
 
-    // Accessor: badge warna status
+    // Accessor: badge warna berdasarkan kondisi tanaman terkini.
     public function getWarnaBadgeAttribute(): string
     {
-        return match ($this->status_kebutuhan_dominan) {
-            'Darurat' => 'red',
-            'Segera' => 'orange',
-            'Normal' => 'green',
-            'Tunda' => 'gray',
-            default => 'blue',
+        return match ($this->status_kondisi_tanaman) {
+            'GEJALA_BERAT' => 'red',
+            'TERINDIKASI_DEFISIENSI' => 'orange',
+            'TERINDIKASI_DEFISIENSI_RINGAN' => 'yellow',
+            'NORMAL_VISUAL' => 'green',
+            'PERLU_VERIFIKASI', 'BELUM_DIOBSERVASI' => 'blue',
+            default => 'gray',
         };
     }
 
@@ -170,10 +171,10 @@ class RekomendasiRbs extends Model
     public static function labelStatus(?string $status): string
     {
         return match ($status) {
-            'Darurat' => 'Defisiensi Berat',
-            'Segera' => 'Perlu Pupuk',
-            'Normal' => 'Sehat',
-            'Tunda' => 'Tunda Pupuk',
+            'Darurat' => 'Indikasi Visual Perlu Diperiksa',
+            'Segera' => 'Ditemukan Gejala pada Daun',
+            'Normal' => 'Tidak Ditemukan Gejala pada Daun',
+            'Tunda' => 'Aplikasi Ditunda',
             default => 'Belum Dicek',
         };
     }
