@@ -226,13 +226,13 @@
 @endpush
 
 @section('content')
-<div class="max-w-4xl mx-auto">
+<div class="w-full">
     <div class="bg-white border border-slate-200 shadow-sm rounded-2xl p-4 sm:p-6">
         <form method="POST" action="{{ route('blok-lahan.store') }}" class="space-y-5" id="form-blok-lahan">
             @csrf
 
             {{-- Baris 1: Pemilik + Nama Blok --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 <div>
                     @include('components.searchable-select', [
                         'name' => 'anggota_id',
@@ -252,10 +252,7 @@
                         class="w-full px-4 py-3 bg-white border {{ $errors->has('nama_blok') ? 'border-red-400' : 'border-slate-300' }} rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
                     @error('nama_blok') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
-            </div>
 
-            {{-- Baris 2: SPH saja (luas otomatis dari peta) --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="sph" class="block text-sm font-medium text-slate-700 mb-2">SPH (Standar Pohon/Ha) <span class="text-red-400">*</span></label>
                     <input type="number" id="sph" name="sph" value="{{ old('sph', 136) }}" min="1" required placeholder="contoh: 136"
@@ -264,7 +261,6 @@
                     <p class="mt-1 text-xs text-slate-400">Umumnya 136 pohon/Ha untuk jarak tanam 9×9m</p>
                     <p class="mt-0.5 text-xs text-amber-600">⚠️ Nilai normal: 136–148 pohon/Ha</p>
                 </div>
-                <div></div>
             </div>
 
             {{-- Kriteria Agronomis --}}

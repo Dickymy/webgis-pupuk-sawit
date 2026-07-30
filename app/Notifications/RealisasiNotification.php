@@ -10,7 +10,7 @@ use Illuminate\Notifications\Notification;
  *
  * Tipe event:
  * - tahap_siap: Blok siap untuk realisasi tahap tertentu
- * - interval_terpenuhi: Interval 60 hari terpenuhi, Tahap 2 siap
+ * - interval_terpenuhi: Interval tahap terpenuhi, Tahap 2 siap
  * - realisasi_dicatat: Realisasi berhasil dicatat
  * - program_selesai: Program pemupukan tahun ini selesai
  * - realisasi_sebagian: Realisasi sebagian, perlu dilengkapi
@@ -58,10 +58,12 @@ class RealisasiNotification extends Notification
 
     public static function intervalTerpenuhi(string $namaBlok, string $url): self
     {
+        $intervalHari = (int) config('fertilization.window.min_interval_days', 120);
+
         return new self(
             tipe: 'interval_terpenuhi',
             judul: 'Tahap 2 Siap',
-            pesan: "{$namaBlok} — interval 60 hari terpenuhi, Tahap 2 dapat dilakukan.",
+            pesan: "{$namaBlok} — interval {$intervalHari} hari terpenuhi, Tahap 2 dapat dilakukan.",
             url: $url,
             meta: ['blok' => $namaBlok],
         );

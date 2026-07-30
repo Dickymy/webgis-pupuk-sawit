@@ -15,6 +15,8 @@ class RuleBaseLanjutan extends Model
         'kondisi_ph_max',
         'kondisi_kelembaban',
         'kondisi_curah_hujan_kategori',
+        'kondisi_curah_hujan_min_mm',
+        'kondisi_curah_hujan_max_mm',
         'kondisi_musim',
         'kondisi_drainase',
         'kondisi_defisiensi',
@@ -59,10 +61,14 @@ class RuleBaseLanjutan extends Model
     {
         return [
             'aktif' => 'boolean',
+            'is_system_rule' => 'boolean',
+            'tanggal_validasi' => 'date',
             'ada_serangan_hama' => 'boolean',
             'ada_gulma_dominan' => 'boolean',
             'kondisi_ph_min' => 'decimal:2',
             'kondisi_ph_max' => 'decimal:2',
+            'kondisi_curah_hujan_min_mm' => 'decimal:1',
+            'kondisi_curah_hujan_max_mm' => 'decimal:1',
             'prioritas' => 'integer',
             'kondisi_intermediate' => 'array',
             'prasyarat_intermediate' => 'array',

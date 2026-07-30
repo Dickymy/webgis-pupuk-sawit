@@ -6,6 +6,12 @@ use Tests\TestCase;
 
 class DemoModeTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        config(['app.demo_mode' => false]);
+        parent::tearDown();
+    }
+
     public function test_demo_mode_config_exists_in_env_example(): void
     {
         $content = file_get_contents(base_path('.env.example'));
@@ -27,6 +33,6 @@ class DemoModeTest extends TestCase
         $this->assertEquals(100, array_sum($weights));
 
         $interval = config('fertilization.window.min_interval_days');
-        $this->assertEquals(60, $interval);
+        $this->assertEquals(120, $interval);
     }
 }

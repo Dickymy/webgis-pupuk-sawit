@@ -70,4 +70,43 @@ class UxTechnicalCodeHiddenTest extends TestCase
             "Technical codes displayed raw in views:\n".implode("\n", $violations)
         );
     }
+
+    public function test_user_facing_code_has_no_broken_utf8_characters(): void
+    {
+        $paths = [
+            app_path(),
+            resource_path('views'),
+        ];
+
+        $brokenMarkers = [
+            "\u{00E2}\u{20AC}\u{201D}",
+            "\u{00E2}\u{2020}\u{2019}",
+            "\u{00C2}",
+            "\u{00C3}",
+        ];
+
+        $violations = [];
+
+        foreach ($paths as $path) {
+            foreach (File::allFiles($path) as $file) {
+                $content = File::get($file->getPathname());
+
+                foreach ($brokenMarkers as $marker) {
+                    if (str_contains($content, $marker)) {
+                        $violations[] = str_replace(
+                            base_path().DIRECTORY_SEPARATOR,
+                            '',
+                            $file->getPathname()
+                        );
+                        break;
+                    }
+                }
+            }
+        }
+
+        $this->assertEmpty(
+            $violations,
+            "Broken UTF-8 text found in user-facing code:\n".implode("\n", $violations)
+        );
+    }
 }

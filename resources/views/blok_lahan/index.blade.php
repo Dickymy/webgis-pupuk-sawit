@@ -1,52 +1,54 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen Blok Lahan')
-@section('page-title', 'Manajemen Blok Lahan')
-@section('page-subtitle', 'Data master blok lahan kelapa sawit')
+@section('title', 'Data Kebun')
+@section('page-title', 'Data Kebun')
+@section('page-subtitle', 'Kelola blok lahan dan anggota kelompok tani')
 
 @section('content')
-<div class="space-y-4">
+<div class="space-y-3">
+    <section class="rounded-2xl border border-slate-200 bg-white p-2.5 shadow-sm dark:border-slate-700 dark:bg-slate-800" aria-label="Kontrol data blok lahan">
+        <div class="flex flex-col gap-2 xl:flex-row xl:items-center">
+            @include('components.data-kebun-tabs')
 
-    {{-- Header: count + filter + tambah --}}
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <p class="text-xs text-slate-500"><span class="font-bold text-slate-800">{{ $totalBlok }}</span> blok terdaftar</p>
-        <a href="{{ route('blok-lahan.create') }}"
-           class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition-all shadow-sm">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            Tambah Blok
-        </a>
-    </div>
+            <p class="shrink-0 px-1 text-xs text-slate-500 dark:text-slate-400">
+                <span class="font-bold text-slate-800 dark:text-slate-100">{{ $totalBlok }}</span> blok terdaftar
+            </p>
 
-    {{-- Filter --}}
-    <form method="GET" action="{{ route('blok-lahan.index') }}" id="blok-filter-form" data-no-prevent-double="true" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-        <div class="flex-1 sm:max-w-[220px]">
-            @include('components.filter-searchable', [
-                'name' => 'anggota_id',
-                'placeholder' => 'Cari pemilik...',
-                'options' => $anggotas,
-                'displayField' => 'nama',
-                'selected' => request('anggota_id'),
-                'formId' => 'blok-filter-form',
-            ])
+            <form method="GET" action="{{ route('blok-lahan.index') }}" id="blok-filter-form" data-no-prevent-double="true" class="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center xl:justify-end">
+                <div class="w-full min-w-0 sm:w-[220px] sm:flex-none">
+                    @include('components.filter-searchable', [
+                        'name' => 'anggota_id',
+                        'placeholder' => 'Cari pemilik...',
+                        'options' => $anggotas,
+                        'displayField' => 'nama',
+                        'selected' => request('anggota_id'),
+                        'formId' => 'blok-filter-form',
+                    ])
+                </div>
+                <div class="relative w-full shrink-0 sm:w-[170px]">
+                    <select name="status" onchange="this.form.submit()"
+                        class="custom-select min-h-10 w-full rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-xs font-medium text-slate-700 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
+                        <option value="">Semua Status</option>
+                        @foreach(['TERINDIKASI_DEFISIENSI' => 'Ditemukan Gejala pada Daun', 'NORMAL_VISUAL' => 'Tidak Ditemukan Gejala pada Daun', 'PERLU_VERIFIKASI' => 'Data Pemeriksaan Belum Lengkap', 'Belum' => 'Belum Dianalisis'] as $val => $label)
+                            <option value="{{ $val }}" {{ request('status') == $val ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-2.5 flex items-center">
+                        <svg class="h-3.5 w-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+                @if(request()->hasAny(['anggota_id','status']))
+                    <a href="{{ route('blok-lahan.index') }}" class="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg px-3 py-2 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700">Hapus Filter</a>
+                @endif
+            </form>
+
+            <a href="{{ route('blok-lahan.create') }}"
+               class="inline-flex min-h-10 w-full shrink-0 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 sm:w-auto">
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Tambah Blok
+            </a>
         </div>
-        <div class="relative sm:min-w-[130px]">
-            <select name="status" onchange="this.form.submit()"
-                style="background-image: none !important; -webkit-appearance: none !important; -moz-appearance: none !important; appearance: none !important;"
-                class="w-full pl-3 pr-8 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer">
-                <option value="">Semua Status</option>
-                @foreach(['Darurat' => 'Defisiensi Berat', 'Segera' => 'Perlu Pupuk', 'Normal' => 'Sehat', 'Tunda' => 'Tunda Pupuk', 'Belum' => 'Belum Dicek'] as $val => $label)
-                    <option value="{{ $val }}" {{ request('status') == $val ? 'selected' : '' }}>{{ $label }}</option>
-                @endforeach
-            </select>
-            <div class="pointer-events-none absolute inset-y-0 right-2.5 flex items-center">
-                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </div>
-        </div>
-        @if(request()->hasAny(['anggota_id','status']))
-            <a href="{{ route('blok-lahan.index') }}" class="text-xs text-slate-500 hover:text-slate-700 font-medium px-2 py-1.5">Reset</a>
-        @endif
-    </form>
-
+    </section>
     {{-- Grouped by Anggota --}}
     @forelse($grouped as $group)
     @php $anggota = $group['anggota']; $bloks = $group['bloks']; @endphp
@@ -77,17 +79,7 @@
                 </thead>
                 <tbody class="divide-y divide-slate-50">
                     @foreach($bloks as $blok)
-                    @php
-                        $rbs = $blok->rekomendasiRbsTerbaru;
-                        $sc = match($rbs?->status_kebutuhan_dominan) {
-                            'Darurat' => 'bg-red-50 text-red-700',
-                            'Segera'  => 'bg-orange-50 text-orange-700',
-                            'Normal'  => 'bg-emerald-50 text-emerald-700',
-                            'Tunda'   => 'bg-slate-100 text-slate-600',
-                            default   => 'bg-blue-50 text-blue-600',
-                        };
-                        $statusLabel = \App\Models\RekomendasiRbs::labelStatus($rbs?->status_kebutuhan_dominan);
-                    @endphp
+                    @php $rbs = $blok->rekomendasiRbsTerbaru; @endphp
                     <tr class="block-row hover:bg-slate-50/50" data-nama-blok="{{ strtolower($blok->nama_blok ?? '') }}">
                         <td class="px-4 py-2.5 font-semibold text-slate-800 text-xs">{{ $blok->nama_blok }}</td>
                         <td class="px-4 py-2.5 text-xs text-slate-600">{{ number_format($blok->luas_ha, 2) }} Ha</td>
@@ -101,7 +93,7 @@
                             @if($blok->topografi) <span class="text-[10px] text-slate-400">· {{ $blok->topografi }}</span> @endif
                         </td>
                         <td class="px-4 py-2.5">
-                            <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $sc }}">{{ $statusLabel }}</span>
+                            <x-recommendation-status :recommendation="$rbs" :show-stage="false" compact />
                         </td>
                         <td class="px-4 py-2.5 text-right">
                             <div class="flex items-center gap-1 justify-end">
@@ -128,21 +120,11 @@
         {{-- Mobile Cards --}}
         <div class="sm:hidden divide-y divide-slate-100">
             @foreach($bloks as $blok)
-            @php
-                $rbs = $blok->rekomendasiRbsTerbaru;
-                $sc = match($rbs?->status_kebutuhan_dominan) {
-                    'Darurat' => 'bg-red-100 text-red-800',
-                    'Segera'  => 'bg-orange-100 text-orange-800',
-                    'Normal'  => 'bg-emerald-100 text-emerald-800',
-                    'Tunda'   => 'bg-slate-100 text-slate-700',
-                    default   => 'bg-blue-50 text-blue-700',
-                };
-                $statusLabel = \App\Models\RekomendasiRbs::labelStatus($rbs?->status_kebutuhan_dominan);
-            @endphp
+            @php $rbs = $blok->rekomendasiRbsTerbaru; @endphp
             <div class="block-row px-4 py-3" data-nama-blok="{{ strtolower($blok->nama_blok ?? '') }}">
                 <div class="flex items-center justify-between gap-2 mb-1">
                     <p class="font-semibold text-slate-800 text-xs">{{ $blok->nama_blok }} <span class="font-normal text-slate-400">· {{ number_format($blok->luas_ha, 2) }} Ha</span></p>
-                    <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-semibold {{ $sc }} flex-shrink-0">{{ $statusLabel }}</span>
+                    <x-recommendation-status :recommendation="$rbs" :show-stage="false" compact />
                 </div>
                 <div class="flex items-center justify-between gap-2">
                     <p class="text-[10px] text-slate-500">

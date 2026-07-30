@@ -31,6 +31,7 @@ class KondisiLahan extends Model
         'ada_gulma_dominan',
         'ada_serangan_hama',
         'catatan_observasi',
+        'foto_observasi_path',
         'status_verifikasi_gejala',
     ];
 

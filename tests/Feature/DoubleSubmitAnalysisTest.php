@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\Admin;
 use App\Models\BlokLahan;
 use App\Models\KondisiLahan;
-use Database\Seeders\RuleBaseLanjutanSeeder;
+use Database\Seeders\RuleBaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,7 +15,7 @@ class DoubleSubmitAnalysisTest extends TestCase
 
     public function test_double_click_analysis_does_not_create_duplicate_recommendation(): void
     {
-        $this->seed(RuleBaseLanjutanSeeder::class);
+        $this->seed(RuleBaseSeeder::class);
 
         $admin = Admin::factory()->create();
         $blok = BlokLahan::factory()->create([
@@ -32,7 +32,7 @@ class DoubleSubmitAnalysisTest extends TestCase
             'kondisi_drainase' => 'Baik',
             'curah_hujan_mm_bulanan' => 180,
             'ph_tanah' => 5.5,
-            'tanggal_pemupukan_terakhir' => now()->subDays(90),
+            'tanggal_pemupukan_terakhir' => now()->subDays(150),
         ]);
 
         // Simulate double-click: two rapid requests
@@ -56,7 +56,7 @@ class DoubleSubmitAnalysisTest extends TestCase
 
     public function test_double_click_analysis_does_not_create_duplicate_program(): void
     {
-        $this->seed(RuleBaseLanjutanSeeder::class);
+        $this->seed(RuleBaseSeeder::class);
 
         $admin = Admin::factory()->create();
         $blok = BlokLahan::factory()->create([
@@ -73,7 +73,7 @@ class DoubleSubmitAnalysisTest extends TestCase
             'kondisi_drainase' => 'Baik',
             'curah_hujan_mm_bulanan' => 180,
             'ph_tanah' => 5.5,
-            'tanggal_pemupukan_terakhir' => now()->subDays(90),
+            'tanggal_pemupukan_terakhir' => now()->subDays(150),
         ]);
 
         $this->actingAs($admin, 'admin')

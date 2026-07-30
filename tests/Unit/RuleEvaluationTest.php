@@ -32,6 +32,8 @@ class RuleEvaluationTest extends TestCase
         $rule->kondisi_ph_max = $attrs['kondisi_ph_max'] ?? null;
         $rule->kondisi_kelembaban = $attrs['kondisi_kelembaban'] ?? null;
         $rule->kondisi_curah_hujan_kategori = $attrs['kondisi_curah_hujan_kategori'] ?? null;
+        $rule->kondisi_curah_hujan_min_mm = $attrs['kondisi_curah_hujan_min_mm'] ?? null;
+        $rule->kondisi_curah_hujan_max_mm = $attrs['kondisi_curah_hujan_max_mm'] ?? null;
         $rule->kondisi_musim = $attrs['kondisi_musim'] ?? null;
         $rule->kondisi_drainase = $attrs['kondisi_drainase'] ?? null;
         $rule->kondisi_kategori_umur = $attrs['kondisi_kategori_umur'] ?? null;
@@ -56,6 +58,7 @@ class RuleEvaluationTest extends TestCase
         $kondisi->ph_tanah = $attrs['ph_tanah'] ?? null;
         $kondisi->kelembaban_tanah = $attrs['kelembaban_tanah'] ?? null;
         $kondisi->curah_hujan_kategori = $attrs['curah_hujan_kategori'] ?? null;
+        $kondisi->curah_hujan_mm_bulanan = $attrs['curah_hujan_mm_bulanan'] ?? null;
         $kondisi->musim_saat_ini = $attrs['musim_saat_ini'] ?? null;
         $kondisi->kondisi_drainase = $attrs['kondisi_drainase'] ?? null;
         $kondisi->kondisi_pelepah = $attrs['kondisi_pelepah'] ?? null;
@@ -265,5 +268,23 @@ class RuleEvaluationTest extends TestCase
         $kondisi = $this->makeKondisi(['ph_tanah' => null]);
         $result = $this->callEvaluasiRule($rule, $kondisi);
         $this->assertFalse($result, 'Rule pH harus gagal jika pH input null');
+    }
+
+    public function test_rule_curah_hujan_numerik_memakai_batas_minimum_dan_maksimum(): void
+    {
+        $optimal = $this->makeRule([
+            'kondisi_curah_hujan_min_mm' => 100.0,
+            'kondisi_curah_hujan_max_mm' => 250.0,
+        ]);
+
+        $this->assertTrue($this->callEvaluasiRule($optimal, $this->makeKondisi([
+            'curah_hujan_mm_bulanan' => 180.0,
+        ])));
+        $this->assertFalse($this->callEvaluasiRule($optimal, $this->makeKondisi([
+            'curah_hujan_mm_bulanan' => 80.0,
+        ])));
+        $this->assertFalse($this->callEvaluasiRule($optimal, $this->makeKondisi([
+            'curah_hujan_mm_bulanan' => null,
+        ])));
     }
 }

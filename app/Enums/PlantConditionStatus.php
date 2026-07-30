@@ -21,12 +21,12 @@ enum PlantConditionStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::NORMAL_VISUAL => 'Kondisi Visual Normal',
-            self::TERINDIKASI_DEFISIENSI_RINGAN => 'Terindikasi Defisiensi Ringan',
-            self::TERINDIKASI_DEFISIENSI => 'Terindikasi Defisiensi',
-            self::GEJALA_BERAT => 'Gejala Berat',
-            self::PERLU_VERIFIKASI => 'Data Belum Lengkap',
-            self::BELUM_DIOBSERVASI => 'Belum Diobservasi',
+            self::NORMAL_VISUAL => 'Tidak Ditemukan Gejala pada Daun',
+            self::TERINDIKASI_DEFISIENSI_RINGAN => 'Ditemukan Gejala pada Daun',
+            self::TERINDIKASI_DEFISIENSI => 'Ditemukan Gejala pada Daun',
+            self::GEJALA_BERAT => 'Ditemukan Gejala pada Daun',
+            self::PERLU_VERIFIKASI => 'Data Pemeriksaan Belum Lengkap',
+            self::BELUM_DIOBSERVASI => 'Belum Diperiksa',
         };
     }
 

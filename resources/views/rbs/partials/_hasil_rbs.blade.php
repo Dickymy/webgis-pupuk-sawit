@@ -22,6 +22,13 @@ $warna = match($rbs->status_kondisi_tanaman) {
         'icon'   => '🟠',
         'title'  => 'text-orange-800',
     ],
+    'TERINDIKASI_DEFISIENSI_RINGAN' => [
+        'bg'     => 'bg-yellow-50',
+        'border' => 'border-yellow-200',
+        'badge'  => 'bg-yellow-100 text-yellow-800 ring-1 ring-yellow-300',
+        'icon'   => '!',
+        'title'  => 'text-yellow-800',
+    ],
     'NORMAL_VISUAL' => [
         'bg'     => 'bg-emerald-50',
         'border' => 'border-emerald-200',
@@ -49,12 +56,12 @@ $warna = match($rbs->status_kondisi_tanaman) {
 <div class="{{ $warna['bg'] }} {{ $warna['border'] }} border rounded-2xl p-5 space-y-4">
 
     {{-- Header Status --}}
-    <div class="flex items-start justify-between gap-3">
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <h3 class="font-bold text-slate-800 flex items-center gap-2 text-sm">
             <span class="text-base">{{ $warna['icon'] }}</span>
             Hasil Analisis RBS
         </h3>
-        <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="flex flex-wrap items-center gap-2 sm:flex-shrink-0">
             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ $warna['badge'] }}">
                 {{ $rbs->label_kondisi_tanaman }}
             </span>
@@ -70,6 +77,7 @@ $warna = match($rbs->status_kondisi_tanaman) {
             @switch($rbs->status_kondisi_tanaman)
                 @case('GEJALA_BERAT') bg-red-50 border-red-200 @break
                 @case('TERINDIKASI_DEFISIENSI') bg-orange-50 border-orange-200 @break
+                @case('TERINDIKASI_DEFISIENSI_RINGAN') bg-yellow-50 border-yellow-200 @break
                 @case('NORMAL_VISUAL') bg-emerald-50 border-emerald-200 @break
                 @case('PERLU_VERIFIKASI') bg-yellow-50 border-yellow-200 @break
                 @default bg-slate-50 border-slate-200
@@ -79,6 +87,7 @@ $warna = match($rbs->status_kondisi_tanaman) {
                 @switch($rbs->status_kondisi_tanaman)
                     @case('GEJALA_BERAT') 🔴 @break
                     @case('TERINDIKASI_DEFISIENSI') 🟠 @break
+                    @case('TERINDIKASI_DEFISIENSI_RINGAN') &#128993; @break
                     @case('NORMAL_VISUAL') 🟢 @break
                     @case('PERLU_VERIFIKASI') 🟡 @break
                     @default ⚪
@@ -88,11 +97,12 @@ $warna = match($rbs->status_kondisi_tanaman) {
                 <p class="text-[9px] text-slate-500 uppercase font-bold">Kondisi Tanaman</p>
                 <p class="text-xs font-semibold text-slate-800">
                     @switch($rbs->status_kondisi_tanaman)
-                        @case('GEJALA_BERAT') Gejala Berat @break
-                        @case('TERINDIKASI_DEFISIENSI') Terindikasi Defisiensi @break
-                        @case('NORMAL_VISUAL') Kondisi Visual Normal @break
-                        @case('PERLU_VERIFIKASI') Perlu Verifikasi @break
-                        @case('BELUM_DIOBSERVASI') Belum Diobservasi @break
+                        @case('GEJALA_BERAT') Ditemukan Gejala pada Daun @break
+                        @case('TERINDIKASI_DEFISIENSI') Ditemukan Gejala pada Daun @break
+                        @case('TERINDIKASI_DEFISIENSI_RINGAN') Ditemukan Gejala pada Daun @break
+                        @case('NORMAL_VISUAL') Tidak Ditemukan Gejala pada Daun @break
+                        @case('PERLU_VERIFIKASI') Perlu Diperiksa @break
+                        @case('BELUM_DIOBSERVASI') Belum Diperiksa @break
                         @default Belum Dicek
                     @endswitch
                 </p>
@@ -111,6 +121,7 @@ $warna = match($rbs->status_kondisi_tanaman) {
                     @case('TERLAMBAT_PERLU_DIJADWALKAN') ⏰ @break
                     @case('TUNDA_HUJAN_RENDAH') ☀️ @break
                     @case('TUNDA_HUJAN_TINGGI') 🌧️ @break
+                    @case('TUNDA_TANAH_KERING') 🌱 @break
                     @case('TUNDA_INTERVAL') ⏳ @break
                     @case('PERLU_PERBAIKAN_DRAINASE') 💧 @break
                     @case('PERLU_VERIFIKASI_DATA') ❓ @break
@@ -118,7 +129,7 @@ $warna = match($rbs->status_kondisi_tanaman) {
                 @endswitch
             </span>
             <div>
-                <p class="text-[9px] text-slate-500 uppercase font-bold">Kelayakan Pemupukan</p>
+                <p class="text-[9px] text-slate-500 uppercase font-bold">Kesiapan Pemupukan</p>
                 <p class="text-xs font-semibold text-slate-800">
                     {{ \App\Services\FertilizationWindowService::labelStatus($rbs->status_kelayakan_aplikasi ?? 'PERLU_VERIFIKASI_DATA') }}
                 </p>
@@ -146,11 +157,17 @@ $warna = match($rbs->status_kondisi_tanaman) {
     <div>
         <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Rekomendasi Pemupukan</p>
         <div class="space-y-2">
-            @foreach($rbs->rekomendasi_pupuk as $pupuk)
+            @php
+                $rekomendasiTampil = collect($rbs->rekomendasi_pupuk)->unique(fn ($item) => mb_strtolower(trim($item['jenis_utama'] ?? '')))->values();
+            @endphp
+            @foreach($rekomendasiTampil as $pupuk)
             @php
                 $dosisDisplay = $pupuk['dosis'] ?? '-';
                 $metodeDisplay = $pupuk['metode'] ?? '';
                 $waktuDisplay = $pupuk['waktu'] ?? '';
+                $jenisUtamaNormalized = mb_strtolower(trim(preg_replace('/\s*\([^)]*\)\s*/', '', $pupuk['jenis_utama'] ?? '')));
+                $isUreaUtama = $jenisUtamaNormalized === 'urea';
+                $isKclUtama = in_array($jenisUtamaNormalized, ['kcl', 'mop'], true);
                 
                 // Override dosis dan cara aplikasi agar sinkron dengan kalkulasi kriteria lahan (Urea & KCl)
                 // PERBAIKAN v2.2: Tampilkan kebutuhan tahunan, bukan dosis aplikasi saat ini (yang bisa 0 saat ditunda)
@@ -160,7 +177,7 @@ $warna = match($rbs->status_kondisi_tanaman) {
                 $ureaTotalTahunan = $ureaPerPokok ? round($ureaPerPokok * $jmlPokok, 1) : $rbs->total_urea;
                 $kclTotalTahunan = $kclPerPokok ? round($kclPerPokok * $jmlPokok, 1) : $rbs->total_kcl;
 
-                if (str_contains(strtolower($pupuk['jenis_utama']), 'urea') && $ureaPerPokok) {
+                if ($isUreaUtama && $ureaPerPokok) {
                     $dosisDisplay = number_format($ureaPerPokok, 2) . ' kg/pokok/tahun (Total Blok: ' . number_format($ureaTotalTahunan, 1) . ' kg)';
                     // Pahan v2.7: Metode aplikasi memakai umur/fase snapshot
                     $umurTanaman = $rbs->umur_tanaman_snapshot ?? $blokLahan->umur_tanaman;
@@ -170,7 +187,7 @@ $warna = match($rbs->status_kondisi_tanaman) {
                     } else {
                         $metodeDisplay = 'Ditabur melingkar merata pada piringan bersih berjarak 1.5 - 2.0 meter dari pangkal batang (di bawah proyeksi tajuk terluar pelepah).';
                     }
-                } elseif (str_contains(strtolower($pupuk['jenis_utama']), 'kcl') && $kclPerPokok) {
+                } elseif ($isKclUtama && $kclPerPokok) {
                     $dosisDisplay = number_format($kclPerPokok, 2) . ' kg/pokok/tahun (Total Blok: ' . number_format($kclTotalTahunan, 1) . ' kg)';
                     // Pahan v2.7: Metode aplikasi memakai umur/fase snapshot
                     $umurTanaman = $rbs->umur_tanaman_snapshot ?? $blokLahan->umur_tanaman;
@@ -208,7 +225,17 @@ $warna = match($rbs->status_kondisi_tanaman) {
     @if($rbs->saran_tindakan_utama)
     <div class="bg-white rounded-xl border border-slate-200 p-3">
         <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Saran Tindakan</p>
-        <p class="text-xs text-slate-700 leading-relaxed">{{ $rbs->saran_tindakan_utama }}</p>
+        @php
+            $saranItems = collect(explode('|', $rbs->saran_tindakan_utama))->map(fn ($item) => trim($item))->filter();
+        @endphp
+        <ul class="space-y-1.5 text-xs leading-relaxed text-slate-700">
+            @foreach($saranItems as $saran)
+                <li class="flex items-start gap-2">
+                    <span class="mt-0.5 text-emerald-600" aria-hidden="true">&bull;</span>
+                    <span>{{ $saran }}</span>
+                </li>
+            @endforeach
+        </ul>
     </div>
     @endif
 
@@ -233,7 +260,7 @@ $warna = match($rbs->status_kondisi_tanaman) {
         $catatanStyle = match(true) {
             in_array($rbs->status_kelayakan_aplikasi, ['LAYAK_DIJADWALKAN', 'TERLAMBAT_PERLU_DIJADWALKAN']) => 'bg-emerald-50 border-emerald-200 text-emerald-800',
             $rbs->status_kondisi_tanaman === 'GEJALA_BERAT' => 'bg-red-50 border-red-200 text-red-800',
-            $rbs->status_kondisi_tanaman === 'TERINDIKASI_DEFISIENSI' => 'bg-blue-50 border-blue-200 text-blue-800',
+            in_array($rbs->status_kondisi_tanaman, ['TERINDIKASI_DEFISIENSI', 'TERINDIKASI_DEFISIENSI_RINGAN'], true) => 'bg-blue-50 border-blue-200 text-blue-800',
             default => 'bg-amber-50 border-amber-200 text-amber-800',
         };
     @endphp
@@ -259,9 +286,7 @@ $warna = match($rbs->status_kondisi_tanaman) {
             @if($rbs->strategi_estimasi_dosis)
             <p>Strategi dosis: <span class="font-medium text-slate-700">{{ $rbs->strategi_estimasi_dosis }}</span></p>
             @endif
-            @if($rbs->kelengkapan_data_score)
-            <p>Skor keandalan: <span class="font-medium text-slate-700">{{ $rbs->kelengkapan_data_score }}% ({{ $rbs->kategori_keandalan ?? '-' }})</span></p>
-            @endif
+            <p>Data analisis: <span class="font-medium text-slate-700">{{ $rbs->data_cukup ? 'tersedia' : 'belum lengkap' }}</span></p>
             @if($rbs->program_pemupukan_id)
             <p>Program ID: <span class="font-mono text-slate-700">{{ $rbs->program_pemupukan_id }}</span></p>
             @endif
@@ -280,7 +305,7 @@ $warna = match($rbs->status_kondisi_tanaman) {
     {{-- Footer --}}
     <div class="flex items-center justify-between pt-1">
         <p class="text-xs text-slate-400">
-            {{ $rbs->jumlah_rule_terpicu }} rule terpicu · {{ $rbs->tanggal_analisis->diffForHumans() }}
+            {{ $rbs->jumlah_rule_terpicu }} aturan sesuai · {{ $rbs->tanggal_analisis->diffForHumans() }}
         </p>
         @if(!request()->routeIs('rbs.detail'))
         <a href="{{ route('rbs.detail', $blokLahan) }}"

@@ -35,6 +35,7 @@ class RealisasiPemupukan extends Model
         'confirmed_over_plan',
         'override_annual_limit',
         'override_reason',
+        'submission_token',
     ];
 
     protected function casts(): array

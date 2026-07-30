@@ -117,4 +117,15 @@ class LegacyStatusStaticAuditTest extends TestCase
         $this->assertStringContainsString('status_kondisi_tanaman', $content,
             'Laporan show harus menggunakan status_kondisi_tanaman untuk banner');
     }
+
+    public function test_laporan_index_no_legacy_status_decision(): void
+    {
+        $file = resource_path('views/laporan/index.blade.php');
+        $this->assertFileExists($file);
+
+        $content = File::get($file);
+        $this->assertStringNotContainsString('status_kebutuhan_dominan', $content);
+        $this->assertStringContainsString('urea_aplikasi_saat_ini', $content);
+        $this->assertStringContainsString('kcl_aplikasi_saat_ini', $content);
+    }
 }

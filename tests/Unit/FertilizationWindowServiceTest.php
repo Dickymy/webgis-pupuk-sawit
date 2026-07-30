@@ -26,105 +26,90 @@ class FertilizationWindowServiceTest extends TestCase
             ? Carbon::parse($attrs['tanggal_pemupukan_terakhir'])
             : null;
         $kondisi->kondisi_drainase = $attrs['kondisi_drainase'] ?? null;
+        $kondisi->kelembaban_tanah = $attrs['kelembaban_tanah'] ?? null;
 
         return $kondisi;
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // Curah Hujan Tests
-    // ═══════════════════════════════════════════════════════════════
-
-    public function test_hujan_99mm_ditunda(): void
+    public function test_hujan_di_bawah_60_mm_ditunda(): void
     {
-        $kondisi = $this->makeKondisi(['curah_hujan_mm_bulanan' => 99]);
-        $result = $this->service->evaluate($kondisi);
+        $result = $this->service->evaluate($this->makeKondisi(['curah_hujan_mm_bulanan' => 59]));
 
-        $this->assertEquals(FertilizationWindowService::TUNDA_HUJAN_RENDAH, $result['status']);
+        $this->assertSame(FertilizationWindowService::TUNDA_HUJAN_RENDAH, $result['status']);
         $this->assertFalse($result['layak']);
     }
 
-    public function test_hujan_100mm_layak(): void
+    public function test_hujan_60_sampai_99_mm_perlu_verifikasi(): void
     {
-        $kondisi = $this->makeKondisi(['curah_hujan_mm_bulanan' => 100]);
-        $result = $this->service->evaluate($kondisi);
-
-        $this->assertEquals(FertilizationWindowService::LAYAK, $result['status']);
-        $this->assertTrue($result['layak']);
+        foreach ([60, 99] as $rainfall) {
+            $result = $this->service->evaluate($this->makeKondisi(['curah_hujan_mm_bulanan' => $rainfall]));
+            $this->assertSame(FertilizationWindowService::PERLU_VERIFIKASI_DATA, $result['status']);
+            $this->assertFalse($result['layak']);
+        }
     }
 
-    public function test_hujan_250mm_layak(): void
+    public function test_hujan_100_sampai_250_mm_layak(): void
     {
-        $kondisi = $this->makeKondisi(['curah_hujan_mm_bulanan' => 250]);
-        $result = $this->service->evaluate($kondisi);
-
-        $this->assertEquals(FertilizationWindowService::LAYAK, $result['status']);
-        $this->assertTrue($result['layak']);
+        foreach ([100, 250] as $rainfall) {
+            $result = $this->service->evaluate($this->makeKondisi(['curah_hujan_mm_bulanan' => $rainfall]));
+            $this->assertSame(FertilizationWindowService::LAYAK, $result['status']);
+            $this->assertTrue($result['layak']);
+        }
     }
 
-    public function test_hujan_251mm_ditunda(): void
+    public function test_hujan_251_sampai_300_mm_perlu_verifikasi(): void
     {
-        $kondisi = $this->makeKondisi(['curah_hujan_mm_bulanan' => 251]);
-        $result = $this->service->evaluate($kondisi);
+        foreach ([251, 300] as $rainfall) {
+            $result = $this->service->evaluate($this->makeKondisi(['curah_hujan_mm_bulanan' => $rainfall]));
+            $this->assertSame(FertilizationWindowService::PERLU_VERIFIKASI_DATA, $result['status']);
+            $this->assertFalse($result['layak']);
+        }
+    }
 
-        $this->assertEquals(FertilizationWindowService::TUNDA_HUJAN_TINGGI, $result['status']);
+    public function test_hujan_di_atas_300_mm_ditunda(): void
+    {
+        $result = $this->service->evaluate($this->makeKondisi(['curah_hujan_mm_bulanan' => 301]));
+
+        $this->assertSame(FertilizationWindowService::TUNDA_HUJAN_TINGGI, $result['status']);
         $this->assertFalse($result['layak']);
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // Interval Tests
-    // ═══════════════════════════════════════════════════════════════
-
-    public function test_interval_59_hari_ditunda(): void
+    public function test_interval_119_hari_ditunda_dan_120_hari_layak(): void
     {
-        $kondisi = $this->makeKondisi([
+        $before = $this->service->evaluate($this->makeKondisi([
             'curah_hujan_mm_bulanan' => 150,
-            'tanggal_pemupukan_terakhir' => now()->subDays(59)->toDateString(),
-        ]);
-        $result = $this->service->evaluate($kondisi);
+            'tanggal_pemupukan_terakhir' => now()->subDays(119)->toDateString(),
+        ]));
+        $onBoundary = $this->service->evaluate($this->makeKondisi([
+            'curah_hujan_mm_bulanan' => 150,
+            'tanggal_pemupukan_terakhir' => now()->subDays(120)->toDateString(),
+        ]));
 
-        $this->assertEquals(FertilizationWindowService::TUNDA_INTERVAL, $result['status']);
+        $this->assertSame(FertilizationWindowService::TUNDA_INTERVAL, $before['status']);
+        $this->assertFalse($before['layak']);
+        $this->assertSame(FertilizationWindowService::LAYAK, $onBoundary['status']);
+        $this->assertTrue($onBoundary['layak']);
+    }
+
+    public function test_tanah_sangat_kering_ditunda(): void
+    {
+        $result = $this->service->evaluate($this->makeKondisi([
+            'curah_hujan_mm_bulanan' => 150,
+            'kelembaban_tanah' => 'Sangat Kering',
+        ]));
+
+        $this->assertSame(FertilizationWindowService::TUNDA_TANAH_KERING, $result['status']);
         $this->assertFalse($result['layak']);
     }
-
-    public function test_interval_60_hari_layak(): void
-    {
-        $kondisi = $this->makeKondisi([
-            'curah_hujan_mm_bulanan' => 150,
-            'tanggal_pemupukan_terakhir' => now()->subDays(60)->toDateString(),
-        ]);
-        $result = $this->service->evaluate($kondisi);
-
-        $this->assertEquals(FertilizationWindowService::LAYAK, $result['status']);
-        $this->assertTrue($result['layak']);
-    }
-
-    public function test_interval_130_hari_terlambat_tanpa_kenaikan_dosis(): void
-    {
-        $kondisi = $this->makeKondisi([
-            'curah_hujan_mm_bulanan' => 150,
-            'tanggal_pemupukan_terakhir' => now()->subDays(130)->toDateString(),
-        ]);
-        $result = $this->service->evaluate($kondisi);
-
-        // Terlambat tapi tetap layak dijadwalkan
-        $this->assertEquals(FertilizationWindowService::TERLAMBAT, $result['status']);
-        $this->assertTrue($result['layak']);
-        $this->assertTrue($result['terlambat']);
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // Drainase Tests
-    // ═══════════════════════════════════════════════════════════════
 
     public function test_drainase_buruk_ditunda(): void
     {
-        $kondisi = $this->makeKondisi([
+        $result = $this->service->evaluate($this->makeKondisi([
             'curah_hujan_mm_bulanan' => 150,
             'kondisi_drainase' => 'Buruk — Tergenang',
-        ]);
-        $result = $this->service->evaluate($kondisi);
+        ]));
 
-        $this->assertEquals(FertilizationWindowService::PERLU_PERBAIKAN_DRAINASE, $result['status']);
+        $this->assertSame(FertilizationWindowService::PERLU_PERBAIKAN_DRAINASE, $result['status']);
         $this->assertFalse($result['layak']);
     }
 }

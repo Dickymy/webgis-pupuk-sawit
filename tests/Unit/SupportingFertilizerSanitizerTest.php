@@ -108,4 +108,12 @@ class SupportingFertilizerSanitizerTest extends TestCase
         $this->assertTrue($result[0]['angka_boleh_tampil']);
         $this->assertEquals('REFERENSI_PAHAN', $result[0]['status_validasi']);
     }
+
+    public function test_duplicate_fertilizer_names_are_consolidated(): void
+    {
+        $first = new RuleBaseLanjutan(['jenis_pupuk_utama' => 'Dolomit', 'metode_aplikasi' => 'Sebar di piringan']);
+        $second = new RuleBaseLanjutan(['jenis_pupuk_utama' => 'Dolomit', 'metode_aplikasi' => 'Sebar merata']);
+        $result = $this->sanitizer->sanitize([$first, $second]);
+        $this->assertCount(1, $result);
+    }
 }

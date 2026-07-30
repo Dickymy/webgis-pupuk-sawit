@@ -23,9 +23,10 @@
         </p>
     </div>
 
-    <form method="POST" action="{{ route('realisasi-pemupukan.update', $realisasiPemupukan) }}">
+    <form method="POST" action="{{ route('realisasi-pemupukan.update', $realisasiPemupukan) }}" data-prevent-double-submit>
         @csrf
         @method('PUT')
+        <input type="hidden" name="_expected_updated_at" value="{{ $realisasiPemupukan->updated_at->toDateTimeString() }}">
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {{-- Tanggal Realisasi --}}

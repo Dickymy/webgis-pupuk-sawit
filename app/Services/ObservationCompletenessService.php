@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\KondisiLahan;
+use App\Models\RealisasiPemupukan;
 
 /**
  * ObservationCompletenessService — Menentukan apakah data observasi
@@ -20,18 +21,12 @@ class ObservationCompletenessService
      */
     private const PARAMETER_PENTING = [
         'warna_daun' => 'Warna daun',
-        'ph_tanah' => 'pH tanah',
         'kondisi_drainase' => 'Kondisi drainase',
         'curah_hujan' => 'Data curah hujan',
         'kelembaban_tanah' => 'Kelembaban tanah',
         'musim_saat_ini' => 'Musim saat ini',
         'tanggal_pemupukan_terakhir' => 'Tanggal pemupukan terakhir',
     ];
-
-    /**
-     * Minimum field yang harus terisi untuk menjalankan diagnosis.
-     */
-    private const MIN_FIELDS_REQUIRED = 5;
 
     /**
      * Evaluasi kelengkapan data observasi.
@@ -41,6 +36,7 @@ class ObservationCompletenessService
      *   can_run_diagnosis: bool,
      *   filled_fields: array,
      *   missing_fields: array,
+     *   blocking_missing_fields: array,
      *   filled_count: int,
      *   total_fields: int,
      *   reason: string
@@ -56,12 +52,6 @@ class ObservationCompletenessService
             $filledFields[] = 'warna_daun';
         } else {
             $missingFields[] = self::PARAMETER_PENTING['warna_daun'];
-        }
-
-        if ($kondisi->ph_tanah !== null) {
-            $filledFields[] = 'ph_tanah';
-        } else {
-            $missingFields[] = self::PARAMETER_PENTING['ph_tanah'];
         }
 
         if ($kondisi->kondisi_drainase !== null) {
@@ -90,7 +80,12 @@ class ObservationCompletenessService
             $missingFields[] = self::PARAMETER_PENTING['musim_saat_ini'];
         }
 
-        if ($kondisi->tanggal_pemupukan_terakhir !== null) {
+        $hasFertilizationHistory = $kondisi->tanggal_pemupukan_terakhir !== null
+            || ($kondisi->blok_lahan_id !== null && RealisasiPemupukan::query()
+                ->where('blok_lahan_id', $kondisi->blok_lahan_id)
+                ->aktif()
+                ->exists());
+        if ($hasFertilizationHistory) {
             $filledFields[] = 'tanggal_pemupukan_terakhir';
         } else {
             $missingFields[] = self::PARAMETER_PENTING['tanggal_pemupukan_terakhir'];
@@ -99,40 +94,29 @@ class ObservationCompletenessService
         $filledCount = count($filledFields);
         $totalFields = count(self::PARAMETER_PENTING);
 
-        // Syarat minimum diagnosis:
-        // 1. Minimal 5 dari 7 parameter terisi
-        // 2. Warna daun WAJIB terisi
-        // 3. pH tanah ATAU kondisi drainase WAJIB terisi (salah satu)
-        $hasWarnaDaun = in_array('warna_daun', $filledFields);
-        $hasPhOrDrainase = in_array('ph_tanah', $filledFields) || in_array('kondisi_drainase', $filledFields);
+        // Rule diagnosis akademik yang aktif hanya membaca fakta visual warna daun.
+        // Curah hujan, kelembapan, drainase, dan riwayat pemupukan dievaluasi
+        // secara terpisah oleh FertilizationWindowService untuk menentukan waktu aplikasi.
+        $hasWarnaDaun = in_array('warna_daun', $filledFields, true);
+        $canRunDiagnosis = $hasWarnaDaun;
+        $blockingMissingFields = $hasWarnaDaun ? [] : [self::PARAMETER_PENTING['warna_daun']];
+        $supportingMissingFields = array_values(array_diff(
+            $missingFields,
+            [self::PARAMETER_PENTING['musim_saat_ini']]
+        ));
 
-        $canRunDiagnosis = $filledCount >= self::MIN_FIELDS_REQUIRED
-            && $hasWarnaDaun
-            && $hasPhOrDrainase;
-
-        // Alasan jika tidak bisa diagnosis
-        $reason = '';
-        if (! $canRunDiagnosis) {
-            $reasons = [];
-            if ($filledCount < self::MIN_FIELDS_REQUIRED) {
-                $reasons[] = "Hanya {$filledCount} dari {$totalFields} parameter terisi (minimal ".self::MIN_FIELDS_REQUIRED.')';
-            }
-            if (! $hasWarnaDaun) {
-                $reasons[] = 'Data warna daun belum diisi (wajib untuk diagnosis)';
-            }
-            if (! $hasPhOrDrainase) {
-                $reasons[] = 'pH tanah atau kondisi drainase belum diisi (minimal salah satu wajib)';
-            }
-            $reason = implode('. ', $reasons).'.';
-        } else {
-            $reason = 'Data observasi cukup untuk menjalankan diagnosis RBS.';
-        }
+        $reason = $canRunDiagnosis
+            ? 'Fakta warna daun tersedia untuk pemeriksaan gejala. Data lingkungan tetap digunakan untuk menilai kesiapan pemupukan.'
+            : 'Data warna daun belum diisi; aturan pemeriksaan gejala belum dapat dijalankan.';
 
         return [
             'can_calculate_base_dose' => true, // Selalu bisa jika blok punya data dasar
             'can_run_diagnosis' => $canRunDiagnosis,
             'filled_fields' => $filledFields,
-            'missing_fields' => $missingFields,
+            // Data pendukung yang belum tersedia tetap ditampilkan sebagai informasi,
+            // tetapi tidak menghalangi rule visual.
+            'missing_fields' => $supportingMissingFields,
+            'blocking_missing_fields' => $blockingMissingFields,
             'filled_count' => $filledCount,
             'total_fields' => $totalFields,
             'reason' => $reason,

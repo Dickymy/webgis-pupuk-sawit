@@ -1,283 +1,236 @@
 @extends('layouts.app')
 
-@section('title', 'Analisis RBS')
-@section('page-title', 'Analisis Rule-Based System')
-@section('page-subtitle', 'Evaluasi kondisi lahan & rekomendasi pemupukan')
+@section('title', 'Rekomendasi Pupuk')
+@section('page-title', 'Rekomendasi Pupuk')
+@section('page-subtitle', 'Lihat hasil analisis dan langkah selanjutnya untuk setiap blok')
 
 @section('content')
 @php
-    $totalBlok     = $stats['total'];
-    $sudahAnalisis = $stats['sudah_analisis'];
-    $darurat       = $stats['darurat'];
-    $segera        = $stats['segera'];
-    $belumKondisi  = $stats['belum_kondisi'];
+    $belumKondisi = $stats['belum_kondisi'];
+    $statusOptions = [
+        'semua' => 'Semua Status',
+        'perlu-tindakan' => 'Perlu Tindakan',
+        'belum-observasi' => 'Belum Diperiksa',
+        'perlu-rekomendasi' => 'Perlu Dianalisis',
+        'siap-realisasi' => 'Siap Dipupuk',
+        'menunggu-interval' => 'Menunggu Jarak Waktu',
+        'menunggu' => 'Menunggu Lainnya',
+        'selesai' => 'Program Selesai',
+    ];
 @endphp
 
-{{-- Stats --}}
-<div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-4">
-    <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
-        <p class="text-[11px] text-slate-500 mb-0.5">Total Blok</p>
-        <p class="text-xl sm:text-2xl font-bold text-slate-900">{{ $totalBlok }}</p>
-        <p class="text-[10px] text-slate-400">terdaftar</p>
+<div class="mb-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 dark:text-slate-400 [&>div>p:first-child]:hidden [&>div>p:last-child]:mt-0 [&>div>p:last-child]:text-[10px] [&>div>p:last-child]:text-slate-500">
+    <div>
+        <p class="text-sm font-semibold text-emerald-900 dark:text-emerald-200">Fakta observasi → aturan RBS → rekomendasi pupuk</p>
+        <p class="mt-0.5 text-xs text-emerald-700 dark:text-emerald-400">Dosis Urea dan KCl mengacu pada Iyung Pahan (2013).</p>
     </div>
-    <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
-        <p class="text-[11px] text-slate-500 mb-0.5">Sudah Dianalisis</p>
-        <p class="text-xl sm:text-2xl font-bold text-blue-600">{{ $sudahAnalisis }}</p>
-        <p class="text-[10px] text-slate-400">dari {{ $totalBlok }}</p>
-    </div>
-    <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm border-l-4 border-l-red-500">
-        <p class="text-[11px] text-slate-500 mb-0.5">Def. Berat</p>
-        <p class="text-xl sm:text-2xl font-bold text-red-600">{{ $darurat }}</p>
-        <p class="text-[10px] text-slate-400">penanganan</p>
-    </div>
-    <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm border-l-4 border-l-orange-400">
-        <p class="text-[11px] text-slate-500 mb-0.5">Perlu Pupuk</p>
-        <p class="text-xl sm:text-2xl font-bold text-orange-500">{{ $segera }}</p>
-        <p class="text-[10px] text-slate-400">kurang hara</p>
-    </div>
-    <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
-        <p class="text-[11px] text-slate-500 mb-0.5">Belum Ada Kondisi</p>
-        <p class="text-xl sm:text-2xl font-bold text-slate-400">{{ $belumKondisi }}</p>
-        <p class="text-[10px] text-slate-400">perlu input</p>
-    </div>
+    <a href="{{ route('rule-base.index') }}" class="inline-flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 font-semibold text-slate-600 transition-colors hover:border-emerald-300 hover:text-emerald-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+        Rule Based
+        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/></svg>
+    </a>
 </div>
 
-{{-- Filter & Action --}}
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-    <form method="GET" action="{{ route('rbs.index') }}" id="rbs-filter-form" data-no-prevent-double="true" class="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-        <div class="sm:min-w-[180px]">
+<div class="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+    <a href="{{ route('rbs.index', ['status' => 'perlu-rekomendasi']) }}" class="flex min-h-20 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm transition hover:border-emerald-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
+        <div class="min-w-0"><p class="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-100"><span class="h-2 w-2 rounded-full bg-amber-500"></span>Perlu Dianalisis</p><p class="mt-1 text-[10px] text-slate-400">Observasi baru atau berubah</p></div>
+        <div class="shrink-0 text-right"><p class="text-2xl font-bold text-slate-800 dark:text-white">{{ $stats['perlu_rekomendasi'] }}</p><p class="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">Buka &rarr;</p></div>
+    </a>
+    <a href="{{ route('rbs.index', ['status' => 'siap-realisasi']) }}" class="flex min-h-20 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm transition hover:border-emerald-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
+        <div class="min-w-0"><p class="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-100"><span class="h-2 w-2 rounded-full bg-emerald-500"></span>Siap Dipupuk</p><p class="mt-1 text-[10px] text-slate-400">Dapat dicatat sekarang</p></div>
+        <div class="shrink-0 text-right"><p class="text-2xl font-bold text-slate-800 dark:text-white">{{ $stats['siap_realisasi'] }}</p><p class="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">Buka &rarr;</p></div>
+    </a>
+    <a href="{{ route('rbs.index', ['status' => 'belum-observasi']) }}" class="flex min-h-20 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm transition hover:border-emerald-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
+        <div class="min-w-0"><p class="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-100"><span class="h-2 w-2 rounded-full bg-slate-400"></span>Belum Diperiksa</p><p class="mt-1 text-[10px] text-slate-400">Isi fakta lapangan dahulu</p></div>
+        <div class="shrink-0 text-right"><p class="text-2xl font-bold text-slate-800 dark:text-white">{{ $belumKondisi }}</p><p class="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">Buka &rarr;</p></div>
+    </a>
+</div>
+<div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+    <form method="GET" action="{{ route('rbs.index') }}" id="rbs-filter-form" data-no-prevent-double="true" class="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
+        <div class="relative sm:min-w-[180px]">
+            <select name="status" onchange="this.form.submit()" class="custom-select w-full rounded-lg border border-slate-300 bg-white pl-3 pr-8 py-2 text-xs font-medium text-slate-700 focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 sm:w-auto sm:min-w-[180px]">
+                @foreach($statusOptions as $value => $label)
+                    <option value="{{ $value }}" {{ $status === $value ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-2.5 flex items-center">
+                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+        </div>
+        <div class="sm:min-w-[200px]">
             @include('components.filter-searchable', [
                 'name' => 'anggota_id',
-                'placeholder' => 'Cari anggota...',
+                'placeholder' => 'Cari pemilik...',
                 'options' => $anggotas,
                 'displayField' => 'nama',
                 'selected' => request('anggota_id'),
                 'formId' => 'rbs-filter-form',
             ])
         </div>
-
         @if($blokFilter->isNotEmpty())
-        <select name="blok_lahan_id" onchange="this.form.submit()"
-            class="px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-emerald-500 w-full sm:w-auto sm:min-w-[150px]">
-            <option value="">Semua Blok</option>
-            @foreach($blokFilter as $bf)
-                <option value="{{ $bf->id }}" {{ request('blok_lahan_id') == $bf->id ? 'selected' : '' }}>{{ $bf->nama_blok }}</option>
-            @endforeach
-        </select>
+            <div class="relative sm:min-w-[150px]">
+                <select name="blok_lahan_id" onchange="this.form.submit()" class="custom-select w-full rounded-lg border border-slate-300 bg-white pl-3 pr-8 py-2 text-xs font-medium text-slate-700 focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 sm:w-auto sm:min-w-[150px]">
+                    <option value="">Semua Blok</option>
+                    @foreach($blokFilter as $bf)
+                        <option value="{{ $bf->id }}" {{ request('blok_lahan_id') == $bf->id ? 'selected' : '' }}>{{ $bf->nama_blok }}</option>
+                    @endforeach
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-2.5 flex items-center">
+                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+            </div>
         @endif
-
-        @if(request()->hasAny(['anggota_id', 'blok_lahan_id']))
-            <a href="{{ route('rbs.index') }}" class="text-xs text-slate-500 hover:text-slate-700 font-medium">Reset</a>
+        @if(request()->hasAny(['anggota_id', 'blok_lahan_id']) || $status !== 'semua')
+            <a href="{{ route('rbs.index') }}" class="px-2 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">Reset</a>
         @endif
     </form>
 
-    <form action="{{ route('rbs.analisisSemua') }}" method="POST" id="form-analisis-semua" class="w-full sm:w-auto">
+    <form action="{{ route('rbs.analisisSemua') }}" method="POST" id="form-analisis-semua">
         @csrf
-        <button type="button" onclick="showConfirm('Jalankan analisis RBS untuk semua blok yang memiliki data kondisi?', function(){ document.getElementById('form-analisis-semua').submit(); })"
-            class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg transition-colors shadow-sm w-full sm:w-auto justify-center">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            Analisis Semua Blok
+        <button type="button"
+            onclick="showConfirm('Hitung ulang rekomendasi untuk semua blok yang sudah diobservasi?', function(){ document.getElementById('form-analisis-semua').submit(); })"
+            class="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-2 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 dark:border-emerald-700 dark:bg-slate-800 dark:text-emerald-300">
+            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Perbarui Rekomendasi
         </button>
     </form>
 </div>
 
-@if($belumKondisi > 0)
-<div class="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700 mb-4">
-    ⚠ {{ $belumKondisi }} blok belum memiliki data kondisi lahan. <a href="{{ route('kondisi-lahan.create') }}" class="font-semibold underline">Input sekarang →</a>
-</div>
+@if($status !== 'semua')
+    <div class="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+        Menampilkan filter: <strong>{{ $statusOptions[$status] }}</strong> · {{ $grouped->sum(fn ($group) => $group['bloks']->count()) }} blok
+    </div>
 @endif
 
-{{-- Grouped by Anggota --}}
 @forelse($grouped as $group)
-@php
-    $anggota = $group['anggota'];
-    $bloks = $group['bloks'];
-@endphp
-<div class="anggota-group-card bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mb-4" data-nama-anggota="{{ strtolower($anggota->nama ?? '') }}">
-    {{-- Header anggota --}}
-    <div class="px-4 sm:px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
-        <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
-            {{ strtoupper(substr($anggota->nama ?? '?', 0, 1)) }}
-        </div>
-        <div>
-            <p class="font-bold text-slate-800 text-sm">{{ $anggota->nama ?? 'Tidak Diketahui' }}</p>
-            <p class="text-[10px] text-slate-500">{{ $bloks->count() }} blok</p>
-        </div>
+    @php $anggota = $group['anggota']; $bloks = $group['bloks']; @endphp
+    <div class="mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div class="flex items-center gap-2.5 border-b border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/80 sm:px-5">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">{{ strtoupper(substr($anggota->nama ?? '?', 0, 1)) }}</div>
+            <div>
+                <p class="text-sm font-bold text-slate-800 dark:text-slate-100">{{ $anggota->nama ?? 'Tidak Diketahui' }}</p>
+                <p class="text-[10px] text-slate-500">{{ $bloks->count() }} blok</p>
+            </div>
     </div>
 
-    {{-- Desktop Table --}}
-    <div class="hidden sm:block overflow-x-auto">
-        <table class="w-full text-sm">
-            <thead>
-                <tr class="border-b border-slate-100">
-                    <th class="px-4 py-2.5 text-left text-[10px] font-semibold text-slate-400 uppercase">Blok Lahan</th>
-                    <th class="px-4 py-2.5 text-left text-[10px] font-semibold text-slate-400 uppercase">Umur</th>
-                    <th class="px-4 py-2.5 text-left text-[10px] font-semibold text-slate-400 uppercase">Kondisi Terakhir</th>
-                    <th class="px-4 py-2.5 text-left text-[10px] font-semibold text-slate-400 uppercase">Status</th>
-                    <th class="px-4 py-2.5 text-center text-[10px] font-semibold text-slate-400 uppercase">Confidence</th>
-                    <th class="px-4 py-2.5 text-center text-[10px] font-semibold text-slate-400 uppercase">Rule</th>
-                    <th class="px-4 py-2.5 text-right text-[10px] font-semibold text-slate-400 uppercase">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-50">
-                @foreach($bloks as $blok)
+        <div class="hidden overflow-x-auto sm:block">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-slate-100 dark:border-slate-700">
+                        <th class="px-4 py-2.5 text-left text-[10px] font-semibold uppercase text-slate-400">Blok Lahan</th>
+                        <th class="px-4 py-2.5 text-left text-[10px] font-semibold uppercase text-slate-400">Observasi</th>
+                        <th class="px-4 py-2.5 text-left text-[10px] font-semibold uppercase text-slate-400">Hasil RBS</th>
+                        <th class="px-4 py-2.5 text-left text-[10px] font-semibold uppercase text-slate-400">Tahap</th>
+                        <th class="px-4 py-2.5 text-right text-[10px] font-semibold uppercase text-slate-400">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                    @foreach($bloks as $blok)
+                        @php
+                            $rbs = $blok->rekomendasiRbsTerbaru;
+                            $kondisi = $blok->kondisiTerbaru;
+                            $perluAnalisisUlang = $kondisi && $rbs && $kondisi->updated_at->gt($rbs->updated_at);
+                            $operationalStatus = $blok->operational_eligibility['status_stage'] ?? $rbs?->status_stage;
+                            $observasiBelumLengkap = $rbs && (
+                                ! $rbs->data_cukup
+                                || in_array($rbs->status_kondisi_tanaman, ['PERLU_VERIFIKASI', 'BELUM_DIOBSERVASI'], true)
+                                || $rbs->status_kelayakan_aplikasi === 'PERLU_VERIFIKASI_DATA'
+                            );
+                        @endphp
+                        <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-700/40">
+                            <td class="px-4 py-3">
+                                @if($rbs)
+                                    <a href="{{ route('rbs.detail', $blok) }}" class="text-xs font-semibold text-slate-800 hover:text-emerald-700 hover:underline dark:text-slate-100 dark:hover:text-emerald-400">{{ $blok->nama_blok }}</a>
+                                @else
+                                    <p class="text-xs font-semibold text-slate-800 dark:text-slate-100">{{ $blok->nama_blok }}</p>
+                                @endif
+                                <p class="text-[10px] text-slate-400">{{ number_format($blok->luas_ha, 2) }} Ha · SPH {{ $blok->sph }} · {{ $blok->umur_tanaman ?? '—' }} thn</p>
+                            </td>
+                            <td class="px-4 py-3 text-xs">
+                                @if($kondisi)
+                                    <p class="font-medium text-slate-700 dark:text-slate-200">{{ $kondisi->tanggal_observasi->format('d/m/Y') }}</p>
+                                    <p class="text-[10px] text-slate-400">{{ $kondisi->warna_daun ?? 'Gejala belum lengkap' }}</p>
+                                @else
+                                    <span class="font-semibold text-amber-600">Belum ada</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3">
+                                <x-recommendation-status :recommendation="$rbs" :show-stage="false" compact />
+                                @if($rbs)
+                                    <p class="mt-1 text-[10px] text-slate-400">{{ $rbs->jumlah_rule_terpicu }} aturan sesuai</p>
+                                @endif
+                                @if($perluAnalisisUlang)
+                                    <p class="mt-1 text-[9px] font-semibold text-amber-600">Observasi berubah, rekomendasi perlu diperbarui</p>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-xs text-slate-600 dark:text-slate-300">
+                                @if($rbs)
+                                    <p class="font-medium">{{ $observasiBelumLengkap ? 'Observasi belum lengkap' : \App\Services\CurrentApplicationCalculator::labelStatusStage($operationalStatus) }}</p>
+                                    @if(! $observasiBelumLengkap && $rbs->tanggal_minimum_tahap_berikutnya)
+                                        <p class="text-[10px] text-slate-400">Mulai {{ $rbs->tanggal_minimum_tahap_berikutnya->format('d/m/Y') }}</p>
+                                    @endif
+                                @else
+                                    <span class="text-slate-400">Belum dihitung</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex flex-wrap justify-end gap-1.5">
+                                    @if($rbs)
+                                        <a href="{{ route('rbs.detail', $blok) }}" class="inline-flex items-center justify-center gap-1 rounded-lg border border-emerald-300 bg-white px-2.5 py-1.5 text-[10px] font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 dark:border-emerald-700 dark:bg-slate-800 dark:text-emerald-300">
+                                            Lihat Detail
+                                        </a>
+                                    @endif
+                                    <x-next-block-action :blok="$blok" :hide-detail-fallback="true" compact />
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <div class="divide-y divide-slate-100 dark:divide-slate-700 sm:hidden">
+            @foreach($bloks as $blok)
                 @php
                     $rbs = $blok->rekomendasiRbsTerbaru;
                     $kondisi = $blok->kondisiTerbaru;
-                    $perluAnalisisUlang = $kondisi && $rbs && $kondisi->updated_at->gt($rbs->updated_at);
-                    $dataBlokKurang = !$blok->tahun_tanam || !$blok->jenis_tanah || !$blok->topografi;
-                    $statusConfig = match($rbs?->status_kebutuhan_dominan) {
-                        'Darurat' => ['bg' => 'bg-red-50 text-red-700', 'label' => 'Defisiensi Berat'],
-                        'Segera'  => ['bg' => 'bg-orange-50 text-orange-700', 'label' => 'Perlu Pupuk'],
-                        'Normal'  => ['bg' => 'bg-emerald-50 text-emerald-700', 'label' => 'Sehat'],
-                        'Tunda'   => ['bg' => 'bg-slate-100 text-slate-600', 'label' => 'Tunda Pupuk'],
-                        default   => ['bg' => 'bg-blue-50 text-blue-700', 'label' => 'Belum Dicek'],
-                    };
+                    $operationalStatus = $blok->operational_eligibility['status_stage'] ?? $rbs?->status_stage;
+                    $observasiBelumLengkap = $rbs && (
+                        ! $rbs->data_cukup
+                        || in_array($rbs->status_kondisi_tanaman, ['PERLU_VERIFIKASI', 'BELUM_DIOBSERVASI'], true)
+                        || $rbs->status_kelayakan_aplikasi === 'PERLU_VERIFIKASI_DATA'
+                    );
                 @endphp
-                <tr class="block-row hover:bg-slate-50/50" data-nama-blok="{{ strtolower($blok->nama_blok ?? '') }}">
-                    <td class="px-4 py-2.5">
-                        <p class="font-semibold text-slate-800 text-xs">{{ $blok->nama_blok }}</p>
-                        <p class="text-[10px] text-slate-400">{{ number_format($blok->luas_ha, 2) }} Ha · SPH {{ $blok->sph }}</p>
-                        @if($dataBlokKurang)
-                        <span class="text-[9px] text-red-500 font-medium">⚠️ Data blok belum lengkap</span>
-                        @endif
-                    </td>
-                    <td class="px-4 py-2.5 text-xs text-slate-600">
-                        @if($blok->umur_tanaman !== null)
-                            {{ $blok->umur_tanaman }} thn
-                            <span class="text-[10px] text-slate-400 block">{{ $blok->kategori_umur }}</span>
-                        @else
-                            <span class="text-slate-300">—</span>
-                        @endif
-                    </td>
-                    <td class="px-4 py-2.5 text-xs">
-                        @if($kondisi)
-                            <span class="text-slate-700">{{ $kondisi->tanggal_observasi->format('d/m/Y') }}</span>
-                        @else
-                            <span class="text-amber-600 font-medium">Belum ada</span>
-                        @endif
-                    </td>
-                    <td class="px-4 py-2.5">
-                        <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $statusConfig['bg'] }}">{{ $statusConfig['label'] }}</span>
-                        @if($perluAnalisisUlang)
-                        <span class="block mt-0.5 text-[9px] text-amber-600 font-medium">⚠️ Data berubah</span>
-                        @endif
-                    </td>
-                    <td class="px-4 py-2.5 text-center text-xs">
-                        @if($rbs)
-                            @php $confColor = match($rbs->confidence_label) { 'Tinggi' => 'text-green-600', 'Sedang' => 'text-blue-600', default => 'text-amber-600' }; @endphp
-                            <span class="font-semibold {{ $confColor }}">{{ $rbs->confidence_score }}%</span>
-                        @else
-                            <span class="text-slate-300">—</span>
-                        @endif
-                    </td>
-                    <td class="px-4 py-2.5 text-center text-xs text-slate-600">
-                        {{ $rbs ? $rbs->jumlah_rule_terpicu : '—' }}
-                    </td>
-                    <td class="px-4 py-2.5 text-right">
-                        <div class="flex items-center gap-1.5 justify-end">
-                            @if(!$kondisi)
-                                <a href="{{ route('kondisi-lahan.create', ['blok_lahan_id' => $blok->id]) }}" class="inline-flex items-center gap-1 px-2 py-1 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-medium rounded-md hover:bg-amber-100 transition-colors">
-                                    Input Kondisi
-                                </a>
+                <div class="space-y-2.5 px-4 py-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            @if($rbs)
+                                <a href="{{ route('rbs.detail', $blok) }}" class="text-xs font-semibold text-slate-800 hover:text-emerald-700 hover:underline dark:text-slate-100 dark:hover:text-emerald-400">{{ $blok->nama_blok }}</a>
                             @else
-                                <form action="{{ route('rbs.analisis', $blok) }}" method="POST" class="inline">
-                                    @csrf
-                                    <button type="submit" class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-medium rounded-md hover:bg-emerald-100 transition-colors">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                        Analisis
-                                    </button>
-                                </form>
-                                @if($rbs)
-                                @if($rbs->is_tahap_siap && ($rbs->urea_aplikasi_saat_ini > 0 || $rbs->kcl_aplikasi_saat_ini > 0))
-                                <a href="{{ route('realisasi-pemupukan.create', $rbs) }}" class="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-medium rounded-md hover:bg-blue-100 transition-colors">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                    Realisasi
-                                </a>
-                                @endif
-                                <a href="{{ route('rbs.detail', $blok) }}" class="inline-flex items-center gap-1 px-2 py-1 bg-slate-50 text-slate-600 border border-slate-200 text-[10px] font-medium rounded-md hover:bg-slate-100 transition-colors">
-                                    Detail
-                                </a>
-                                @endif
+                                <p class="text-xs font-semibold text-slate-800 dark:text-slate-100">{{ $blok->nama_blok }}</p>
                             @endif
+                            <p class="text-[10px] text-slate-400">{{ number_format($blok->luas_ha, 2) }} Ha &middot; {{ $kondisi?->tanggal_observasi?->format('d/m/Y') ?? 'belum diobservasi' }}</p>
                         </div>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-
-    {{-- Mobile Cards --}}
-    <div class="sm:hidden divide-y divide-slate-100">
-        @foreach($bloks as $blok)
-        @php
-            $rbs = $blok->rekomendasiRbsTerbaru;
-            $kondisi = $blok->kondisiTerbaru;
-            $perluAnalisisUlang = $kondisi && $rbs && $kondisi->updated_at->gt($rbs->updated_at);
-            $dataBlokKurang = !$blok->tahun_tanam || !$blok->jenis_tanah || !$blok->topografi;
-            $statusConfig = match($rbs?->status_kebutuhan_dominan) {
-                'Darurat' => ['bg' => 'bg-red-100 text-red-800', 'label' => 'Defisiensi Berat'],
-                'Segera'  => ['bg' => 'bg-orange-100 text-orange-800', 'label' => 'Perlu Pupuk'],
-                'Normal'  => ['bg' => 'bg-emerald-100 text-emerald-800', 'label' => 'Sehat'],
-                'Tunda'   => ['bg' => 'bg-slate-100 text-slate-700', 'label' => 'Tunda Pupuk'],
-                default   => ['bg' => 'bg-blue-50 text-blue-700', 'label' => 'Belum Dicek'],
-            };
-        @endphp
-        <div class="block-row px-4 py-3" data-nama-blok="{{ strtolower($blok->nama_blok ?? '') }}">
-            {{-- Row 1: Nama blok + Status --}}
-            <div class="flex items-center justify-between gap-2 mb-1.5">
-                <div>
-                    <p class="font-semibold text-slate-800 text-xs">{{ $blok->nama_blok }}</p>
-                    <p class="text-[10px] text-slate-400">{{ number_format($blok->luas_ha, 2) }} Ha · {{ $blok->umur_tanaman !== null ? $blok->umur_tanaman.' thn' : '—' }}</p>
-                    @if($dataBlokKurang)
-                    <span class="text-[8px] text-red-500 font-medium">⚠️ Data blok belum lengkap</span>
+                        <x-recommendation-status :recommendation="$rbs" :show-stage="false" compact />
+                    </div>
+                    @if($rbs)
+                        <p class="text-[10px] text-slate-500">{{ $observasiBelumLengkap ? 'Observasi belum lengkap' : \App\Services\CurrentApplicationCalculator::labelStatusStage($operationalStatus) }} · {{ $rbs->jumlah_rule_terpicu }} aturan sesuai</p>
                     @endif
-                </div>
-                <div class="flex flex-col items-end gap-0.5 flex-shrink-0">
-                    <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-semibold {{ $statusConfig['bg'] }}">{{ $statusConfig['label'] }}</span>
-                    @if($perluAnalisisUlang)
-                    <span class="text-[8px] text-amber-600 font-medium">⚠️ Data berubah</span>
-                    @endif
-                </div>
-            </div>
-
-            {{-- Row 2: Info + Aksi --}}
-            <div class="flex items-center justify-between gap-2">
-                <div class="text-[10px] text-slate-500">
-                    @if($kondisi)
-                        Kondisi: {{ $kondisi->tanggal_observasi->format('d/m/Y') }}
-                        @if($rbs) · {{ $rbs->jumlah_rule_terpicu }} rule @endif
-                    @else
-                        <span class="text-amber-600">Belum ada data kondisi</span>
-                    @endif
-                </div>
-                <div class="flex items-center gap-1 flex-shrink-0">
-                    @if(!$kondisi)
-                        <a href="{{ route('kondisi-lahan.create', ['blok_lahan_id' => $blok->id]) }}" class="px-2 py-1 bg-amber-50 text-amber-700 border border-amber-200 text-[9px] font-medium rounded-md">Input</a>
-                    @else
-                        <form action="{{ route('rbs.analisis', $blok) }}" method="POST" class="inline">
-                            @csrf
-                            <button type="submit" class="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-medium rounded-md">Analisis</button>
-                        </form>
+                    <div class="grid gap-2">
+                        <x-next-block-action :blok="$blok" :hide-detail-fallback="true" class="w-full" compact />
                         @if($rbs)
-                        @if($rbs->is_tahap_siap && ($rbs->urea_aplikasi_saat_ini > 0 || $rbs->kcl_aplikasi_saat_ini > 0))
-                        <a href="{{ route('realisasi-pemupukan.create', $rbs) }}" class="px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-medium rounded-md">Realisasi</a>
+                            <a href="{{ route('rbs.detail', $blok) }}" class="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-2.5 text-[11px] font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 dark:border-emerald-700 dark:bg-slate-800 dark:text-emerald-300">
+                                Lihat Detail <span aria-hidden="true">&rarr;</span>
+                            </a>
                         @endif
-                        <a href="{{ route('rbs.detail', $blok) }}" class="px-2 py-1 bg-slate-50 text-slate-600 border border-slate-200 text-[9px] font-medium rounded-md">Detail</a>
-                        @endif
-                    @endif
+                    </div>
                 </div>
-            </div>
+            @endforeach
         </div>
-        @endforeach
     </div>
-</div>
 @empty
-<div class="bg-white border border-slate-200 rounded-xl p-8 sm:p-12 text-center shadow-sm">
-    <p class="text-slate-400 text-sm mb-2">Tidak ada data blok lahan yang sesuai filter.</p>
-    <a href="{{ route('blok-lahan.create') }}" class="text-emerald-600 text-sm font-semibold hover:underline">Tambah blok lahan →</a>
-</div>
+    <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Tidak ada blok yang sesuai filter.</p>
+        <p class="mt-1 text-xs text-slate-400">Pilih status lain atau reset filter.</p>
+    </div>
 @endforelse
-
 @endsection

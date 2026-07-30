@@ -25,7 +25,7 @@ class BlokLahanController extends Controller
                 $query->whereDoesntHave('rekomendasiRbsTerbaru');
             } else {
                 $query->whereHas('rekomendasiRbsTerbaru', function ($q) use ($request) {
-                    $q->where('status_kebutuhan_dominan', $request->status);
+                    $q->where('status_kondisi_tanaman', $request->status);
                 });
             }
         }
@@ -117,6 +117,11 @@ class BlokLahanController extends Controller
 
     public function destroy(BlokLahan $blokLahan)
     {
+        if ($blokLahan->rekomendasiRbs()->exists() || $blokLahan->programPemupukans()->exists() || $blokLahan->realisasiPemupukans()->exists()) {
+            return redirect()->route('blok-lahan.index')
+                ->with('error', 'Blok tidak dapat dihapus karena sudah memiliki histori rekomendasi atau realisasi. Data historis harus tetap dapat diaudit.');
+        }
+
         $blokLahan->delete();
 
         return redirect()->route('blok-lahan.index')->with('success', 'Blok lahan berhasil dihapus.');

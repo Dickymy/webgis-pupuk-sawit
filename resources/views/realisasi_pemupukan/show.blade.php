@@ -135,7 +135,7 @@
 {{-- Histori Operasional (Pahan v2.7) --}}
 @if(isset($historiOperasional) && $historiOperasional->count() > 0)
 <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-5 mt-5">
-    <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3">📜 Histori Operasional</h3>
+    <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3">Riwayat Perubahan</h3>
     <div class="overflow-x-auto">
         <table class="w-full text-xs">
             <thead class="bg-slate-50 dark:bg-slate-700">
@@ -178,7 +178,7 @@
 <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 mt-5">
     <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
         <span class="text-base">🎯</span>
-        Tindakan Berikutnya
+        Langkah Selanjutnya
     </h3>
     <div class="p-3 rounded-xl {{ $isSiap ? 'bg-emerald-50 border border-emerald-200' : 'bg-blue-50 border border-blue-200' }}">
         <p class="text-sm font-semibold {{ $isSiap ? 'text-emerald-800' : 'text-blue-800' }}">
@@ -193,7 +193,7 @@
                     Tahap 1 selesai. Tahap 2 dapat dilakukan mulai {{ $rekomendasi->tanggal_minimum_tahap_berikutnya ? $rekomendasi->tanggal_minimum_tahap_berikutnya->format('d M Y') : '—' }}.
                     @break
                 @case(\App\Services\CurrentApplicationCalculator::MENUNGGU_KELAYAKAN)
-                    Pemupukan ditunda karena kondisi kelayakan belum terpenuhi.
+                    Blok belum siap dipupuk karena kondisi lapangan belum memenuhi syarat.
                     @break
                 @case(\App\Services\CurrentApplicationCalculator::TAHAP_2_SIAP)
                     Catat realisasi Tahap 2.

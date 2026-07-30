@@ -1,0 +1,322 @@
+<mxfile host="app.diagrams.net" modified="2026-07-22T00:00:00.000Z" agent="draw.io" version="24.0.0">
+  <diagram id="erd" name="ERD">
+    <mxGraphModel dx="1800" dy="2400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="3300" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- JUDUL -->
+        <mxCell id="title" value="Entity Relationship Diagram (ERD)&#xa;Sistem Rekomendasi Pemupukan Kelapa Sawit" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="500" height="50" as="geometry" />
+        </mxCell>
+
+
+        <!-- ═══════════════════════════════════ -->
+        <!-- ENTITAS: Anggota (y=120)           -->
+        <!-- ═══════════════════════════════════ -->
+        <mxCell id="ent_anggota" value="Anggota" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="580" y="120" width="130" height="40" as="geometry" />
+        </mxCell>
+        <!-- Atribut Anggota -->
+        <mxCell id="att_ang_id" value="id (PK)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;fontStyle=4;" vertex="1" parent="1">
+          <mxGeometry x="460" y="90" width="80" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="att_ang_nama" value="nama" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="720" y="80" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="att_ang_hp" value="no_hp" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="800" y="110" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="att_ang_alamat" value="alamat" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="720" y="150" width="70" height="30" as="geometry" />
+        </mxCell>
+        <!-- Garis atribut Anggota -->
+        <mxCell id="l_ang_id" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_anggota" target="att_ang_id"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_ang_nama" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_anggota" target="att_ang_nama"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_ang_hp" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_anggota" target="att_ang_hp"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_ang_alamat" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_anggota" target="att_ang_alamat"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+
+        <!-- ═══ RELASI: Anggota — memiliki — Blok_Lahan ═══ -->
+        <mxCell id="rel_memiliki" value="memiliki" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="600" y="210" width="90" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="l_ang_rel1" value="1" style="strokeColor=#000000;endArrow=none;fontSize=9;labelPosition=left;verticalLabelPosition=middle;align=right;" edge="1" parent="1" source="ent_anggota" target="rel_memiliki"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_rel1_blok" value="N" style="strokeColor=#000000;endArrow=none;fontSize=9;labelPosition=left;verticalLabelPosition=middle;align=right;" edge="1" parent="1" source="rel_memiliki" target="ent_blok"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ═══════════════════════════════════ -->
+        <!-- ENTITAS: Blok_Lahan (y=310)        -->
+        <!-- ═══════════════════════════════════ -->
+        <mxCell id="ent_blok" value="Blok_Lahan" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="570" y="310" width="130" height="40" as="geometry" />
+        </mxCell>
+        <!-- Atribut Blok_Lahan -->
+        <mxCell id="att_blk_id" value="id (PK)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;fontStyle=4;" vertex="1" parent="1">
+          <mxGeometry x="400" y="280" width="80" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="att_blk_nama" value="nama_blok" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="730" y="270" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="att_blk_luas" value="luas_ha" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="820" y="300" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="att_blk_sph" value="sph" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="820" y="340" width="60" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_blk_tanam" value="tahun_tanam" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="730" y="350" width="85" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="att_blk_tanah" value="jenis_tanah" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="400" y="330" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="att_blk_topo" value="topografi" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="400" y="370" width="75" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_blk_geo" value="koordinat_geojson" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="490" y="360" width="110" height="30" as="geometry" />
+        </mxCell>
+        <!-- Garis atribut Blok_Lahan -->
+        <mxCell id="l_blk_id" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_blok" target="att_blk_id"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_blk_nama" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_blok" target="att_blk_nama"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_blk_luas" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_blok" target="att_blk_luas"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_blk_sph" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_blok" target="att_blk_sph"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_blk_tanam" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_blok" target="att_blk_tanam"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_blk_tanah" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_blok" target="att_blk_tanah"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_blk_topo" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_blok" target="att_blk_topo"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_blk_geo" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_blok" target="att_blk_geo"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+
+        <!-- ═══ RELASI: Blok_Lahan — diobservasi — Kondisi_Lahan ═══ -->
+        <mxCell id="rel_observasi" value="diobservasi" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="590" y="440" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="l_blk_obs" value="1" style="strokeColor=#000000;endArrow=none;fontSize=9;labelPosition=left;verticalLabelPosition=middle;align=right;" edge="1" parent="1" source="ent_blok" target="rel_observasi"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_obs_kon" value="N" style="strokeColor=#000000;endArrow=none;fontSize=9;labelPosition=left;verticalLabelPosition=middle;align=right;" edge="1" parent="1" source="rel_observasi" target="ent_kondisi"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ═══════════════════════════════════ -->
+        <!-- ENTITAS: Kondisi_Lahan (y=540)     -->
+        <!-- ═══════════════════════════════════ -->
+        <mxCell id="ent_kondisi" value="Kondisi_Lahan" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="560" y="540" width="140" height="40" as="geometry" />
+        </mxCell>
+        <!-- Atribut Kondisi_Lahan -->
+        <mxCell id="att_kon_id" value="id (PK)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;fontStyle=4;" vertex="1" parent="1">
+          <mxGeometry x="400" y="510" width="80" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="att_kon_tgl" value="tgl_observasi" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="400" y="560" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="att_kon_ph" value="ph_tanah" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="730" y="510" width="70" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="att_kon_daun" value="warna_daun" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="810" y="530" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="att_kon_lembab" value="kelembaban" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="810" y="570" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="att_kon_def" value="gejala_defisiensi" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="730" y="580" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="att_kon_musim" value="musim" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="490" y="590" width="65" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_kon_drain" value="kondisi_drainase" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="400" y="600" width="100" height="28" as="geometry" />
+        </mxCell>
+        <!-- Garis atribut Kondisi_Lahan -->
+        <mxCell id="l_kon_id" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_kondisi" target="att_kon_id"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_kon_tgl" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_kondisi" target="att_kon_tgl"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_kon_ph" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_kondisi" target="att_kon_ph"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_kon_daun" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_kondisi" target="att_kon_daun"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_kon_lembab" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_kondisi" target="att_kon_lembab"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_kon_def" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_kondisi" target="att_kon_def"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_kon_musim" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_kondisi" target="att_kon_musim"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_kon_drain" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_kondisi" target="att_kon_drain"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+
+        <!-- ═══ RELASI: Kondisi_Lahan — dianalisis menjadi — Rekomendasi_RBS ═══ -->
+        <mxCell id="rel_analisis" value="dianalisis&#xa;menjadi" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="590" y="680" width="100" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="l_kon_anal" value="1" style="strokeColor=#000000;endArrow=none;fontSize=9;labelPosition=left;verticalLabelPosition=middle;align=right;" edge="1" parent="1" source="ent_kondisi" target="rel_analisis"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_anal_rek" value="N" style="strokeColor=#000000;endArrow=none;fontSize=9;labelPosition=left;verticalLabelPosition=middle;align=right;" edge="1" parent="1" source="rel_analisis" target="ent_rekom"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ═══════════════════════════════════ -->
+        <!-- ENTITAS: Rekomendasi_RBS (y=790)   -->
+        <!-- ═══════════════════════════════════ -->
+        <mxCell id="ent_rekom" value="Rekomendasi_RBS" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="550" y="790" width="160" height="40" as="geometry" />
+        </mxCell>
+        <!-- Atribut Rekomendasi_RBS -->
+        <mxCell id="att_rek_id" value="id (PK)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;fontStyle=4;" vertex="1" parent="1">
+          <mxGeometry x="380" y="760" width="80" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="att_rek_tgl" value="tgl_analisis" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="380" y="810" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="att_rek_urea" value="total_urea" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="540" y="850" width="75" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_rek_kcl" value="total_kcl" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="640" y="850" width="70" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_rek_status" value="status_kebutuhan" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="380" y="850" width="110" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_rek_skor" value="kelengkapan_skor" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="730" y="770" width="110" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_rek_stage" value="status_stage" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="740" y="810" width="85" height="28" as="geometry" />
+        </mxCell>
+        <!-- Garis atribut Rekomendasi -->
+        <mxCell id="l_rek_id" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_rekom" target="att_rek_id"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_rek_tgl" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_rekom" target="att_rek_tgl"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_rek_urea" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_rekom" target="att_rek_urea"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_rek_kcl" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_rekom" target="att_rek_kcl"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_rek_status" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_rekom" target="att_rek_status"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_rek_skor" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_rekom" target="att_rek_skor"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_rek_stage" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_rekom" target="att_rek_stage"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+
+        <!-- ═══ RELASI: Rekomendasi — referensi rule — Rule_Base ═══ -->
+        <mxCell id="rel_rule" value="referensi&#xa;rule" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="990" y="785" width="90" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="l_rek_rule" value="N" style="strokeColor=#000000;endArrow=none;fontSize=9;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1" source="ent_rekom" target="rel_rule"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_rule_ent" value="1" style="strokeColor=#000000;endArrow=none;fontSize=9;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1" source="rel_rule" target="ent_rule"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ═══════════════════════════════════ -->
+        <!-- ENTITAS: Rule_Base (kanan, y=790)  -->
+        <!-- ═══════════════════════════════════ -->
+        <mxCell id="ent_rule" value="Rule_Base" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="790" width="120" height="40" as="geometry" />
+        </mxCell>
+        <!-- Atribut Rule_Base -->
+        <mxCell id="att_rul_id" value="id (PK)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;fontStyle=4;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="720" width="80" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="att_rul_masalah" value="indikasi_masalah" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="750" width="105" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_rul_pupuk" value="jenis_pupuk" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="790" width="80" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_rul_dosis" value="dosis_anjuran" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="830" width="90" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_rul_prior" value="prioritas" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="850" width="70" height="28" as="geometry" />
+        </mxCell>
+        <!-- Garis atribut Rule_Base -->
+        <mxCell id="l_rul_id" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_rule" target="att_rul_id"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_rul_masalah" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_rule" target="att_rul_masalah"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_rul_pupuk" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_rule" target="att_rul_pupuk"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_rul_dosis" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_rule" target="att_rul_dosis"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_rul_prior" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_rule" target="att_rul_prior"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+
+        <!-- ═══ RELASI: Rekomendasi — dicatat oleh — Admin ═══ -->
+        <mxCell id="rel_admin" value="dicatat&#xa;oleh" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="590" y="940" width="90" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="l_rek_adm" value="N" style="strokeColor=#000000;endArrow=none;fontSize=9;labelPosition=left;verticalLabelPosition=middle;align=right;" edge="1" parent="1" source="ent_rekom" target="rel_admin"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_adm_ent" value="1" style="strokeColor=#000000;endArrow=none;fontSize=9;labelPosition=left;verticalLabelPosition=middle;align=right;" edge="1" parent="1" source="rel_admin" target="ent_admin"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ═══════════════════════════════════ -->
+        <!-- ENTITAS: Admin (y=1050)            -->
+        <!-- ═══════════════════════════════════ -->
+        <mxCell id="ent_admin" value="Admin" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=12;fontStyle=1;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="580" y="1050" width="120" height="40" as="geometry" />
+        </mxCell>
+        <!-- Atribut Admin -->
+        <mxCell id="att_adm_id" value="id (PK)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;fontStyle=4;" vertex="1" parent="1">
+          <mxGeometry x="450" y="1040" width="80" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="att_adm_user" value="username" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="720" y="1030" width="75" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_adm_pass" value="password" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="720" y="1065" width="75" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_adm_nama" value="nama_lengkap" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="580" y="1105" width="90" height="28" as="geometry" />
+        </mxCell>
+        <!-- Garis atribut Admin -->
+        <mxCell id="l_adm_id" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_admin" target="att_adm_id"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_adm_user" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_admin" target="att_adm_user"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_adm_pass" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_admin" target="att_adm_pass"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_adm_nama" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_admin" target="att_adm_nama"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+
+        <!-- ═══ RELASI: Rekomendasi — memiliki realisasi — Realisasi_Pemupukan ═══ -->
+        <mxCell id="rel_realisasi" value="memiliki&#xa;realisasi" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="180" y="785" width="100" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="l_rek_real" value="1" style="strokeColor=#000000;endArrow=none;fontSize=9;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1" source="ent_rekom" target="rel_realisasi"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_real_ent" value="N" style="strokeColor=#000000;endArrow=none;fontSize=9;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" parent="1" source="rel_realisasi" target="ent_realisasi"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- ═══════════════════════════════════ -->
+        <!-- ENTITAS: Realisasi_Pemupukan (kiri, y=900) -->
+        <!-- ═══════════════════════════════════ -->
+        <mxCell id="ent_realisasi" value="Realisasi_Pemupukan" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=11;fontStyle=1;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="100" y="900" width="170" height="40" as="geometry" />
+        </mxCell>
+        <!-- Atribut Realisasi -->
+        <mxCell id="att_real_id" value="id (PK)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;fontStyle=4;" vertex="1" parent="1">
+          <mxGeometry x="30" y="860" width="80" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="att_real_tgl" value="tgl_realisasi" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="280" y="870" width="85" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_real_tahap" value="tahap" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="280" y="910" width="60" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_real_urea" value="urea_realisasi_kg" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="30" y="910" width="110" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_real_kcl" value="kcl_realisasi_kg" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="30" y="950" width="100" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="att_real_stat" value="status_realisasi" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="160" y="960" width="100" height="28" as="geometry" />
+        </mxCell>
+        <!-- Garis atribut Realisasi -->
+        <mxCell id="l_real_id" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_realisasi" target="att_real_id"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_real_tgl" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_realisasi" target="att_real_tgl"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_real_tahap" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_realisasi" target="att_real_tahap"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_real_urea" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_realisasi" target="att_real_urea"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_real_kcl" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_realisasi" target="att_real_kcl"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="l_real_stat" style="strokeColor=#000000;endArrow=none;" edge="1" parent="1" source="ent_realisasi" target="att_real_stat"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+
+        <!-- ═══ RELASI: Blok_Lahan — memiliki rekomendasi — Rekomendasi_RBS ═══ -->
+        <!-- (relasi tambahan langsung Blok → Rekomendasi di sisi kiri) -->
+        <mxCell id="rel_blok_rek" value="memiliki&#xa;rekomendasi" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="300" y="540" width="100" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="l_blk_rek1" value="1" style="strokeColor=#000000;endArrow=none;fontSize=9;labelPosition=left;verticalLabelPosition=middle;align=right;" edge="1" parent="1" source="ent_blok" target="rel_blok_rek">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="350" y="330" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l_blk_rek2" value="N" style="strokeColor=#000000;endArrow=none;fontSize=9;labelPosition=left;verticalLabelPosition=middle;align=right;" edge="1" parent="1" source="rel_blok_rek" target="ent_rekom">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="350" y="810" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ═══ RELASI: Program_Pemupukan ═══ -->
+        <!-- (tidak ditampilkan sebagai entitas terpisah di ERD konseptual, -->
+        <!--  karena merupakan entitas teknis/operasional yang terlalu detail -->
+        <!--  untuk ERD skripsi level konseptual) -->
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

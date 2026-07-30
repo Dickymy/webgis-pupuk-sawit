@@ -10,9 +10,10 @@ use Carbon\Carbon;
  *
  * Service ini mengatur WAKTU, bukan mengubah dosis tahunan.
  *
- * Referensi: Pahan, 2013. Bab 9, hal. 157-159.
- * - Curah hujan layak: 100–250 mm/bulan
- * - Interval minimal antar pupuk sejenis: 60 hari
+ * Referensi waktu aplikasi:
+ * - PPKS 2025: curah hujan optimal 100-250 mm/bulan.
+ * - Pradiko dkk. (PPKS 2021): tunda pada <60 atau >300 mm/bulan.
+ * - Jeda 120 hari adalah adaptasi operasional dari frekuensi 2-3 aplikasi/tahun.
  */
 class FertilizationWindowService
 {
@@ -22,6 +23,8 @@ class FertilizationWindowService
     public const TUNDA_HUJAN_RENDAH = 'TUNDA_HUJAN_RENDAH';
 
     public const TUNDA_HUJAN_TINGGI = 'TUNDA_HUJAN_TINGGI';
+
+    public const TUNDA_TANAH_KERING = 'TUNDA_TANAH_KERING';
 
     public const TUNDA_INTERVAL = 'TUNDA_INTERVAL';
 
@@ -49,20 +52,24 @@ class FertilizationWindowService
         $statuses = [];
         $tanggalRencana = $tanggalRencana ?? now();
 
-        $rainfallMin = config('fertilization.window.rainfall_min_mm', 100);
-        $rainfallMax = config('fertilization.window.rainfall_max_mm', 250);
-        $minInterval = config('fertilization.window.min_interval_days', 60);
-        $lateThreshold = config('fertilization.window.late_threshold_days', 120);
+        $rainfallOptimalMin = config('fertilization.window.rainfall_optimal_min_mm', 100);
+        $rainfallOptimalMax = config('fertilization.window.rainfall_optimal_max_mm', 250);
+        $rainfallDeferBelow = config('fertilization.window.rainfall_defer_below_mm', 60);
+        $rainfallDeferAbove = config('fertilization.window.rainfall_defer_above_mm', 300);
+        $minInterval = config('fertilization.window.min_interval_days', 120);
 
         // 1. Cek curah hujan bulanan
         $curahHujan = $kondisi->curah_hujan_mm_bulanan;
         if ($curahHujan !== null) {
-            if ($curahHujan < $rainfallMin) {
+            if ($curahHujan < $rainfallDeferBelow) {
                 $statuses[] = self::TUNDA_HUJAN_RENDAH;
-                $alasan[] = "Curah hujan {$curahHujan} mm/bulan (< {$rainfallMin} mm) — risiko efektivitas rendah, Urea mudah menguap.";
-            } elseif ($curahHujan > $rainfallMax) {
+                $alasan[] = "Curah hujan {$curahHujan} mm/bulan (< {$rainfallDeferBelow} mm) — tunda aplikasi sampai kelembapan tanah memadai.";
+            } elseif ($curahHujan > $rainfallDeferAbove) {
                 $statuses[] = self::TUNDA_HUJAN_TINGGI;
-                $alasan[] = "Curah hujan {$curahHujan} mm/bulan (> {$rainfallMax} mm) — risiko pencucian dan aliran permukaan tinggi.";
+                $alasan[] = "Curah hujan {$curahHujan} mm/bulan (> {$rainfallDeferAbove} mm) — tunda karena risiko pencucian dan aliran permukaan.";
+            } elseif ($curahHujan < $rainfallOptimalMin || $curahHujan > $rainfallOptimalMax) {
+                $statuses[] = self::PERLU_VERIFIKASI_DATA;
+                $alasan[] = "Curah hujan {$curahHujan} mm/bulan berada di luar rentang optimal {$rainfallOptimalMin}-{$rainfallOptimalMax} mm, tetapi belum mencapai batas tunda. Verifikasi kelembapan tanah dan prakiraan hujan sebelum aplikasi.";
             }
         } else {
             // Fallback: cek kategori curah hujan lama
@@ -77,7 +84,7 @@ class FertilizationWindowService
             } elseif ($kategori === 'Rendah' || $kategori === 'Tinggi') {
                 // Kategori Rendah/Tinggi tanpa numerik → tidak bisa memastikan layak
                 $statuses[] = self::PERLU_VERIFIKASI_DATA;
-                $alasan[] = "Curah hujan '{$kategori}' (hanya kategori, tanpa nilai numerik mm/bulan) — tidak dapat memastikan kelayakan waktu. Masukkan data numerik untuk presisi.";
+                $alasan[] = "Curah hujan '{$kategori}' (hanya kategori, tanpa nilai numerik mm/bulan) — belum cukup untuk menentukan waktu pemupukan. Masukkan jumlah hujan dalam mm/bulan.";
             } elseif ($kategori === 'Normal') {
                 // Kategori Normal tanpa numerik → perlu verifikasi karena range bisa luas
                 $statuses[] = self::PERLU_VERIFIKASI_DATA;
@@ -91,23 +98,30 @@ class FertilizationWindowService
             }
         }
 
-        // 2. Cek interval pemupukan terakhir
+        // 2. Cek kelembapan aktual tanah. Fakta lapangan mengungguli label musim.
+        if ($kondisi->kelembaban_tanah === 'Sangat Kering') {
+            $statuses[] = self::TUNDA_TANAH_KERING;
+            $alasan[] = 'Tanah sangat kering — tunda pupuk tanah sampai kelembapan memadai.';
+        } elseif ($kondisi->kelembaban_tanah === 'Kering') {
+            $statuses[] = self::PERLU_VERIFIKASI_DATA;
+            $alasan[] = 'Tanah kering — periksa kelembapan aktual dan peluang hujan sebelum aplikasi.';
+        }
+
+        // 3. Cek interval pemupukan terakhir
         $intervalHari = null;
-        $terlambat = false;
+        $terlambat = false; // Kolom kompatibilitas histori; status terlambat tidak dihitung otomatis.
 
         if ($kondisi->tanggal_pemupukan_terakhir) {
             $intervalHari = (int) $kondisi->tanggal_pemupukan_terakhir->diffInDays($tanggalRencana);
 
             if ($intervalHari < $minInterval) {
                 $statuses[] = self::TUNDA_INTERVAL;
-                $alasan[] = "Pemupukan terakhir {$intervalHari} hari lalu (< {$minInterval} hari) — interval terlalu pendek.";
-            } elseif ($intervalHari > $lateThreshold) {
-                $terlambat = true;
-                $alasan[] = "Pemupukan terlambat ({$intervalHari} hari sejak terakhir) — perlu segera dijadwalkan.";
+                $alasan[] = "Pemupukan terakhir {$intervalHari} hari lalu (< {$minInterval} hari) — jarak waktu terlalu pendek.";
+
             }
         }
 
-        // 3. Cek drainase
+        // 4. Cek drainase
         if ($kondisi->kondisi_drainase === 'Buruk — Tergenang') {
             $statuses[] = self::PERLU_PERBAIKAN_DRAINASE;
             $alasan[] = 'Lahan tergenang — pupuk tanah tidak efektif, perbaiki drainase terlebih dahulu.';
@@ -115,7 +129,7 @@ class FertilizationWindowService
 
         // Tentukan status final
         if (empty($statuses)) {
-            $statusFinal = $terlambat ? self::TERLAMBAT : self::LAYAK;
+            $statusFinal = self::LAYAK;
         } else {
             // Prioritas: Drainase > Interval > Hujan > Verifikasi
             $priority = [
@@ -123,6 +137,7 @@ class FertilizationWindowService
                 self::TUNDA_INTERVAL => 4,
                 self::TUNDA_HUJAN_TINGGI => 3,
                 self::TUNDA_HUJAN_RENDAH => 3,
+                self::TUNDA_TANAH_KERING => 3,
                 self::PERLU_VERIFIKASI_DATA => 1,
             ];
 
@@ -148,13 +163,14 @@ class FertilizationWindowService
     public static function labelStatus(string $status): string
     {
         return match ($status) {
-            self::LAYAK => 'Layak Dijadwalkan',
-            self::TUNDA_HUJAN_RENDAH => 'Tunda — Curah Hujan Rendah',
-            self::TUNDA_HUJAN_TINGGI => 'Tunda — Curah Hujan Tinggi',
-            self::TUNDA_INTERVAL => 'Tunda — Interval Terlalu Pendek',
-            self::PERLU_PERBAIKAN_DRAINASE => 'Tunda — Drainase Perlu Diperbaiki',
-            self::PERLU_VERIFIKASI_DATA => 'Perlu Verifikasi Data',
-            self::TERLAMBAT => 'Terlambat — Perlu Dijadwalkan',
+            self::LAYAK => 'Siap Dipupuk',
+            self::TUNDA_HUJAN_RENDAH => 'Belum Dipupuk — Hujan Terlalu Rendah',
+            self::TUNDA_HUJAN_TINGGI => 'Belum Dipupuk — Hujan Terlalu Tinggi',
+            self::TUNDA_TANAH_KERING => 'Belum Dipupuk — Tanah Sangat Kering',
+            self::TUNDA_INTERVAL => 'Belum Dipupuk — Jarak Waktu Belum Cukup',
+            self::PERLU_PERBAIKAN_DRAINASE => 'Belum Dipupuk — Perbaiki Saluran Air',
+            self::PERLU_VERIFIKASI_DATA => 'Data Pemeriksaan Belum Lengkap',
+            self::TERLAMBAT => 'Segera Dijadwalkan',
             default => $status,
         };
     }

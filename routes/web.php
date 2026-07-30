@@ -22,7 +22,7 @@ Route::get('/', fn () => redirect()->route('dashboard'));
 // Authentication routes (guest only)
 Route::middleware('guest:admin')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.submit');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -40,11 +40,19 @@ Route::middleware(AdminAuthenticated::class)->group(function () {
     Route::resource('blok-lahan', BlokLahanController::class);
 
     // Kondisi Lahan
+    Route::get('/kondisi-lahan/{kondisiLahan}/foto', [KondisiLahanController::class, 'photo'])->name('kondisi-lahan.photo');
     Route::resource('kondisi-lahan', KondisiLahanController::class)->except(['show']);
 
     // Rule Base RBS
-    Route::get('rule-base/info', [RuleBaseController::class, 'info'])->name('rule-base.info');
-    Route::resource('rule-base', RuleBaseController::class)->except(['show']);
+    Route::prefix('rule-base')->name('rule-base.')->group(function () {
+        Route::get('/', [RuleBaseController::class, 'index'])->name('index');
+        Route::get('/info', [RuleBaseController::class, 'info'])->name('info');
+        Route::get('/tambah', [RuleBaseController::class, 'create'])->name('create');
+        Route::post('/', [RuleBaseController::class, 'store'])->name('store');
+        Route::get('/{rule}/edit', [RuleBaseController::class, 'edit'])->name('edit');
+        Route::put('/{rule}', [RuleBaseController::class, 'update'])->name('update');
+        Route::patch('/{rule}/status', [RuleBaseController::class, 'toggleStatus'])->name('status');
+    });
 
     // Analisis RBS (Rule-Based System) — Satu-satunya mesin analisis
     Route::prefix('rbs')->name('rbs.')->group(function () {

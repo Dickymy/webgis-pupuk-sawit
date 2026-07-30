@@ -71,10 +71,10 @@ class DemoSawitGisSeeder extends Seeder
                 'jenis_tanah' => 'Tanah Lempung',
                 'topografi' => 'Datar 0-15°',
             ],
-            // Blok 2: Defisiensi ringan
+            // Blok 2: gejala daun bagian bawah menguning
             [
                 'anggota_idx' => 0,
-                'nama_blok' => 'DEMO - Blok A2 Defisiensi Ringan',
+                'nama_blok' => 'DEMO - Blok A2 Gejala Daun Menguning',
                 'luas_ha' => 3.2,
                 'sph' => 130,
                 'tahun_tanam' => 2015,
@@ -82,10 +82,10 @@ class DemoSawitGisSeeder extends Seeder
                 'jenis_tanah' => 'Tanah Lempung Berpasir',
                 'topografi' => 'Datar 0-15°',
             ],
-            // Blok 3: Defisiensi sedang
+            // Blok 3: gejala bercak pada daun tua
             [
                 'anggota_idx' => 1,
-                'nama_blok' => 'DEMO - Blok B1 Defisiensi Sedang',
+                'nama_blok' => 'DEMO - Blok B1 Gejala Bercak Daun Tua',
                 'luas_ha' => 5.0,
                 'sph' => 140,
                 'tahun_tanam' => 2010,
@@ -93,10 +93,10 @@ class DemoSawitGisSeeder extends Seeder
                 'jenis_tanah' => 'Tanah Podsolik Merah Kuning (PMK)',
                 'topografi' => 'Bergelombang 15-30°',
             ],
-            // Blok 4: Gejala berat
+            // Blok 4: gejala tepi daun tua
             [
                 'anggota_idx' => 1,
-                'nama_blok' => 'DEMO - Blok B2 Gejala Berat',
+                'nama_blok' => 'DEMO - Blok B2 Gejala Tepi Daun Tua',
                 'luas_ha' => 2.8,
                 'sph' => 125,
                 'tahun_tanam' => 2008,
@@ -140,7 +140,7 @@ class DemoSawitGisSeeder extends Seeder
             // Blok 8: TBM (tanaman muda)
             [
                 'anggota_idx' => 3,
-                'nama_blok' => 'DEMO - Blok D2 Tanaman Muda',
+                'nama_blok' => 'DEMO - Blok D2 Gejala Daun Muda',
                 'luas_ha' => 2.0,
                 'sph' => 143,
                 'tahun_tanam' => 2024,
@@ -209,7 +209,7 @@ class DemoSawitGisSeeder extends Seeder
                 'ada_gulma_dominan' => false,
                 'ada_serangan_hama' => false,
             ],
-            // Blok 1: Defisiensi ringan N
+            // Blok 1: indikasi visual N
             [
                 'blok_idx' => 1,
                 'tanggal_observasi' => now()->subDays(10)->toDateString(),
@@ -220,14 +220,13 @@ class DemoSawitGisSeeder extends Seeder
                 'curah_hujan_kategori' => 'Normal',
                 'periode_curah_hujan' => now()->format('Y-m'),
                 'sumber_curah_hujan' => 'open-meteo',
-                'warna_daun' => 'Hijau Pucat',
+                'warna_daun' => 'Daun Bawah Menguning',
                 'kondisi_pelepah' => 'Normal',
-                'gejala_defisiensi' => ['N'],
                 'kondisi_drainase' => 'Baik',
                 'ada_gulma_dominan' => false,
                 'ada_serangan_hama' => false,
             ],
-            // Blok 2: Defisiensi sedang K
+            // Blok 2: indikasi visual K
             [
                 'blok_idx' => 2,
                 'tanggal_observasi' => now()->subDays(7)->toDateString(),
@@ -238,9 +237,8 @@ class DemoSawitGisSeeder extends Seeder
                 'curah_hujan_kategori' => 'Normal',
                 'periode_curah_hujan' => now()->format('Y-m'),
                 'sumber_curah_hujan' => 'open-meteo',
-                'warna_daun' => 'Kuning Tepi',
+                'warna_daun' => 'Bercak Kuning/Transparan pada Daun Tua',
                 'kondisi_pelepah' => 'Normal',
-                'gejala_defisiensi' => ['K'],
                 'kondisi_drainase' => 'Baik',
                 'ada_gulma_dominan' => true,
                 'ada_serangan_hama' => false,
@@ -256,9 +254,8 @@ class DemoSawitGisSeeder extends Seeder
                 'curah_hujan_kategori' => 'Normal',
                 'periode_curah_hujan' => now()->format('Y-m'),
                 'sumber_curah_hujan' => 'open-meteo',
-                'warna_daun' => 'Oranye/Kemerahan',
+                'warna_daun' => 'Tepi Daun Tua Menguning pada Bagian Terbuka',
                 'kondisi_pelepah' => 'Kering Prematur',
-                'gejala_defisiensi' => ['K', 'Mg'],
                 'kondisi_drainase' => 'Cukup',
                 'ada_gulma_dominan' => true,
                 'ada_serangan_hama' => true,
@@ -270,7 +267,7 @@ class DemoSawitGisSeeder extends Seeder
                 'tanggal_pemupukan_terakhir' => now()->subDays(80)->toDateString(),
                 'ph_tanah' => 5.5,
                 'metode_pengukuran_ph' => 'ph_meter',
-                'curah_hujan_mm_bulanan' => 60.0,
+                'curah_hujan_mm_bulanan' => 50.0,
                 'curah_hujan_kategori' => 'Rendah',
                 'periode_curah_hujan' => now()->format('Y-m'),
                 'sumber_curah_hujan' => 'open-meteo',
@@ -308,9 +305,8 @@ class DemoSawitGisSeeder extends Seeder
                 'curah_hujan_kategori' => 'Normal',
                 'periode_curah_hujan' => now()->format('Y-m'),
                 'sumber_curah_hujan' => 'open-meteo',
-                'warna_daun' => 'Hijau Pucat',
+                'warna_daun' => 'Hijau Normal',
                 'kondisi_pelepah' => 'Normal',
-                'gejala_defisiensi' => ['N'],
                 'kondisi_drainase' => 'Buruk — Tergenang',
                 'ada_gulma_dominan' => true,
                 'ada_serangan_hama' => false,
@@ -325,7 +321,7 @@ class DemoSawitGisSeeder extends Seeder
                 'curah_hujan_kategori' => 'Normal',
                 'periode_curah_hujan' => now()->format('Y-m'),
                 'sumber_curah_hujan' => 'open-meteo',
-                'warna_daun' => 'Hijau Normal',
+                'warna_daun' => 'Daun Muda Berbentuk Kait atau Memendek',
                 'kondisi_pelepah' => 'Normal',
                 'kondisi_drainase' => 'Baik',
                 'ada_gulma_dominan' => false,

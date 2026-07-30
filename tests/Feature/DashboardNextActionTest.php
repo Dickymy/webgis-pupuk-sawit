@@ -78,4 +78,22 @@ class DashboardNextActionTest extends TestCase
         $response->assertOk();
         $response->assertDontSee('Verifikasi');
     }
+
+    public function test_dashboard_uses_simplified_layout(): void
+    {
+        $response = $this->actingAs($this->admin, 'admin')
+            ->get(route('dashboard'));
+
+        $response->assertOk();
+        $content = $response->getContent();
+
+        $view = file_get_contents(resource_path('views/dashboard/index.blade.php'));
+
+        $this->assertSame(5, substr_count($content, 'class="stat-card'));
+        $this->assertStringContainsString('Prioritas Hari Ini', $view);
+        $this->assertStringNotContainsString('Luas Lahan per Kondisi Tanaman', $view);
+        $this->assertStringNotContainsString('class="map-legend"', $view);
+        $this->assertStringContainsString('id="luas-ada-gejala"', $view);
+        $this->assertStringContainsString('id="luas-siap-dipupuk"', $view);
+    }
 }

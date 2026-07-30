@@ -20,8 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         // Exclude tema cookie dari enkripsi agar JS bisa baca langsung
         $middleware->encryptCookies(except: ['tema_tampilan']);
-        // Disable CSRF untuk semua route (diperlukan di shared hosting Rumahweb)
-        $middleware->validateCsrfTokens(except: ['*']);
+        // Aktifkan perlindungan CSRF untuk seluruh route yang mengubah data
+        $middleware->validateCsrfTokens();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -24,7 +24,6 @@ class ObservationCompletenessTest extends TestCase
     {
         $kondisi = new KondisiLahan;
         $kondisi->warna_daun = $attrs['warna_daun'] ?? null;
-        $kondisi->ph_tanah = $attrs['ph_tanah'] ?? null;
         $kondisi->kondisi_drainase = $attrs['kondisi_drainase'] ?? null;
         $kondisi->curah_hujan_mm_bulanan = $attrs['curah_hujan_mm_bulanan'] ?? null;
         $kondisi->curah_hujan_kategori = $attrs['curah_hujan_kategori'] ?? null;
@@ -41,15 +40,23 @@ class ObservationCompletenessTest extends TestCase
     // 1. Satu field terisi → diagnosis TIDAK dijalankan
     // ═══════════════════════════════════════════════════════════════
 
-    public function test_satu_field_terisi_tidak_cukup_diagnosis(): void
+    public function test_warna_daun_saja_cukup_untuk_rule_visual(): void
     {
         $kondisi = $this->makeKondisi([
             'warna_daun' => 'Hijau Normal',
         ]);
 
         $result = $this->service->evaluate($kondisi);
-        $this->assertFalse($result['can_run_diagnosis']);
+        $this->assertTrue($result['can_run_diagnosis']);
         $this->assertTrue($result['can_calculate_base_dose']);
+        $this->assertSame([], $result['blocking_missing_fields']);
+        $this->assertEqualsCanonicalizing([
+            'Kondisi drainase',
+            'Data curah hujan',
+            'Kelembaban tanah',
+            'Tanggal pemupukan terakhir',
+        ], $result['missing_fields']);
+        $this->assertNotContains('Musim saat ini', $result['missing_fields']);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -60,7 +67,6 @@ class ObservationCompletenessTest extends TestCase
     {
         $kondisi = $this->makeKondisi([
             'warna_daun' => 'Kuning Merata',
-            'ph_tanah' => 5.5,
             'kondisi_drainase' => 'Baik',
             'curah_hujan_mm_bulanan' => 150,
             'kelembaban_tanah' => 'Normal',
@@ -69,7 +75,7 @@ class ObservationCompletenessTest extends TestCase
 
         $result = $this->service->evaluate($kondisi);
         $this->assertTrue($result['can_run_diagnosis']);
-        $this->assertEquals(6, $result['filled_count']);
+        $this->assertEquals(5, $result['filled_count']);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -79,7 +85,6 @@ class ObservationCompletenessTest extends TestCase
     public function test_tanpa_warna_daun_tidak_bisa_diagnosis(): void
     {
         $kondisi = $this->makeKondisi([
-            'ph_tanah' => 5.5,
             'kondisi_drainase' => 'Baik',
             'curah_hujan_mm_bulanan' => 150,
             'kelembaban_tanah' => 'Normal',
@@ -89,13 +94,14 @@ class ObservationCompletenessTest extends TestCase
 
         $result = $this->service->evaluate($kondisi);
         $this->assertFalse($result['can_run_diagnosis']);
+        $this->assertSame(['Warna daun'], $result['blocking_missing_fields']);
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // 4. Tanpa pH dan tanpa drainase → diagnosis TIDAK bisa
+    // 4. Drainase tidak menjadi syarat untuk menjalankan rule visual
     // ═══════════════════════════════════════════════════════════════
 
-    public function test_tanpa_ph_dan_drainase_tidak_bisa_diagnosis(): void
+    public function test_tanpa_drainase_tetap_bisa_menjalankan_rule_visual(): void
     {
         $kondisi = $this->makeKondisi([
             'warna_daun' => 'Kuning Merata',
@@ -106,18 +112,17 @@ class ObservationCompletenessTest extends TestCase
         ]);
 
         $result = $this->service->evaluate($kondisi);
-        $this->assertFalse($result['can_run_diagnosis']);
+        $this->assertTrue($result['can_run_diagnosis']);
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // 5. pH tanpa drainase = CUKUP (salah satu wajib)
+    // 5. Kondisi daun tetap menjadi fakta utama rule visual
     // ═══════════════════════════════════════════════════════════════
 
-    public function test_ph_tanpa_drainase_cukup(): void
+    public function test_kondisi_daun_tetap_cukup_tanpa_drainase(): void
     {
         $kondisi = $this->makeKondisi([
             'warna_daun' => 'Kuning Merata',
-            'ph_tanah' => 5.5,
             'curah_hujan_mm_bulanan' => 150,
             'kelembaban_tanah' => 'Normal',
             'musim_saat_ini' => 'Musim Hujan',

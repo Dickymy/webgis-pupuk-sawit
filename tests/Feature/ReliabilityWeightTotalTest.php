@@ -11,7 +11,7 @@ class ReliabilityWeightTotalTest extends TestCase
         $weights = config('fertilization.reliability_weights');
 
         $this->assertNotEmpty($weights);
-        $this->assertEquals(100, array_sum($weights), 'Total bobot keandalan harus berjumlah 100');
+        $this->assertEquals(100, array_sum($weights), 'Total bobot kelengkapan data harus berjumlah 100');
     }
 
     public function test_no_validasi_ahli_weight(): void
@@ -36,12 +36,10 @@ class ReliabilityWeightTotalTest extends TestCase
         $expected = [
             'identitas_blok',
             'fase_terverifikasi',
-            'ph_dan_metode',
             'curah_hujan',
             'tgl_pemupukan',
             'data_visual',
-            'drainase_gulma_hama',
-            'rule_bersumber',
+            'kondisi_lapangan',
         ];
 
         $this->assertEquals($expected, array_keys($weights));

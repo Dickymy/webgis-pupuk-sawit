@@ -55,6 +55,12 @@ class SupportingFertilizerSanitizer
                 continue;
             }
 
+            // Rule waktu aplikasi dan rule pemeriksaan lanjutan bukan rekomendasi pupuk.
+            if ($rule->jenis_rule === 'PEMBATAS_APLIKASI'
+                || $rule->jenis_pupuk_utama === 'Tidak ditentukan otomatis') {
+                continue;
+            }
+
             $pupukUtama = $rule->jenis_pupuk_utama ?? '';
             $isPupukUtama = $this->isPupukUtama($pupukUtama);
 
@@ -63,7 +69,7 @@ class SupportingFertilizerSanitizer
                 $result[] = [
                     'jenis_utama' => $pupukUtama,
                     'jenis_pendukung' => $rule->jenis_pupuk_pendukung,
-                    'dosis' => 'Sesuai kebutuhan tahunan Pahan 2013',
+                    'dosis' => 'Sesuai kebutuhan tahunan Iyung Pahan (2013)',
                     'metode' => $rule->metode_aplikasi,
                     'waktu' => $rule->waktu_aplikasi,
                     'status_validasi' => 'REFERENSI_PAHAN',
@@ -86,7 +92,9 @@ class SupportingFertilizerSanitizer
             }
         }
 
-        return $result;
+        return collect($result)
+            ->unique(fn (array $item) => mb_strtolower(trim($item['jenis_utama'] ?? '')))
+            ->values()->all();
     }
 
     /**
@@ -119,7 +127,7 @@ class SupportingFertilizerSanitizer
      * Cek apakah rule memiliki validasi yang memadai.
      *
      * Pahan v2.4: Perketat syarat metadata.
-     * TERVERIFIKASI_SUMBER: wajib sumber_judul, sumber_penulis, sumber_tahun, sumber_halaman, sumber_tabel.
+     * TERVERIFIKASI_SUMBER: wajib nama sumber acuan; detail lain bersifat opsional.
      * TERVERIFIKASI_AHLI: wajib divalidasi_oleh, tanggal_validasi, catatan_validasi.
      */
     private function isValidated(RuleBaseLanjutan $rule): bool
@@ -131,11 +139,7 @@ class SupportingFertilizerSanitizer
         }
 
         if ($status === 'TERVERIFIKASI_SUMBER') {
-            return $rule->sumber_judul !== null
-                && $rule->sumber_penulis !== null
-                && $rule->sumber_tahun !== null
-                && $rule->sumber_halaman !== null
-                && $rule->sumber_tabel !== null;
+            return filled($rule->sumber_judul);
         }
 
         if ($status === 'TERVERIFIKASI_AHLI') {

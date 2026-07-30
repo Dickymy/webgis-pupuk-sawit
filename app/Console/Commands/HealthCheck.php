@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\ProgramPemupukan;
 use App\Models\RealisasiPemupukan;
 use App\Models\RekomendasiRbs;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -55,10 +56,12 @@ class HealthCheck extends Command
         $this->checkRealisasiTanpaRekomendasi();
         $this->checkMismatchProgram();
         $this->checkTahap2TanpaTahap1();
-        $this->checkTahap2Sebelum60Hari();
+        $this->checkTahap2SebelumIntervalMinimum();
         $this->checkTanggalMasaDepan();
         $this->checkSelesaiDiBawahRencana();
         $this->checkBatalTerhitung();
+        $this->checkSubmissionTokenGanda();
+        $this->checkDuplikasiAktifIdentik();
 
         // Histori
         $this->info('── HISTORI ───────────────────────────────────────────────────');
@@ -342,8 +345,9 @@ class HealthCheck extends Command
         }
     }
 
-    private function checkTahap2Sebelum60Hari(): void
+    private function checkTahap2SebelumIntervalMinimum(): void
     {
+        $minInterval = (int) config('fertilization.window.min_interval_days', 120);
         $tahap2Records = RealisasiPemupukan::where('tahap', 2)
             ->where('status_realisasi', '!=', 'BATAL')
             ->get();
@@ -351,23 +355,25 @@ class HealthCheck extends Command
         $issues = 0;
         foreach ($tahap2Records as $record) {
             $tahap1Terakhir = RealisasiPemupukan::where('blok_lahan_id', $record->blok_lahan_id)
+                ->when($record->program_pemupukan_id, fn ($query, $programId) => $query->where('program_pemupukan_id', $programId))
                 ->where('tahap', 1)
                 ->where('status_realisasi', '!=', 'BATAL')
+                ->whereDate('tanggal_realisasi', '<=', $record->tanggal_realisasi)
                 ->max('tanggal_realisasi');
 
             if ($tahap1Terakhir && $record->tanggal_realisasi) {
-                $diff = $record->tanggal_realisasi->diffInDays($tahap1Terakhir);
-                if ($diff < 60) {
+                $diff = Carbon::parse($tahap1Terakhir)->diffInDays($record->tanggal_realisasi, true);
+                if ($diff < $minInterval) {
                     $issues++;
                 }
             }
         }
 
         if ($issues > 0) {
-            $this->error("   ✗ {$issues} realisasi Tahap 2 < 60 hari setelah Tahap 1");
+            $this->error("   ✗ {$issues} realisasi Tahap 2 < {$minInterval} hari setelah Tahap 1");
             $this->issueCount++;
         } else {
-            $this->line('   ✓ Interval 60 hari terpenuhi');
+            $this->line("   ✓ Interval {$minInterval} hari terpenuhi");
         }
     }
 
@@ -388,7 +394,7 @@ class HealthCheck extends Command
     private function checkSelesaiDiBawahRencana(): void
     {
         $issues = RealisasiPemupukan::where('status_realisasi', 'SELESAI')
-            ->whereRaw('(urea_realisasi_kg < urea_rencana_kg * 0.99 AND kcl_realisasi_kg < kcl_rencana_kg * 0.99)')
+            ->whereRaw('(urea_realisasi_kg < urea_rencana_kg * 0.99 OR kcl_realisasi_kg < kcl_rencana_kg * 0.99)')
             ->count();
 
         if ($issues > 0) {
@@ -405,12 +411,80 @@ class HealthCheck extends Command
         $file = app_path('Services/FertilizationRealizationService.php');
         if (file_exists($file)) {
             $content = file_get_contents($file);
-            if (str_contains($content, "!= 'BATAL'") || str_contains($content, '!= self::STATUS_BATAL') || str_contains($content, 'aktif()')) {
+            if (str_contains($content, "!= 'BATAL'") || str_contains($content, 'STATUS_BATAL') || str_contains($content, 'aktif()')) {
                 $this->line('   ✓ Realisasi BATAL tidak ikut terhitung (code check)');
             } else {
                 $this->warn('   ⚠ Perlu verifikasi filter realisasi BATAL di FertilizationRealizationService');
                 $this->warningCount++;
             }
+        }
+    }
+
+    private function checkSubmissionTokenGanda(): void
+    {
+        if (! Schema::hasColumn('realisasi_pemupukans', 'submission_token')) {
+            return;
+        }
+
+        $ganda = DB::table('realisasi_pemupukans')
+            ->select('submission_token')
+            ->whereNotNull('submission_token')
+            ->groupBy('submission_token')
+            ->havingRaw('COUNT(*) > 1')
+            ->count();
+
+        if ($ganda > 0) {
+            $this->error("   ✗ {$ganda} submission_token digunakan lebih dari sekali (KRITIS: duplikat)");
+            $this->issueCount++;
+        } else {
+            $this->line('   ✓ Tidak ada submission_token ganda');
+        }
+    }
+
+    private function checkDuplikasiAktifIdentik(): void
+    {
+        // Cari dua realisasi aktif identik yang dibuat dalam waktu sangat dekat (< 5 menit)
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'sqlite') {
+            // SQLite: gunakan julianday untuk diff dalam detik
+            $duplicates = DB::table('realisasi_pemupukans as a')
+                ->join('realisasi_pemupukans as b', function ($join) {
+                    $join->on('a.blok_lahan_id', '=', 'b.blok_lahan_id')
+                        ->on('a.rekomendasi_rbs_id', '=', 'b.rekomendasi_rbs_id')
+                        ->on('a.tahap', '=', 'b.tahap')
+                        ->on('a.tanggal_realisasi', '=', 'b.tanggal_realisasi')
+                        ->on('a.urea_realisasi_kg', '=', 'b.urea_realisasi_kg')
+                        ->on('a.kcl_realisasi_kg', '=', 'b.kcl_realisasi_kg')
+                        ->whereColumn('a.id', '<', 'b.id');
+                })
+                ->where('a.status_realisasi', '!=', 'BATAL')
+                ->where('b.status_realisasi', '!=', 'BATAL')
+                ->whereRaw('ABS((julianday(b.created_at) - julianday(a.created_at)) * 86400) < 300')
+                ->count();
+        } else {
+            // MySQL: TIMESTAMPDIFF
+            $duplicates = DB::table('realisasi_pemupukans as a')
+                ->join('realisasi_pemupukans as b', function ($join) {
+                    $join->on('a.blok_lahan_id', '=', 'b.blok_lahan_id')
+                        ->on('a.rekomendasi_rbs_id', '=', 'b.rekomendasi_rbs_id')
+                        ->on('a.tahap', '=', 'b.tahap')
+                        ->on('a.tanggal_realisasi', '=', 'b.tanggal_realisasi')
+                        ->on('a.urea_realisasi_kg', '=', 'b.urea_realisasi_kg')
+                        ->on('a.kcl_realisasi_kg', '=', 'b.kcl_realisasi_kg')
+                        ->whereColumn('a.id', '<', 'b.id');
+                })
+                ->where('a.status_realisasi', '!=', 'BATAL')
+                ->where('b.status_realisasi', '!=', 'BATAL')
+                ->whereRaw('ABS(TIMESTAMPDIFF(SECOND, a.created_at, b.created_at)) < 300')
+                ->count();
+        }
+
+        if ($duplicates > 0) {
+            $this->error("   ✗ {$duplicates} pasangan realisasi aktif identik dalam < 5 menit (KRITIS: duplikat double-submit)");
+            $this->issueCount++;
+        } else {
+            $this->line('   ✓ Tidak ada duplikasi realisasi aktif identik');
         }
     }
 
@@ -431,13 +505,6 @@ class HealthCheck extends Command
         $version = config('fertilization.engine_version');
         $this->line("   ✓ Engine version: {$version}");
 
-        $multiplierEnabled = config('fertilization.legacy_multipliers.enabled', false);
-        if ($multiplierEnabled) {
-            $this->error('   ✗ Legacy multipliers masih aktif!');
-            $this->issueCount++;
-        } else {
-            $this->line('   ✓ Legacy multipliers nonaktif');
-        }
     }
 
     private function checkBackupNotPublic(): void

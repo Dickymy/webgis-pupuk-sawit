@@ -32,20 +32,19 @@ class TrueLegacySchemaUpgradeV28Test extends TestCase
         $this->assertTrue(Schema::hasTable('rekomendasi_operasional_histories'));
     }
 
-    public function test_rollback_v28_migration_is_safe(): void
+    public function test_rollback_academic_enum_migration_is_safe(): void
     {
-        // Rollback v2.8 hanya menghapus kolom active_key
-        // Ini divalidasi oleh step terpisah di GitHub Actions
-        // Test ini memastikan rollback tidak crash
+        // Rollback migrasi enum secara eksplisit agar penambahan migrasi baru
+        // tidak mengubah migration yang diuji.
         LegacySchemaBuilder::insertLegacyData();
 
         Artisan::call('migrate:rollback', [
-            '--step' => 1,
+            '--path' => 'database/migrations/2026_07_28_195630_expand_warna_daun_enum_for_academic_rules.php',
             '--force' => true,
         ]);
 
-        // active_key harus hilang
-        $this->assertFalse(Schema::hasColumn('program_pemupukans', 'active_key'));
+        // Kolom v2.8 tetap ada karena yang di-rollback hanya migrasi enum.
+        $this->assertTrue(Schema::hasColumn('program_pemupukans', 'active_key'));
 
         // Tabel utama masih ada
         $this->assertTrue(Schema::hasTable('program_pemupukans'));

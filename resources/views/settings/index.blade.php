@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Pengaturan')
-@section('page-title', 'Pengaturan')
-@section('page-subtitle', 'Kelola password & tampilan aplikasi')
+@section('title', 'Akun dan Tampilan')
+@section('page-title', 'Akun dan Tampilan')
+@section('page-subtitle', 'Atur kata sandi dan tampilan aplikasi')
 
 @section('content')
-<div class="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-4">
+<div class="w-full space-y-4">
 
     @if (session('success'))
         <div class="flex items-center gap-3 rounded-xl bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 text-sm">
@@ -27,8 +27,8 @@
                     </svg>
                 </div>
                 <div class="text-left">
-                    <h2 class="text-sm sm:text-base font-semibold text-slate-800 dark:text-slate-100">Ganti Password</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Ubah password akun Anda</p>
+                    <h2 class="text-sm sm:text-base font-semibold text-slate-800 dark:text-slate-100">Ganti Kata Sandi</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Perbarui kata sandi akun Anda</p>
                 </div>
             </div>
             <svg id="password-section-chevron" class="w-5 h-5 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,22 +39,22 @@
         <div id="password-section" class="hidden border-t border-slate-100 dark:border-slate-700">
             <div class="px-5 sm:px-6 py-5">
                 <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                    Login sebagai <span class="font-medium text-slate-700 dark:text-slate-300">{{ $admin->username }}</span>. Masukkan password lama lalu password baru.
+                    Anda masuk sebagai <span class="font-medium text-slate-700 dark:text-slate-300">{{ $admin->username }}</span>. Masukkan kata sandi lama, lalu buat kata sandi baru.
                 </p>
 
-                <form method="POST" action="{{ route('settings.password.update') }}" class="space-y-4">
+                <form method="POST" action="{{ route('settings.password.update') }}" class="grid gap-4 lg:grid-cols-3">
                     @csrf
                     @method('PUT')
 
                     <div>
                         <label for="password_lama" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                            Password Lama
+                            Kata Sandi Lama
                         </label>
                         <div class="relative">
                             <input type="password" id="password_lama" name="password_lama"
                                 class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100
                                        focus:border-emerald-500 focus:ring-emerald-500 text-sm pr-10"
-                                autocomplete="off" required>
+                                autocomplete="current-password" required>
                             <button type="button" onclick="togglePassword('password_lama')" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" tabindex="-1">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                             </button>
@@ -66,7 +66,7 @@
 
                     <div>
                         <label for="password_baru" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                            Password Baru
+                            Kata Sandi Baru
                         </label>
                         <div class="relative">
                             <input type="password" id="password_baru" name="password_baru"
@@ -77,7 +77,7 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                             </button>
                         </div>
-                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Minimal 8 karakter, kombinasi huruf & angka.</p>
+                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">Minimal 8 karakter dengan kombinasi huruf dan angka.</p>
                         @error('password_baru')
                             <p class="text-red-500 dark:text-red-400 text-xs mt-1">{{ $message }}</p>
                         @enderror
@@ -85,7 +85,7 @@
 
                     <div>
                         <label for="password_baru_confirmation" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                            Konfirmasi Password Baru
+                            Ulangi Kata Sandi Baru
                         </label>
                         <div class="relative">
                             <input type="password" id="password_baru_confirmation" name="password_baru_confirmation"
@@ -98,14 +98,14 @@
                         </div>
                     </div>
 
-                    <div class="pt-2">
+                    <div class="pt-2 lg:col-span-3">
                         <button type="submit"
                             class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700
                                    dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white text-sm font-medium
                                    transition shadow-sm hover:shadow-md">
                             <span class="flex items-center justify-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                Simpan Password Baru
+                                Simpan Kata Sandi
                             </span>
                         </button>
                     </div>
@@ -125,8 +125,8 @@
                     </svg>
                 </div>
                 <div class="text-left">
-                    <h2 class="text-sm sm:text-base font-semibold text-slate-800 dark:text-slate-100">Mode Tampilan</h2>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Pilih tema terang, gelap, atau ikuti sistem</p>
+                    <h2 class="text-sm sm:text-base font-semibold text-slate-800 dark:text-slate-100">Tema Aplikasi</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Pilih tampilan terang, gelap, atau sesuai perangkat</p>
                 </div>
             </div>
             <svg id="theme-section-chevron" class="w-5 h-5 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">

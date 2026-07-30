@@ -335,14 +335,14 @@
         </div>
         {{-- Status Kelayakan Aplikasi --}}
         <div class="status-banner" style="flex: 1;">
-            <div class="label">Kelayakan Aplikasi Pemupukan</div>
+            <div class="label">Kesiapan Pemupukan</div>
             <div class="value">{{ $rekomendasiRbs->label_kelayakan }}</div>
         </div>
     </div>
 
     @if($rekomendasiRbs->alasan_kelayakan)
     <div style="font-size: 9px; color: #475569; margin-bottom: 12px; padding: 4px 8px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 3px;">
-        <strong>Alasan Kelayakan:</strong> {{ $rekomendasiRbs->alasan_kelayakan }}
+        <strong>Alasan Kesiapan:</strong> {{ $rekomendasiRbs->alasan_kelayakan }}
     </div>
     @endif
 
@@ -386,7 +386,7 @@
         {{-- Rentang Referensi Pahan --}}
         @if($rekomendasiRbs->urea_min_kg_per_pokok_tahun)
         <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 9px;">
-            <p style="font-weight: 700; color: #1e40af; margin-bottom: 4px;">📖 Rentang Referensi Pahan (2013) — Tabel 9.13 & 9.14</p>
+            <p style="font-weight: 700; color: #1e40af; margin-bottom: 4px;">Acuan dosis: Iyung Pahan (2013)</p>
             <p style="color: #1e3a5f;">
                 Urea: {{ number_format($rekomendasiRbs->urea_min_kg_per_pokok_tahun, 2) }}–{{ number_format($rekomendasiRbs->urea_max_kg_per_pokok_tahun, 2) }} kg/pokok/tahun
                 &nbsp;|&nbsp;
@@ -605,7 +605,7 @@
     {{-- ═══ 10. DETAIL TEKNIS (font kecil, untuk dokumentasi) ═══ --}}
     @if($rekomendasiRbs->rules_terpicu && count($rekomendasiRbs->rules_terpicu) > 0)
     <div class="section">
-        <div class="section-title">Detail Teknis — Rules Terpicu ({{ $rekomendasiRbs->jumlah_rule_terpicu }})</div>
+        <div class="section-title">Detail Teknis — Aturan yang Sesuai ({{ $rekomendasiRbs->jumlah_rule_terpicu }})</div>
         <table class="rules-table">
             <thead>
                 <tr>
@@ -710,19 +710,23 @@
     </div>
     @endif
 
-    {{-- ═══ 11. META INFO — validitas & keandalan ═══ --}}
+    @php
+        $currentDataReady = $observationCompleteness['can_run_diagnosis'] ?? $rekomendasiRbs->data_cukup;
+        $dataPendukungKurang = collect($observationCompleteness['missing_fields'] ?? $rekomendasiRbs->data_kurang ?? [])->filter()->values();
+    @endphp
+    {{-- ═══ 11. META INFO — ketersediaan data ═══ --}}
     <div class="meta-info">
-        <strong>Validitas:</strong> {{ $rekomendasiRbs->validitas_rekomendasi ?? 'Estimasi Visual' }}
-        &nbsp;·&nbsp;
-        <strong>Tingkat Kelengkapan & Keandalan Data:</strong> {{ $rekomendasiRbs->kategori_keandalan ?? 'Data Tidak Cukup' }} ({{ $rekomendasiRbs->kelengkapan_data_score ?? 0 }}%)
-        @if(!$rekomendasiRbs->data_cukup)
-        &nbsp;·&nbsp; <span style="color: #dc2626;">Data observasi belum lengkap</span>
+        <strong>Data analisis:</strong> {{ $currentDataReady ? 'Tersedia' : 'Belum lengkap' }}
+        @if($dataPendukungKurang->isNotEmpty())
+        &nbsp;·&nbsp; <strong>Data pendukung belum tersedia:</strong> {{ $dataPendukungKurang->implode(', ') }}
+        @else
+        &nbsp;·&nbsp; <strong>Data pendukung:</strong> Lengkap
         @endif
     </div>
 
     {{-- ═══ 12. DISCLAIMER ═══ --}}
     <div class="disclaimer">
-        <strong>Disclaimer:</strong> Estimasi sistem merupakan nilai kerja dari rentang referensi Pahan (2013) dan bukan pengganti analisis laboratorium atau rekomendasi agronomis lapangan. Perhitungan kuantitatif dibatasi pada Urea dan MOP/KCl. Unsur P, Mg, B, dan unsur lain tetap dapat diperlukan sesuai kondisi tanaman dan hasil evaluasi ahli.
+        <strong>Disclaimer:</strong> Estimasi sistem merupakan nilai kerja dari acuan Iyung Pahan (2013) dan bukan pengganti analisis laboratorium atau rekomendasi agronomis lapangan. Perhitungan kuantitatif dibatasi pada Urea dan MOP/KCl. Unsur P, Mg, B, dan unsur lain tetap dapat diperlukan sesuai kondisi tanaman dan hasil evaluasi ahli.
     </div>
 
 

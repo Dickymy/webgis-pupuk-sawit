@@ -1,118 +1,132 @@
 @extends('layouts.app')
 
-@section('title', 'Rule Base RBS')
-@section('page-title', 'Rule Base')
-@section('page-subtitle', 'Aturan diagnosis kondisi tanaman & rekomendasi pemupukan')
+@section('title', 'Rule Based')
+@section('page-title', 'Rule Based')
+@section('page-subtitle', 'Kelola aturan keputusan dan sumber pengetahuannya')
 
 @section('content')
-<div class="space-y-4">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <p class="text-xs text-slate-500"><span class="font-bold text-slate-800">{{ $rules->count() }}</span> aturan · <span class="text-emerald-600 font-semibold">{{ $rules->where('aktif', true)->count() }}</span> aktif</p>
-        <div class="flex items-center gap-2">
-            <a href="{{ route('rule-base.info') }}"
-               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-medium rounded-lg transition-colors">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Info
-            </a>
-            <a href="{{ route('rule-base.create') }}"
-               class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition-all shadow-sm">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Tambah Aturan
-            </a>
-        </div>
-    </div>
+@php
+    $activeRules = $rules->where('aktif', true);
+    $pendingRules = $rules->where('aktif', false);
+    $visualRuleCount = $activeRules->where('jenis_rule', 'DIAGNOSIS_VISUAL')->count();
+    $timingRuleCount = $activeRules->where('jenis_rule', 'PEMBATAS_APLIKASI')->count();
+@endphp
 
-    {{-- Penjelasan singkat --}}
-    <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-700 leading-relaxed">
-        💡 Setiap aturan berisi <strong>JIKA</strong> (kondisi yang harus terpenuhi) <strong>MAKA</strong> (rekomendasi yang diberikan). Sistem mencocokkan kondisi lahan dengan aturan-aturan ini untuk menghasilkan rekomendasi pemupukan.
-    </div>
-
-    {{-- Rules List — Card Format IF-THEN --}}
-    <div class="space-y-3">
-        @forelse($rules as $i => $rule)
-        @php
-            $statusColor = match($rule->status_kebutuhan) {
-                'Darurat' => 'border-l-red-500 bg-red-50/30',
-                'Segera'  => 'border-l-orange-400 bg-orange-50/30',
-                'Normal'  => 'border-l-emerald-400 bg-emerald-50/20',
-                'Tunda'   => 'border-l-slate-400 bg-slate-50/50',
-                default   => 'border-l-blue-400',
-            };
-            $statusBadge = match($rule->status_kebutuhan) {
-                'Darurat' => 'bg-red-100 text-red-800',
-                'Segera'  => 'bg-orange-100 text-orange-800',
-                'Normal'  => 'bg-emerald-100 text-emerald-800',
-                'Tunda'   => 'bg-slate-100 text-slate-700',
-                default   => 'bg-blue-100 text-blue-800',
-            };
-        @endphp
-        <div class="bg-white border border-slate-200 border-l-4 {{ $statusColor }} rounded-xl shadow-sm overflow-hidden {{ !$rule->aktif ? 'opacity-50' : '' }}">
-            <div class="p-4">
-                {{-- Header: Status + Prioritas + Aksi --}}
-                <div class="flex items-center justify-between gap-2 mb-3">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $statusBadge }}">{{ \App\Models\RekomendasiRbs::labelStatus($rule->status_kebutuhan) }}</span>
-                        <span class="text-[10px] text-slate-400">Prioritas {{ $rule->prioritas }}</span>
-                        @if(!$rule->aktif)
-                        <span class="text-[10px] text-red-500 font-medium">● Nonaktif</span>
-                        @endif
-                    </div>
-                    <div class="flex items-center gap-1 flex-shrink-0">
-                        <a href="{{ route('rule-base.edit', $rule) }}" class="p-1.5 rounded-md text-slate-400 hover:text-blue-700 hover:bg-blue-50 transition-all" title="Edit">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                        </a>
-                        <form action="{{ route('rule-base.destroy', $rule) }}" method="POST" class="inline">
-                            @csrf @method('DELETE')
-                            <button type="button" onclick="confirmDelete(this.closest('form'), '{{ \Illuminate\Support\Str::limit($rule->indikasi_masalah, 20) }}')" class="p-1.5 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all" title="Hapus">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            </button>
-                        </form>
-                    </div>
+<div class="w-full space-y-4">
+    <section class="rounded-2xl border border-emerald-200 bg-emerald-50/70 px-4 py-3.5 shadow-sm dark:border-emerald-900 dark:bg-emerald-950/30">
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-100">
+                    <span class="text-emerald-700 dark:text-emerald-300">Alur sistem</span>
+                    <span class="rounded-lg border border-emerald-200 bg-white px-2.5 py-1 dark:border-emerald-800 dark:bg-slate-900">Observasi</span>
+                    <span aria-hidden="true" class="text-emerald-500">→</span>
+                    <span class="rounded-lg border border-emerald-200 bg-white px-2.5 py-1 dark:border-emerald-800 dark:bg-slate-900">Cocokkan rule</span>
+                    <span aria-hidden="true" class="text-emerald-500">→</span>
+                    <span class="rounded-lg border border-emerald-200 bg-white px-2.5 py-1 dark:border-emerald-800 dark:bg-slate-900">Hasil rekomendasi</span>
                 </div>
-
-                {{-- IF Section --}}
-                <div class="mb-3">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">JIKA</p>
-                    <p class="text-xs text-slate-700 leading-relaxed">
-                        @php $conditions = []; @endphp
-                        @if($rule->kondisi_warna_daun) @php $conditions[] = "warna daun <strong>{$rule->kondisi_warna_daun}</strong>"; @endphp @endif
-                        @if($rule->kondisi_ph_min || $rule->kondisi_ph_max) @php $conditions[] = "pH tanah <strong>" . ($rule->kondisi_ph_min ?? '?') . " – " . ($rule->kondisi_ph_max ?? '?') . "</strong>"; @endphp @endif
-                        @if($rule->kondisi_kelembaban) @php $conditions[] = "kelembaban <strong>{$rule->kondisi_kelembaban}</strong>"; @endphp @endif
-                        @if($rule->kondisi_curah_hujan_kategori) @php $conditions[] = "curah hujan <strong>{$rule->kondisi_curah_hujan_kategori}</strong>"; @endphp @endif
-                        @if($rule->kondisi_musim) @php $conditions[] = "musim <strong>{$rule->kondisi_musim}</strong>"; @endphp @endif
-                        @if($rule->kondisi_drainase) @php $conditions[] = "drainase <strong>{$rule->kondisi_drainase}</strong>"; @endphp @endif
-                        @if($rule->kondisi_defisiensi) @php $conditions[] = "ada dugaan defisiensi <strong>{$rule->kondisi_defisiensi}</strong>"; @endphp @endif
-                        @if($rule->kondisi_kategori_umur) @php $conditions[] = "umur tanaman <strong>{$rule->kondisi_kategori_umur}</strong>"; @endphp @endif
-                        @if($rule->kondisi_pelepah) @php $conditions[] = "pelepah <strong>{$rule->kondisi_pelepah}</strong>"; @endphp @endif
-                        @if($rule->kondisi_tandan) @php $conditions[] = "tandan <strong>{$rule->kondisi_tandan}</strong>"; @endphp @endif
-                        @if($rule->ada_serangan_hama === true) @php $conditions[] = "<strong>ada serangan hama</strong>"; @endphp @endif
-                        @if($rule->ada_gulma_dominan === true) @php $conditions[] = "<strong>ada gulma dominan</strong>"; @endphp @endif
-                        {!! implode(' <span class="text-slate-400">DAN</span> ', $conditions) !!}
-                    </p>
-                </div>
-
-                {{-- THEN Section --}}
-                <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">MAKA</p>
-                    <p class="text-xs font-semibold text-slate-800 mb-1">{{ $rule->indikasi_masalah }}</p>
-                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600">
-                        <span>💊 <strong>{{ $rule->jenis_pupuk_utama }}</strong></span>
-                        @if($rule->jenis_pupuk_pendukung)
-                        <span class="text-slate-400">+ {{ $rule->jenis_pupuk_pendukung }}</span>
-                        @endif
-                    </div>
-                    @if($rule->dosis_anjuran)
-                    <p class="text-[10px] text-slate-500 mt-1">Dosis: {{ $rule->dosis_anjuran }}</p>
-                    @endif
-                </div>
+                <p class="mt-2 text-xs leading-5 text-slate-600 dark:text-slate-300">Rule baru disimpan sebagai belum digunakan. Pastikan kondisi, hasil, dan sumbernya sesuai sebelum memilih Gunakan.</p>
+            </div>
+            <div class="flex flex-col gap-2 sm:flex-row">
+                <a href="{{ route('rule-base.info') }}" class="inline-flex min-h-10 items-center justify-center rounded-xl border border-emerald-300 bg-white px-3.5 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-300">Penjelasan Rule Based</a>
+                <a href="{{ route('rule-base.create') }}" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Tambah Rule
+                </a>
             </div>
         </div>
-        @empty
-        <div class="bg-white border border-slate-200 rounded-xl p-8 text-center shadow-sm">
-            <p class="text-slate-400 text-sm mb-2">Belum ada aturan.</p>
-            <a href="{{ route('rule-base.create') }}" class="text-emerald-600 text-sm font-semibold hover:underline">Tambah aturan →</a>
+    </section>
+
+    <section class="grid grid-cols-3 gap-2 sm:gap-3" aria-label="Ringkasan rule">
+        <div class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+            <p class="text-[10px] uppercase text-slate-400">Rule digunakan</p>
+            <p class="mt-1 text-xl font-bold text-slate-800 dark:text-slate-100">{{ $activeRules->count() }}</p>
         </div>
-        @endforelse
+        <div class="rounded-xl border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900 dark:bg-amber-950/30">
+            <p class="text-[10px] uppercase text-amber-700 dark:text-amber-300">Kondisi daun</p>
+            <p class="mt-1 text-xl font-bold text-amber-800 dark:text-amber-200">{{ $visualRuleCount }}</p>
+        </div>
+        <div class="rounded-xl border border-blue-200 bg-blue-50/60 p-3 dark:border-blue-900 dark:bg-blue-950/30">
+            <p class="text-[10px] uppercase text-blue-700 dark:text-blue-300">Waktu pemupukan</p>
+            <p class="mt-1 text-xl font-bold text-blue-800 dark:text-blue-200">{{ $timingRuleCount }}</p>
+        </div>
+    </section>
+
+    <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <h2 class="text-base font-bold text-slate-900 dark:text-white">Aturan yang dikelola</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Rule arsip lama tidak ditampilkan dan tidak memengaruhi analisis.</p>
+        </div>
+        @if($pendingRules->isNotEmpty())
+            <p class="text-xs font-semibold text-amber-700 dark:text-amber-300">{{ $pendingRules->count() }} rule belum digunakan</p>
+        @endif
     </div>
+
+    <section class="space-y-3">
+        @forelse($rules as $rule)
+            @php
+                $isVisual = $rule->jenis_rule === 'DIAGNOSIS_VISUAL';
+                if ($isVisual) {
+                    $condition = 'Kondisi daun: '.$rule->kondisi_warna_daun;
+                } elseif ($rule->kondisi_curah_hujan_min_mm !== null && $rule->kondisi_curah_hujan_max_mm !== null) {
+                    $condition = 'Curah hujan '.(float) $rule->kondisi_curah_hujan_min_mm.'–'.(float) $rule->kondisi_curah_hujan_max_mm.' mm/bulan';
+                } elseif ($rule->kondisi_curah_hujan_min_mm !== null) {
+                    $condition = 'Curah hujan minimal '.(float) $rule->kondisi_curah_hujan_min_mm.' mm/bulan';
+                } else {
+                    $condition = 'Curah hujan maksimal '.(float) $rule->kondisi_curah_hujan_max_mm.' mm/bulan';
+                }
+                $source = filled($rule->sumber_penulis)
+                    ? $rule->sumber_penulis.($rule->sumber_tahun ? ' ('.$rule->sumber_tahun.')' : '')
+                    : $rule->sumber_judul;
+            @endphp
+
+            <article class="overflow-hidden rounded-xl border bg-white shadow-sm dark:bg-slate-800 {{ $rule->aktif ? 'border-slate-200 dark:border-slate-700' : 'border-amber-200 dark:border-amber-900' }}">
+                <header class="flex flex-col gap-3 border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="rounded-md bg-slate-900 px-2 py-1 font-mono text-[10px] font-bold text-white dark:bg-slate-100 dark:text-slate-900">{{ $rule->kode_rule }}</span>
+                        <span class="rounded-full px-2 py-1 text-[9px] font-semibold {{ $rule->aktif ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' }}">{{ $rule->aktif ? 'Digunakan' : 'Belum digunakan' }}</span>
+                        <span class="text-[10px] text-slate-400">Versi {{ $rule->versi_rule }} · Prioritas {{ $rule->prioritas }}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="{{ route('rule-base.edit', $rule) }}" class="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700">Edit</a>
+                        @if($rule->aktif)
+                            <form method="POST" action="{{ route('rule-base.status', $rule) }}">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="action" value="deactivate">
+                                <button type="button" onclick="showConfirm('Rule tidak akan digunakan pada analisis baru. Lanjutkan?', () => this.form.submit())" class="inline-flex min-h-10 items-center justify-center rounded-xl border border-red-200 px-3 text-xs font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-900 dark:text-red-300">Hentikan</button>
+                            </form>
+                        @else
+                            <form method="POST" action="{{ route('rule-base.status', $rule) }}">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="action" value="activate">
+                                <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-xl bg-emerald-600 px-3 text-xs font-bold text-white transition hover:bg-emerald-700">Gunakan</button>
+                            </form>
+                        @endif
+                    </div>
+                </header>
+
+                <div class="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+                    <div class="p-4">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-blue-600">Jika</p>
+                        <p class="mt-1 text-sm font-semibold leading-6 text-slate-900 dark:text-white">{{ $condition }}</p>
+                    </div>
+                    <div class="border-t border-slate-100 bg-slate-50/70 p-4 dark:border-slate-700 dark:bg-slate-900/30 lg:border-l lg:border-t-0">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-600">Maka</p>
+                        <p class="mt-1 text-sm font-semibold leading-6 text-slate-900 dark:text-white">{{ $rule->indikasi_masalah }}</p>
+                        <p class="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">{{ $rule->saran_tindakan }}</p>
+                    </div>
+                </div>
+
+                <footer class="flex flex-col gap-1 border-t border-slate-100 px-4 py-3 text-[10px] text-slate-500 dark:border-slate-700 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+                    <span><strong>Sumber:</strong> {{ $source ?: 'Belum lengkap' }}</span>
+                    <span>{{ $isVisual ? 'Kondisi daun' : 'Waktu pemupukan' }}</span>
+                </footer>
+            </article>
+        @empty
+            <div class="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center dark:border-slate-700 dark:bg-slate-800">
+                <p class="text-sm text-slate-500">Belum ada rule yang dapat dikelola.</p>
+                <a href="{{ route('rule-base.create') }}" class="mt-3 inline-flex min-h-10 items-center rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white">Tambah Rule</a>
+            </div>
+        @endforelse
+    </section>
 </div>
 @endsection
