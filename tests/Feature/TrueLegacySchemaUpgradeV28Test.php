@@ -32,19 +32,18 @@ class TrueLegacySchemaUpgradeV28Test extends TestCase
         $this->assertTrue(Schema::hasTable('rekomendasi_operasional_histories'));
     }
 
-    public function test_rollback_latest_academic_enum_migration_is_safe(): void
+    public function test_rollback_academic_enum_migration_is_safe(): void
     {
-        // Migrasi terbaru hanya memperluas enum warna daun pada MySQL.
-        // Rollback satu step tidak boleh menghapus skema v2.8 yang lebih lama.
-        // Test ini memastikan rollback tidak crash
+        // Rollback migrasi enum secara eksplisit agar penambahan migrasi baru
+        // tidak mengubah migration yang diuji.
         LegacySchemaBuilder::insertLegacyData();
 
         Artisan::call('migrate:rollback', [
-            '--step' => 1,
+            '--path' => 'database/migrations/2026_07_28_195630_expand_warna_daun_enum_for_academic_rules.php',
             '--force' => true,
         ]);
 
-        // Kolom v2.8 tetap ada karena yang di-rollback hanya migrasi enum terbaru.
+        // Kolom v2.8 tetap ada karena yang di-rollback hanya migrasi enum.
         $this->assertTrue(Schema::hasColumn('program_pemupukans', 'active_key'));
 
         // Tabel utama masih ada

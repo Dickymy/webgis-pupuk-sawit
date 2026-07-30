@@ -161,7 +161,13 @@ class TrueLegacySchemaUpgradeTest extends TestCase
         // 8. Verify legacy data with null program_pemupukan_id is acceptable
         $this->assertNull($realisasi->program_pemupukan_id);
 
-        // 9. Rollback v2.7 migrations
+        // 9. Rollback v2.7 migrations.
+        // active_key harus di-rollback lebih dahulu agar status migration-nya
+        // tidak tertinggal ketika tabel program_pemupukans dibuat ulang.
+        Artisan::call('migrate:rollback', [
+            '--path' => 'database/migrations/2026_07_23_000001_add_active_key_to_program_pemupukans_table.php',
+            '--force' => true,
+        ]);
         Artisan::call('migrate:rollback', [
             '--path' => 'database/migrations/2026_07_22_000002_create_rekomendasi_operasional_histories_table.php',
             '--force' => true,
