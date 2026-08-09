@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\RuleBaseLanjutan;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Menyediakan tujuh rule sistem yang memiliki sumber akademik.
@@ -233,7 +234,8 @@ class RuleBaseSeeder extends Seeder
             'status_validasi' => 'TERVERIFIKASI_SUMBER',
         ], $source, $attributes);
 
-        $validColumns = array_flip(\Illuminate\Support\Facades\Schema::getColumnListing('rule_bases_lanjutan'));
+        $validColumns = array_flip(Schema::getColumnListing('rule_bases_lanjutan'));
+
         return array_intersect_key($merged, $validColumns);
     }
 

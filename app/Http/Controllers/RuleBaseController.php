@@ -214,16 +214,16 @@ class RuleBaseController extends Controller
     {
         if ($data['jenis_rule'] === self::JENIS_VISUAL) {
             $parts = [];
-            if (!empty($data['kondisi_warna_daun'])) {
-                $parts[] = 'kondisi daun ' . $data['kondisi_warna_daun'];
+            if (! empty($data['kondisi_warna_daun'])) {
+                $parts[] = 'kondisi daun '.$data['kondisi_warna_daun'];
             }
-            if (!empty($data['kondisi_topografi'])) {
-                $parts[] = 'topografi ' . $data['kondisi_topografi'];
+            if (! empty($data['kondisi_topografi'])) {
+                $parts[] = 'topografi '.$data['kondisi_topografi'];
             }
-            
+
             $conditionText = empty($parts) ? 'kondisi lahan sesuai' : implode(' AND ', $parts);
-            
-            return 'IF ' . $conditionText . ' THEN ' . $data['indikasi_masalah'] . '.';
+
+            return 'IF '.$conditionText.' THEN '.$data['indikasi_masalah'].'.';
         }
 
         $min = $data['kondisi_curah_hujan_min_mm'] ?? null;

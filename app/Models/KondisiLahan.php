@@ -51,5 +51,4 @@ class KondisiLahan extends Model
     {
         return $this->hasMany(RekomendasiRbs::class);
     }
-
 }
