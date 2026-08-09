@@ -21,7 +21,6 @@ class SupportingFertilizerSanitizerTest extends TestCase
         $rule = new RuleBaseLanjutan([
             'jenis_pupuk_utama' => 'Dolomit (Kapur Pertanian)',
             'jenis_pupuk_pendukung' => null,
-            'dosis_anjuran' => '500-1000 kg/Ha',
             'metode_aplikasi' => 'Sebar merata',
             'waktu_aplikasi' => 'Awal musim hujan',
             'status_validasi' => null,
@@ -39,7 +38,6 @@ class SupportingFertilizerSanitizerTest extends TestCase
         $rule = new RuleBaseLanjutan([
             'jenis_pupuk_utama' => 'Borax (Na2B4O7)',
             'jenis_pupuk_pendukung' => null,
-            'dosis_anjuran' => '50-100 g/pokok',
             'metode_aplikasi' => 'Tabur di piringan',
             'waktu_aplikasi' => 'Awal musim hujan',
             'status_validasi' => null,
@@ -55,7 +53,6 @@ class SupportingFertilizerSanitizerTest extends TestCase
         $rule = new RuleBaseLanjutan([
             'jenis_pupuk_utama' => 'Kieserit (27% MgO)',
             'jenis_pupuk_pendukung' => null,
-            'dosis_anjuran' => '1.0-1.5 kg/pokok',
             'metode_aplikasi' => 'Sebar di piringan',
             'waktu_aplikasi' => 'Awal musim hujan',
             'status_validasi' => 'TERVERIFIKASI_SUMBER',
@@ -78,7 +75,6 @@ class SupportingFertilizerSanitizerTest extends TestCase
         $rule = new RuleBaseLanjutan([
             'jenis_pupuk_utama' => 'FeSO4 (Ferrous Sulfate)',
             'jenis_pupuk_pendukung' => null,
-            'dosis_anjuran' => '50-75 g/pokok',
             'metode_aplikasi' => 'Siram ke piringan',
             'waktu_aplikasi' => 'Saat gejala terlihat',
             'status_validasi' => 'TERVERIFIKASI_AHLI',
@@ -97,7 +93,6 @@ class SupportingFertilizerSanitizerTest extends TestCase
         $rule = new RuleBaseLanjutan([
             'jenis_pupuk_utama' => 'Urea (46% N)',
             'jenis_pupuk_pendukung' => null,
-            'dosis_anjuran' => '1.5-2.0 kg/pokok',
             'metode_aplikasi' => 'Tabur melingkar',
             'waktu_aplikasi' => 'Awal musim hujan',
             'status_validasi' => null,

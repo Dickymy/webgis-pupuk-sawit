@@ -77,7 +77,7 @@ class AcademicRuleEvidencePolicyTest extends TestCase
         }
 
         $activeOutput = RuleBaseLanjutan::where('aktif', true)
-            ->get(['jenis_pupuk_utama', 'jenis_pupuk_pendukung', 'dosis_anjuran'])
+            ->get(['jenis_pupuk_utama', 'jenis_pupuk_pendukung'])
             ->toJson();
 
         foreach (['Borax', 'Dolomit', 'KNO3', 'FeSO4', 'TSP', 'ZnSO4'] as $unsupported) {

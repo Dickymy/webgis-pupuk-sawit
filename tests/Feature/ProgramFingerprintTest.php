@@ -38,7 +38,6 @@ class ProgramFingerprintTest extends TestCase
             'blok_lahan_id' => $this->blok->id,
             'tanggal_observasi' => now()->subDays(5),
             'warna_daun' => 'Hijau Normal',
-            'ph_tanah' => 5.5,
             'kelembaban_tanah' => 'Lembab',
             'curah_hujan_mm_bulanan' => 180,
             'curah_hujan_kategori' => 'Normal',

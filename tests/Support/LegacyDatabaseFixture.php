@@ -95,7 +95,6 @@ class LegacyDatabaseFixture
             $ruleId = DB::table('rule_bases_lanjutan')->insertGetId([
                 'indikasi_masalah' => 'Rule Custom Pengguna',
                 'jenis_pupuk_utama' => 'Urea',
-                'dosis_anjuran' => '1.5 kg/pokok/tahun',
                 'saran_tindakan' => 'Saran custom dari pengguna',
                 'status_kebutuhan' => 'Normal',
                 'prioritas' => 50,

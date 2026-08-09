@@ -28,8 +28,7 @@ class RuleEvaluationTest extends TestCase
         $rule = new RuleBaseLanjutan;
         $rule->kondisi_warna_daun = $attrs['kondisi_warna_daun'] ?? null;
         $rule->kondisi_defisiensi = $attrs['kondisi_defisiensi'] ?? null;
-        $rule->kondisi_ph_min = $attrs['kondisi_ph_min'] ?? null;
-        $rule->kondisi_ph_max = $attrs['kondisi_ph_max'] ?? null;
+
         $rule->kondisi_kelembaban = $attrs['kondisi_kelembaban'] ?? null;
         $rule->kondisi_curah_hujan_kategori = $attrs['kondisi_curah_hujan_kategori'] ?? null;
         $rule->kondisi_curah_hujan_min_mm = $attrs['kondisi_curah_hujan_min_mm'] ?? null;
@@ -55,7 +54,7 @@ class RuleEvaluationTest extends TestCase
         $kondisi = new KondisiLahan;
         $kondisi->warna_daun = $attrs['warna_daun'] ?? null;
         $kondisi->gejala_defisiensi = $attrs['gejala_defisiensi'] ?? null;
-        $kondisi->ph_tanah = $attrs['ph_tanah'] ?? null;
+
         $kondisi->kelembaban_tanah = $attrs['kelembaban_tanah'] ?? null;
         $kondisi->curah_hujan_kategori = $attrs['curah_hujan_kategori'] ?? null;
         $kondisi->curah_hujan_mm_bulanan = $attrs['curah_hujan_mm_bulanan'] ?? null;
@@ -166,7 +165,7 @@ class RuleEvaluationTest extends TestCase
         $kondisi = $this->makeKondisi([
             'warna_daun' => 'Hijau Normal',
             'kondisi_drainase' => 'Buruk — Tergenang',
-            'ph_tanah' => 5.5,
+
             'gejala_defisiensi' => ['K'],
         ]);
 
@@ -230,45 +229,7 @@ class RuleEvaluationTest extends TestCase
         $this->assertTrue($result, 'Rule seharusnya terpicu ketika semua syarat cocok');
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // 7. Rule pH range
-    // ═══════════════════════════════════════════════════════════════
 
-    public function test_rule_ph_range_cocok(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_ph_min' => 3.0,
-            'kondisi_ph_max' => 4.5,
-        ]);
-
-        $kondisi = $this->makeKondisi(['ph_tanah' => 4.0]);
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertTrue($result);
-    }
-
-    public function test_rule_ph_range_di_luar(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_ph_min' => 3.0,
-            'kondisi_ph_max' => 4.5,
-        ]);
-
-        $kondisi = $this->makeKondisi(['ph_tanah' => 5.0]);
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertFalse($result);
-    }
-
-    public function test_rule_ph_null_gagal(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_ph_min' => 3.0,
-            'kondisi_ph_max' => 4.5,
-        ]);
-
-        $kondisi = $this->makeKondisi(['ph_tanah' => null]);
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertFalse($result, 'Rule pH harus gagal jika pH input null');
-    }
 
     public function test_rule_curah_hujan_numerik_memakai_batas_minimum_dan_maksimum(): void
     {
