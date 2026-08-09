@@ -76,8 +76,6 @@ class TrueLegacySchemaUpgradeTest extends TestCase
             'kondisi_warna_daun' => 'Kuning Pucat',
             'indikasi_masalah' => 'Kekurangan nitrogen',
             'jenis_pupuk_utama' => 'Urea',
-            'metode_aplikasi' => 'Tabur melingkar',
-            'waktu_aplikasi' => 'Saat curah hujan normal',
             'saran_tindakan' => 'Tambah Urea segera',
             'status_kebutuhan' => 'Segera',
             'prioritas' => 1,

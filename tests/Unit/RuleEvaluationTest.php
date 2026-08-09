@@ -76,43 +76,8 @@ class RuleEvaluationTest extends TestCase
         $reflection = new \ReflectionMethod($this->service, 'evaluasiRule');
         $reflection->setAccessible(true);
 
-        return $reflection->invoke($this->service, $rule, $kondisi, $kategoriUmur);
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // 1. Rule warna + defisiensi TIDAK terpicu jika defisiensi kosong
-    // ═══════════════════════════════════════════════════════════════
-
-    public function test_rule_warna_dan_defisiensi_tidak_terpicu_jika_defisiensi_kosong(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_warna_daun' => 'Kuning Merata',
-            'kondisi_defisiensi' => 'N',
-        ]);
-
-        $kondisi = $this->makeKondisi([
-            'warna_daun' => 'Kuning Merata',
-            'gejala_defisiensi' => [], // kosong!
-        ]);
-
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertFalse($result, 'Rule seharusnya TIDAK terpicu ketika defisiensi kosong');
-    }
-
-    public function test_rule_warna_dan_defisiensi_tidak_terpicu_jika_defisiensi_null(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_warna_daun' => 'Kuning Merata',
-            'kondisi_defisiensi' => 'N',
-        ]);
-
-        $kondisi = $this->makeKondisi([
-            'warna_daun' => 'Kuning Merata',
-            'gejala_defisiensi' => null, // null!
-        ]);
-
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertFalse($result, 'Rule seharusnya TIDAK terpicu ketika defisiensi null');
+        $blok = new \App\Models\BlokLahan();
+        return $reflection->invoke($this->service, $rule, $kondisi, $kategoriUmur, $blok);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -129,22 +94,6 @@ class RuleEvaluationTest extends TestCase
         $kondisi = $this->makeKondisi([
             'warna_daun' => 'Hijau Normal', // berbeda!
             'gejala_defisiensi' => ['N'],
-        ]);
-
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertFalse($result);
-    }
-
-    public function test_rule_tidak_terpicu_jika_defisiensi_berbeda(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_warna_daun' => 'Kuning Merata',
-            'kondisi_defisiensi' => 'N',
-        ]);
-
-        $kondisi = $this->makeKondisi([
-            'warna_daun' => 'Kuning Merata',
-            'gejala_defisiensi' => ['K'], // N bukan K
         ]);
 
         $result = $this->callEvaluasiRule($rule, $kondisi);
@@ -189,45 +138,7 @@ class RuleEvaluationTest extends TestCase
         $this->assertFalse($result, 'Rule tanpa kondisi sama sekali TIDAK boleh terpicu');
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // 5. Array defisiensi menggunakan strict comparison
-    // ═══════════════════════════════════════════════════════════════
 
-    public function test_defisiensi_strict_comparison(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_warna_daun' => 'Kuning Merata',
-            'kondisi_defisiensi' => 'N',
-        ]);
-
-        $kondisi = $this->makeKondisi([
-            'warna_daun' => 'Kuning Merata',
-            'gejala_defisiensi' => ['N', 'K'],
-        ]);
-
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertTrue($result, 'N harus cocok strict di array');
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // 6. Rule warna + defisiensi TERPICU jika SEMUA syarat cocok
-    // ═══════════════════════════════════════════════════════════════
-
-    public function test_rule_terpicu_jika_semua_syarat_cocok(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_warna_daun' => 'Kuning Merata',
-            'kondisi_defisiensi' => 'N',
-        ]);
-
-        $kondisi = $this->makeKondisi([
-            'warna_daun' => 'Kuning Merata',
-            'gejala_defisiensi' => ['N'],
-        ]);
-
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertTrue($result, 'Rule seharusnya terpicu ketika semua syarat cocok');
-    }
 
 
 

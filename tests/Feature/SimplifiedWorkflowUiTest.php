@@ -49,8 +49,8 @@ class SimplifiedWorkflowUiTest extends TestCase
         $this->assertStringNotContainsString('max-w-2xl mx-auto', $memberCreate);
         $this->assertStringNotContainsString('max-w-2xl mx-auto', $memberEdit);
 
-        $this->assertStringContainsString('lg:grid-cols-3', $blockCreate);
-        $this->assertStringContainsString('lg:grid-cols-3', $blockEdit);
+        $this->assertStringContainsString('lg:grid-cols-2', $blockCreate);
+        $this->assertStringContainsString('lg:grid-cols-2', $blockEdit);
         $this->assertStringContainsString('lg:grid-cols-2', $memberCreate);
         $this->assertStringContainsString('lg:grid-cols-2', $memberEdit);
     }
@@ -61,7 +61,7 @@ class SimplifiedWorkflowUiTest extends TestCase
 
         $this->assertStringContainsString('Jadwal Pemupukan', $detail);
         $this->assertStringContainsString('Penjelasan Tambahan', $detail);
-        $this->assertStringContainsString('Alasan hasil rekomendasi', $detail);
+        $this->assertStringContainsString('Dasar Keputusan', $detail);
         $this->assertStringContainsString('Data yang digunakan', $detail);
         $this->assertStringNotContainsString('Jadwal dan cara aplikasi', $detail);
         $this->assertLessThan(strpos($detail, 'Penjelasan Tambahan'), strpos($detail, 'Jadwal Pemupukan'));

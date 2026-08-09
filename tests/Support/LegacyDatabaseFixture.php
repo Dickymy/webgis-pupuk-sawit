@@ -52,7 +52,6 @@ class LegacyDatabaseFixture
             'tanggal_observasi' => '2026-05-15',
             'curah_hujan_mm_bulanan' => 160.0,
             'warna_daun' => 'Hijau Normal',
-            'kondisi_pelepah' => 'Normal',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
