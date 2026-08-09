@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\RuleBaseLanjutan;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Menyediakan tujuh rule sistem yang memiliki sumber akademik.
@@ -50,6 +51,14 @@ class RuleBaseSeeder extends Seeder
             year: 2021,
             pages: '67-80',
             table: 'Kriteria curah hujan untuk waktu pemupukan',
+        );
+
+        $topoSource = $this->source(
+            title: 'Panduan Lengkap Kelapa Sawit: Manajemen Agribisnis dari Hulu hingga Hilir',
+            authors: 'Iyung Pahan',
+            year: 2013,
+            pages: '82',
+            table: 'Tabel 4.5',
         );
 
         return [
@@ -161,6 +170,54 @@ class RuleBaseSeeder extends Seeder
                 'keterangan_rule' => 'IF curah hujan di atas 300 mm/bulan THEN tunda pemupukan.',
                 'catatan_validasi' => 'Pradiko dkk. (2021) merekomendasikan penundaan pemupukan pada curah hujan di atas 300 mm per bulan.',
             ]),
+            'TOPO-01' => $this->rule($topoSource, [
+                'kondisi_topografi' => 'Datar - Landai (< 12°)',
+                'indikasi_masalah' => 'Topografi ideal, limpasan air minimal',
+                'jenis_pupuk_utama' => 'Tidak ditentukan otomatis',
+                'dosis_anjuran' => 'Dosis tidak diubah; mengikuti tabel standar.',
+                'waktu_aplikasi' => 'Sesuai jadwal pemupukan standar.',
+                'saran_tindakan' => 'Kondisi topografi sangat ideal (< 12 derajat). Taburkan pupuk secara merata pada jarak ±30 cm dari pangkal pokok sampai batas luar piringan. Pemupukan manual maupun mekanis dapat dilakukan dengan efisiensi penyerapan yang maksimal.',
+                'metode_aplikasi' => 'Ditabur merata melingkar (Broadcasting)',
+                'status_kebutuhan' => 'Normal',
+                'prioritas' => 5,
+                'jenis_rule' => 'PENENTU_METODE',
+                'tingkat_keparahan' => 'NORMAL',
+                'kategori_kesimpulan' => 'METODE_DITENTUKAN',
+                'keterangan_rule' => 'IF topografi datar THEN metode broadcasting.',
+                'catatan_validasi' => 'Pahan (2013) Halaman 82 Tabel 4.5 menyatakan lereng < 12 derajat adalah kriteria Baik untuk retensi hara.',
+            ]),
+            'TOPO-02' => $this->rule($topoSource, [
+                'kondisi_topografi' => 'Bergelombang - Miring (12° - 23°)',
+                'indikasi_masalah' => 'Topografi miring, risiko pencucian pupuk',
+                'jenis_pupuk_utama' => 'Tidak ditentukan otomatis',
+                'dosis_anjuran' => 'Dosis tidak diubah; mengikuti tabel standar.',
+                'waktu_aplikasi' => 'Sesuai jadwal pemupukan standar.',
+                'saran_tindakan' => 'Topografi mulai miring (12-23 derajat), berisiko tinggi terjadi limpasan air hujan (run-off). Dilarang menabur merata di area bawah lereng. Buatlah teras individu (tapak kuda) pada masing-masing pokok, dan fokuskan penaburan pupuk pada piringan bagian atas lereng agar hara perlahan meresap ke zona perakaran bagian bawah.',
+                'metode_aplikasi' => 'Tabur di area terasan / benam dangkal (Pocketing)',
+                'status_kebutuhan' => 'Normal',
+                'prioritas' => 5,
+                'jenis_rule' => 'PENENTU_METODE',
+                'tingkat_keparahan' => 'SEDANG',
+                'kategori_kesimpulan' => 'METODE_DITENTUKAN',
+                'keterangan_rule' => 'IF topografi miring THEN metode pocketing atau terasan.',
+                'catatan_validasi' => 'Pahan (2013) Halaman 82 Tabel 4.5 menyatakan lereng 12-23 derajat adalah kriteria Kurang Baik, rawan erosi.',
+            ]),
+            'TOPO-03' => $this->rule($topoSource, [
+                'kondisi_topografi' => 'Curam - Berbukit (> 23°)',
+                'indikasi_masalah' => 'Topografi ekstrem, risiko tinggi pupuk hanyut',
+                'jenis_pupuk_utama' => 'Tidak ditentukan otomatis',
+                'dosis_anjuran' => 'Dosis tidak diubah; mengikuti tabel standar.',
+                'waktu_aplikasi' => 'Sesuai jadwal pemupukan standar.',
+                'saran_tindakan' => 'Lahan masuk kategori kelerengan ekstrem (> 23 derajat) dengan potensi erosi sangat tinggi. Dilarang keras menabur pupuk secara bebas di permukaan tanah karena pupuk pasti akan hanyut tercuci. Wajib membangun teras kontur yang bersinambungan dan rorak (parit buntu). Pupuk harus dibenamkan ke dalam tanah di sekitar area piringan (sistem pocket 3-4 lubang per pokok).',
+                'metode_aplikasi' => 'Sistem Benam (Pocket Placement) dalam Rorak',
+                'status_kebutuhan' => 'Normal',
+                'prioritas' => 5,
+                'jenis_rule' => 'PENENTU_METODE',
+                'tingkat_keparahan' => 'BERAT',
+                'kategori_kesimpulan' => 'METODE_DITENTUKAN',
+                'keterangan_rule' => 'IF topografi curam THEN metode sistem benam (pocketing) wajib.',
+                'catatan_validasi' => 'Pahan (2013) Halaman 82 Tabel 4.5 menyatakan lereng > 23 derajat adalah kriteria Tidak Baik, mewajibkan tindakan konservasi tanah.',
+            ]),
         ];
     }
 
@@ -171,31 +228,15 @@ class RuleBaseSeeder extends Seeder
      */
     private function rule(array $source, array $attributes): array
     {
-        return array_merge([
-            'kondisi_warna_daun' => null,
-            'kondisi_ph_min' => null,
-            'kondisi_ph_max' => null,
-            'kondisi_kelembaban' => null,
-            'kondisi_curah_hujan_kategori' => null,
-            'kondisi_curah_hujan_min_mm' => null,
-            'kondisi_curah_hujan_max_mm' => null,
-            'kondisi_musim' => null,
-            'kondisi_drainase' => null,
-            'kondisi_defisiensi' => null,
-            'kondisi_kategori_umur' => null,
-            'kondisi_pelepah' => null,
-            'kondisi_tandan' => null,
-            'ada_serangan_hama' => null,
-            'ada_gulma_dominan' => null,
-            'kondisi_intermediate' => null,
-            'prasyarat_intermediate' => null,
-            'jenis_pupuk_pendukung' => null,
-            'metode_aplikasi' => null,
+        $merged = array_merge([
             'aktif' => true,
             'is_system_rule' => true,
             'status_validasi' => 'TERVERIFIKASI_SUMBER',
-            'versi_rule' => '4.0',
         ], $source, $attributes);
+
+        $validColumns = array_flip(Schema::getColumnListing('rule_bases_lanjutan'));
+
+        return array_intersect_key($merged, $validColumns);
     }
 
     /**

@@ -15,8 +15,6 @@ class KondisiLahan extends Model
         'blok_lahan_id',
         'tanggal_observasi',
         'tanggal_pemupukan_terakhir',
-        'ph_tanah',
-        'metode_pengukuran_ph',
         'kelembaban_tanah',
         'curah_hujan_kategori',
         'curah_hujan_mm_bulanan',
@@ -24,9 +22,6 @@ class KondisiLahan extends Model
         'sumber_curah_hujan',
         'musim_saat_ini',
         'warna_daun',
-        'kondisi_pelepah',
-        'gejala_defisiensi',
-        'kondisi_tandan',
         'kondisi_drainase',
         'ada_gulma_dominan',
         'ada_serangan_hama',
@@ -40,10 +35,8 @@ class KondisiLahan extends Model
         return [
             'tanggal_observasi' => 'date',
             'tanggal_pemupukan_terakhir' => 'date',
-            'gejala_defisiensi' => 'array',
             'ada_gulma_dominan' => 'boolean',
             'ada_serangan_hama' => 'boolean',
-            'ph_tanah' => 'decimal:2',
             'curah_hujan_mm_bulanan' => 'decimal:1',
         ];
     }
@@ -57,21 +50,5 @@ class KondisiLahan extends Model
     public function rekomendasiRbs(): HasMany
     {
         return $this->hasMany(RekomendasiRbs::class);
-    }
-
-    // Accessor: label pH
-    public function getLabelPhAttribute(): string
-    {
-        if (is_null($this->ph_tanah)) {
-            return '-';
-        }
-
-        return match (true) {
-            $this->ph_tanah < 4.0 => 'Sangat Masam',
-            $this->ph_tanah < 5.5 => 'Masam',
-            $this->ph_tanah < 6.5 => 'Agak Masam (Optimal)',
-            $this->ph_tanah < 7.5 => 'Netral',
-            default => 'Basa',
-        };
     }
 }

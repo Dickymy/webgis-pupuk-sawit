@@ -44,8 +44,6 @@ class UpdateKondisiLahanRequest extends FormRequest
             'sumber_curah_hujan' => ['nullable', 'in:manual,open-meteo,alat_ukur,lainnya'],
             'musim_saat_ini' => ['nullable', Rule::in(['Musim Hujan', 'Musim Kemarau', 'Peralihan'])],
             'warna_daun' => ['required', Rule::in($leafValues)],
-            'gejala_defisiensi' => ['nullable', 'array'],
-            'gejala_defisiensi.*' => ['string'],
             'kondisi_drainase' => ['nullable', Rule::in(['Baik', 'Cukup', 'Buruk — Tergenang'])],
             'ada_gulma_dominan' => ['nullable', 'boolean'],
             'ada_serangan_hama' => ['nullable', 'boolean'],

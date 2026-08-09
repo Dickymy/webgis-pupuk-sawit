@@ -105,7 +105,7 @@ class FertilizationScheduleService
         };
 
         // Gunakan jumlah pokok dari snapshot (bukan data blok terkini)
-        $jumlahPokokSnapshot = $doseData['jumlah_pokok_snapshot'] ?? (int) ($blok->luas_ha * $blok->sph);
+        $jumlahPokokSnapshot = $doseData['jumlah_pokok_snapshot'] ?? $blok->jumlah_pokok_aktual;
 
         $jadwal[] = [
             'tahap' => $activeStage,

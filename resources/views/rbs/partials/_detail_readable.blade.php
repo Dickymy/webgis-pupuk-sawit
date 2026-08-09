@@ -13,8 +13,12 @@
     $isComplete = $statusStage === \App\Services\CurrentApplicationCalculator::SELESAI_TAHUNAN;
     $needsReview = $statusStage === \App\Services\CurrentApplicationCalculator::PERLU_VERIFIKASI_REALISASI;
     $currentDataReady = $observationCompleteness['can_run_diagnosis'] ?? $rbs?->data_cukup ?? false;
+    $isDataStrictlyComplete = $currentDataReady 
+        && !in_array($rbs?->status_kondisi_tanaman, ['PERLU_VERIFIKASI', 'BELUM_DIOBSERVASI'], true)
+        && $rbs?->status_kelayakan_aplikasi !== 'PERLU_VERIFIKASI_DATA';
+    
     $dataPendukungKurang = collect($observationCompleteness['missing_fields'] ?? $rbs?->data_kurang ?? [])->filter()->values();
-    $needsData = $rbs && (!$currentDataReady || $needsReview);
+    $needsData = $rbs && (!$isDataStrictlyComplete || $needsReview);
 
     $decisionKind = match (true) {
         !$rbs => 'no_result',
@@ -66,7 +70,7 @@
         default => ['Periksa data observasi dan histori realisasi.', 'Koreksi data yang belum sesuai.', 'Jalankan analisis kembali untuk memperbarui keputusan.'],
     };
 
-    $jumlahPokok = (int) ($rbs?->jumlah_pokok_snapshot ?: round(($blokLahan->luas_ha ?? 0) * ($blokLahan->sph ?? 0)));
+    $jumlahPokok = (int) ($rbs?->jumlah_pokok_snapshot ?: $blokLahan->jumlah_pokok_aktual);
     $annualUrea = $rbs?->urea_total_estimasi_tahunan;
     $annualKcl = $rbs?->kcl_total_estimasi_tahunan;
     if ($rbs && $annualUrea === null && $rbs->urea_estimasi_kg_per_pokok_tahun !== null) {
@@ -160,7 +164,7 @@
                 </div>
             </div>
             <div class="flex w-full flex-none flex-col gap-2 lg:w-auto">
-                @if($isReady)
+                @if($isReady && $decisionKind === 'ready')
                     <a href="{{ route('realisasi-pemupukan.create', $rbs) }}" class="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 lg:w-auto">
                         {{ $statusStage === \App\Services\CurrentApplicationCalculator::TAHAP_2_SIAP ? 'Catat Realisasi Tahap 2' : ($statusStage === \App\Services\CurrentApplicationCalculator::TAHAP_1_SEBAGIAN ? 'Lanjutkan Realisasi Tahap 1' : 'Catat Realisasi Tahap 1') }}
                     </a>
@@ -171,7 +175,7 @@
                 @elseif(!$rbs)
                     <form action="{{ route('rbs.analisis', $blokLahan) }}" method="POST">@csrf<button type="submit" class="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-800 lg:w-auto">Jalankan Analisis RBS</button></form>
                 @elseif($isWaitingInterval || $isComplete)
-                    <a href="{{ route('realisasi-pemupukan.index', ['anggota_id' => $blokLahan->anggota_id]) }}" class="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 lg:w-auto">Lihat Histori Realisasi</a>
+                    <a href="{{ route('realisasi-pemupukan.index', ['tab' => 'riwayat', 'anggota_id' => $blokLahan->anggota_id]) }}" class="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 lg:w-auto">Lihat Histori Realisasi</a>
                 @endif
             </div>
         </div>
@@ -227,7 +231,7 @@
                             @elseif($isComplete)
                                 Kebutuhan tahunan telah selesai berdasarkan realisasi yang tercatat.
                             @else
-                                {{ $decisionDescription }}
+                                Jadwal pemupukan untuk tahap ini belum dapat dibuat karena kondisi lapangan belum memenuhi syarat. Silakan lihat Keputusan Saat Ini di atas.
                             @endif
                         </p>
                     </div>
@@ -238,25 +242,63 @@
     @endif
 
     <div class="grid gap-4 lg:grid-cols-5">
-        <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:col-span-2 dark:border-slate-700 dark:bg-slate-900" aria-labelledby="next-action-title">
-            <div class="flex items-center gap-3">
-                <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-sm font-extrabold text-slate-700 dark:bg-slate-800 dark:text-slate-200">1-3</span>
-                <div><p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Urutan pekerjaan</p><h2 id="next-action-title" class="text-base font-bold text-slate-900 dark:text-white">Yang perlu dilakukan</h2></div>
-            </div>
-            <ol class="mt-4 space-y-3">
-                @foreach($workflow as $step)
-                    <li class="flex gap-3 text-sm leading-5 text-slate-600 dark:text-slate-300">
-                        <span class="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">{{ $loop->iteration }}</span>
-                        <span>{{ $step }}</span>
-                    </li>
-                @endforeach
-            </ol>
-            @if($saranItems->isNotEmpty())
-                <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
-                    <p class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Catatan lapangan dari RBS</p>
-                    <p class="mt-1 text-xs leading-5 text-slate-700 dark:text-slate-300">{{ $saranItems->first() }}</p>
+        <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:col-span-2 dark:border-slate-700 dark:bg-slate-900" aria-labelledby="reason-title">
+            <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between mb-4">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">Analisis Sistem Pakar</p>
+                    <h2 id="reason-title" class="text-base font-bold text-slate-900 dark:text-white">Temuan & Rekomendasi</h2>
                 </div>
-            @endif
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <h4 class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Kesimpulan dan saran</h4>
+                    @if($saranItems->isNotEmpty())
+                        <ul class="mt-2 space-y-2">
+                            @foreach($saranItems as $item)
+                                <li class="flex gap-2 text-sm leading-5 text-slate-700 dark:text-slate-300"><span class="mt-1 h-1.5 w-1.5 flex-none rounded-full bg-emerald-500"></span><span>{{ $item }}</span></li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Tidak ada saran tambahan khusus.</p>
+                    @endif
+                </div>
+
+                @if($recommendations->isNotEmpty())
+                    <div>
+                        <h4 class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Saran pupuk tambahan</h4>
+                        <div class="mt-2 grid gap-2">
+                            @foreach($recommendations as $item)
+                                <article class="rounded-xl border border-amber-200 p-3 bg-amber-50/50 dark:bg-amber-900/20 dark:border-amber-800/50">
+                                    <p class="text-sm font-bold text-amber-900 dark:text-amber-100">{{ $item['jenis_utama'] ?? 'Pupuk pendukung' }}</p>
+                                    @if(!empty($item['dosis']))<p class="mt-1 text-xs leading-5 text-slate-700 dark:text-slate-300">{{ $item['dosis'] }}</p>@endif
+                                    @if(!empty($item['metode']) || !empty($item['waktu']))
+                                        <p class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">{{ $item['metode'] ?? '' }}{{ !empty($item['metode']) && !empty($item['waktu']) ? ' - ' : '' }}{{ $item['waktu'] ?? '' }}</p>
+                                    @endif
+                                </article>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+                
+                @if($problems->isNotEmpty())
+                    <div>
+                        <h4 class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Dasar Keputusan</h4>
+                        <div class="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
+                            <p class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">Temuan Lapangan</p>
+                            @if($problems->count() > 1)
+                                <ul class="mt-1.5 list-inside list-disc space-y-1 text-sm font-medium leading-5 text-slate-800 dark:text-slate-200">
+                                    @foreach($problems as $problem)
+                                        <li>{{ $problem }}</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                <p class="mt-1 text-sm font-medium leading-5 text-slate-800 dark:text-slate-200">{{ $problems->first() }}</p>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+            </div>
         </section>
 
         <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:col-span-3 dark:border-slate-700 dark:bg-slate-900" aria-labelledby="dose-title">
@@ -311,78 +353,25 @@
 
         <section aria-labelledby="support-title">
             <div class="mb-3"><h2 id="support-title" class="text-base font-bold text-slate-900 dark:text-white">Penjelasan Tambahan</h2><p class="text-xs text-slate-500 dark:text-slate-400">Buka bagian ini hanya jika ingin mengetahui alasan, data, atau riwayat hasil.</p></div>
-            <div class="space-y-3">
-
-                <details class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div class="space-y-3">                <details class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900">
                     <summary class="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-500 sm:px-5 dark:hover:bg-slate-800/70">
                         <div>
-                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Alasan hasil rekomendasi</h3>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Panduan langkah pekerjaan</h3>
                             <p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                                @if($rules->isEmpty() && $problems->isEmpty())
-                                    Tidak ada aturan yang sesuai; periksa kembali data observasi
-                                @else
-                                    Hasil dijelaskan oleh {{ $rules->count() }} aturan yang sesuai
-                                @endif
+                                Urutan pekerjaan yang perlu dilakukan di lapangan
                             </p>
                         </div>
                         <svg class="h-5 w-5 flex-none text-slate-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </summary>
-                    <div class="space-y-5 border-t border-slate-100 px-4 py-4 sm:px-5 dark:border-slate-800">
-                        <div>
-                            <h4 class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Kesimpulan dan saran</h4>
-                            @if($saranItems->isNotEmpty())
-                                <ul class="mt-2 space-y-2">
-                                    @foreach($saranItems as $item)
-                                        <li class="flex gap-2 text-sm leading-5 text-slate-700 dark:text-slate-300"><span class="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-emerald-500"></span><span>{{ $item }}</span></li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Tidak ada saran tambahan.</p>
-                            @endif
-                        </div>
-
-                        @if($recommendations->isNotEmpty())
-                            <div>
-                                <h4 class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Saran pupuk tambahan</h4>
-                                <div class="mt-2 grid gap-2 sm:grid-cols-2">
-                                    @foreach($recommendations as $item)
-                                        <article class="rounded-xl border border-slate-200 p-3 dark:border-slate-700">
-                                            <p class="text-sm font-bold text-slate-900 dark:text-white">{{ $item['jenis_utama'] ?? 'Pupuk pendukung' }}</p>
-                                            @if(!empty($item['dosis']))<p class="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">{{ $item['dosis'] }}</p>@endif
-                                            @if(!empty($item['metode']) || !empty($item['waktu']))
-                                                <p class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">{{ $item['metode'] ?? '' }}{{ !empty($item['metode']) && !empty($item['waktu']) ? ' - ' : '' }}{{ $item['waktu'] ?? '' }}</p>
-                                            @endif
-                                        </article>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
-
-                        @if($problems->isNotEmpty() || $rules->isNotEmpty())
-                            <div>
-                                <h4 class="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Mengapa hasil ini muncul?</h4>
-                                @if($problems->isNotEmpty())
-                                    <div class="mt-2 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/70"><p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Temuan dari observasi</p><p class="mt-1 text-sm leading-5 text-slate-700 dark:text-slate-300">{{ $problems->implode('; ') }}</p></div>
-                                @endif
-                                @if($rules->isNotEmpty())
-                                    <div class="mt-2 divide-y divide-slate-100 rounded-xl border border-slate-200 dark:divide-slate-800 dark:border-slate-700">
-                                        @foreach($rules as $rule)
-                                            <div class="p-3">
-                                                <div class="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-                                                    <p class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ $rule['indikasi'] ?? 'Aturan yang sesuai' }}</p>
-                                                    @if(!empty($rule['status']))<span class="w-fit rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{{ \App\Models\RekomendasiRbs::labelStatus($rule['status']) }}</span>@endif
-                                                </div>
-                                                @if(!empty($rule['sumber_judul']))
-                                                    <p class="mt-1 text-[11px] leading-4 text-slate-500 dark:text-slate-400">Acuan: {{ $rule['sumber_penulis'] ?? $rule['sumber_judul'] }}{{ !empty($rule['sumber_tahun']) ? ' ('.$rule['sumber_tahun'].')' : '' }}</p>
-                                                @else
-                                                    <p class="mt-1 text-[11px] text-amber-700 dark:text-amber-300">Acuan aturan masih perlu dilengkapi pada Rule Based.</p>
-                                                @endif
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @endif
-                            </div>
-                        @endif
+                    <div class="border-t border-slate-100 px-4 py-4 sm:px-5 dark:border-slate-800">
+                        <ol class="space-y-3">
+                            @foreach($workflow as $step)
+                                <li class="flex gap-3 text-sm leading-5 text-slate-600 dark:text-slate-300">
+                                    <span class="flex h-6 w-6 flex-none items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">{{ $loop->iteration }}</span>
+                                    <span>{{ $step }}</span>
+                                </li>
+                            @endforeach
+                        </ol>
                     </div>
                 </details>
 

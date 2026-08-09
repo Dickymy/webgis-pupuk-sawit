@@ -28,8 +28,7 @@ class RuleEvaluationTest extends TestCase
         $rule = new RuleBaseLanjutan;
         $rule->kondisi_warna_daun = $attrs['kondisi_warna_daun'] ?? null;
         $rule->kondisi_defisiensi = $attrs['kondisi_defisiensi'] ?? null;
-        $rule->kondisi_ph_min = $attrs['kondisi_ph_min'] ?? null;
-        $rule->kondisi_ph_max = $attrs['kondisi_ph_max'] ?? null;
+
         $rule->kondisi_kelembaban = $attrs['kondisi_kelembaban'] ?? null;
         $rule->kondisi_curah_hujan_kategori = $attrs['kondisi_curah_hujan_kategori'] ?? null;
         $rule->kondisi_curah_hujan_min_mm = $attrs['kondisi_curah_hujan_min_mm'] ?? null;
@@ -55,7 +54,7 @@ class RuleEvaluationTest extends TestCase
         $kondisi = new KondisiLahan;
         $kondisi->warna_daun = $attrs['warna_daun'] ?? null;
         $kondisi->gejala_defisiensi = $attrs['gejala_defisiensi'] ?? null;
-        $kondisi->ph_tanah = $attrs['ph_tanah'] ?? null;
+
         $kondisi->kelembaban_tanah = $attrs['kelembaban_tanah'] ?? null;
         $kondisi->curah_hujan_kategori = $attrs['curah_hujan_kategori'] ?? null;
         $kondisi->curah_hujan_mm_bulanan = $attrs['curah_hujan_mm_bulanan'] ?? null;
@@ -77,43 +76,8 @@ class RuleEvaluationTest extends TestCase
         $reflection = new \ReflectionMethod($this->service, 'evaluasiRule');
         $reflection->setAccessible(true);
 
-        return $reflection->invoke($this->service, $rule, $kondisi, $kategoriUmur);
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // 1. Rule warna + defisiensi TIDAK terpicu jika defisiensi kosong
-    // ═══════════════════════════════════════════════════════════════
-
-    public function test_rule_warna_dan_defisiensi_tidak_terpicu_jika_defisiensi_kosong(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_warna_daun' => 'Kuning Merata',
-            'kondisi_defisiensi' => 'N',
-        ]);
-
-        $kondisi = $this->makeKondisi([
-            'warna_daun' => 'Kuning Merata',
-            'gejala_defisiensi' => [], // kosong!
-        ]);
-
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertFalse($result, 'Rule seharusnya TIDAK terpicu ketika defisiensi kosong');
-    }
-
-    public function test_rule_warna_dan_defisiensi_tidak_terpicu_jika_defisiensi_null(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_warna_daun' => 'Kuning Merata',
-            'kondisi_defisiensi' => 'N',
-        ]);
-
-        $kondisi = $this->makeKondisi([
-            'warna_daun' => 'Kuning Merata',
-            'gejala_defisiensi' => null, // null!
-        ]);
-
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertFalse($result, 'Rule seharusnya TIDAK terpicu ketika defisiensi null');
+        $blok = new \App\Models\BlokLahan();
+        return $reflection->invoke($this->service, $rule, $kondisi, $kategoriUmur, $blok);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -136,22 +100,6 @@ class RuleEvaluationTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function test_rule_tidak_terpicu_jika_defisiensi_berbeda(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_warna_daun' => 'Kuning Merata',
-            'kondisi_defisiensi' => 'N',
-        ]);
-
-        $kondisi = $this->makeKondisi([
-            'warna_daun' => 'Kuning Merata',
-            'gejala_defisiensi' => ['K'], // N bukan K
-        ]);
-
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertFalse($result);
-    }
-
     // ═══════════════════════════════════════════════════════════════
     // 3. NULL pada rule berfungsi sebagai wildcard
     // ═══════════════════════════════════════════════════════════════
@@ -166,7 +114,7 @@ class RuleEvaluationTest extends TestCase
         $kondisi = $this->makeKondisi([
             'warna_daun' => 'Hijau Normal',
             'kondisi_drainase' => 'Buruk — Tergenang',
-            'ph_tanah' => 5.5,
+
             'gejala_defisiensi' => ['K'],
         ]);
 
@@ -190,85 +138,9 @@ class RuleEvaluationTest extends TestCase
         $this->assertFalse($result, 'Rule tanpa kondisi sama sekali TIDAK boleh terpicu');
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // 5. Array defisiensi menggunakan strict comparison
-    // ═══════════════════════════════════════════════════════════════
 
-    public function test_defisiensi_strict_comparison(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_warna_daun' => 'Kuning Merata',
-            'kondisi_defisiensi' => 'N',
-        ]);
 
-        $kondisi = $this->makeKondisi([
-            'warna_daun' => 'Kuning Merata',
-            'gejala_defisiensi' => ['N', 'K'],
-        ]);
 
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertTrue($result, 'N harus cocok strict di array');
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // 6. Rule warna + defisiensi TERPICU jika SEMUA syarat cocok
-    // ═══════════════════════════════════════════════════════════════
-
-    public function test_rule_terpicu_jika_semua_syarat_cocok(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_warna_daun' => 'Kuning Merata',
-            'kondisi_defisiensi' => 'N',
-        ]);
-
-        $kondisi = $this->makeKondisi([
-            'warna_daun' => 'Kuning Merata',
-            'gejala_defisiensi' => ['N'],
-        ]);
-
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertTrue($result, 'Rule seharusnya terpicu ketika semua syarat cocok');
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // 7. Rule pH range
-    // ═══════════════════════════════════════════════════════════════
-
-    public function test_rule_ph_range_cocok(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_ph_min' => 3.0,
-            'kondisi_ph_max' => 4.5,
-        ]);
-
-        $kondisi = $this->makeKondisi(['ph_tanah' => 4.0]);
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertTrue($result);
-    }
-
-    public function test_rule_ph_range_di_luar(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_ph_min' => 3.0,
-            'kondisi_ph_max' => 4.5,
-        ]);
-
-        $kondisi = $this->makeKondisi(['ph_tanah' => 5.0]);
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertFalse($result);
-    }
-
-    public function test_rule_ph_null_gagal(): void
-    {
-        $rule = $this->makeRule([
-            'kondisi_ph_min' => 3.0,
-            'kondisi_ph_max' => 4.5,
-        ]);
-
-        $kondisi = $this->makeKondisi(['ph_tanah' => null]);
-        $result = $this->callEvaluasiRule($rule, $kondisi);
-        $this->assertFalse($result, 'Rule pH harus gagal jika pH input null');
-    }
 
     public function test_rule_curah_hujan_numerik_memakai_batas_minimum_dan_maksimum(): void
     {

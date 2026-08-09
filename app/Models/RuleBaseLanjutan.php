@@ -10,51 +10,31 @@ class RuleBaseLanjutan extends Model
 
     protected $fillable = [
         'kode_rule',
+        'jenis_rule',
+        // Kondisi IF — hanya parameter yang masih aktif di form
         'kondisi_warna_daun',
-        'kondisi_ph_min',
-        'kondisi_ph_max',
-        'kondisi_kelembaban',
-        'kondisi_curah_hujan_kategori',
+        'kondisi_topografi',
         'kondisi_curah_hujan_min_mm',
         'kondisi_curah_hujan_max_mm',
-        'kondisi_musim',
-        'kondisi_drainase',
-        'kondisi_defisiensi',
         'kondisi_kategori_umur',
-        'kondisi_pelepah',
-        'kondisi_tandan',
-        'ada_serangan_hama',
-        'ada_gulma_dominan',
-        'kondisi_intermediate',
-        'prasyarat_intermediate',
+        // Output THEN
         'indikasi_masalah',
         'jenis_pupuk_utama',
-        'jenis_pupuk_pendukung',
-        'dosis_anjuran',
-        'metode_aplikasi',
-        'waktu_aplikasi',
         'saran_tindakan',
         'status_kebutuhan',
+        'tingkat_keparahan',
         'prioritas',
         'aktif',
-        'keterangan_rule',
-        // Provenance fields (Pahan-v2)
+        // Provenance
         'sumber_judul',
         'sumber_penulis',
         'sumber_tahun',
         'sumber_halaman',
         'sumber_tabel',
         'tingkat_bukti',
-        'versi_rule',
         'is_system_rule',
         'status_validasi',
-        'divalidasi_oleh',
-        'tanggal_validasi',
         'catatan_validasi',
-        // Normalisasi output rule (Pahan-v2 finalisasi)
-        'jenis_rule',
-        'tingkat_keparahan',
-        'kategori_kesimpulan',
     ];
 
     protected function casts(): array
@@ -62,16 +42,9 @@ class RuleBaseLanjutan extends Model
         return [
             'aktif' => 'boolean',
             'is_system_rule' => 'boolean',
-            'tanggal_validasi' => 'date',
-            'ada_serangan_hama' => 'boolean',
-            'ada_gulma_dominan' => 'boolean',
-            'kondisi_ph_min' => 'decimal:2',
-            'kondisi_ph_max' => 'decimal:2',
             'kondisi_curah_hujan_min_mm' => 'decimal:1',
             'kondisi_curah_hujan_max_mm' => 'decimal:1',
             'prioritas' => 'integer',
-            'kondisi_intermediate' => 'array',
-            'prasyarat_intermediate' => 'array',
         ];
     }
 

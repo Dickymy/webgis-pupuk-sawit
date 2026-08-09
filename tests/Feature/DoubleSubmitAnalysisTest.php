@@ -31,7 +31,6 @@ class DoubleSubmitAnalysisTest extends TestCase
             'warna_daun' => 'Hijau Normal',
             'kondisi_drainase' => 'Baik',
             'curah_hujan_mm_bulanan' => 180,
-            'ph_tanah' => 5.5,
             'tanggal_pemupukan_terakhir' => now()->subDays(150),
         ]);
 
@@ -72,7 +71,6 @@ class DoubleSubmitAnalysisTest extends TestCase
             'warna_daun' => 'Hijau Normal',
             'kondisi_drainase' => 'Baik',
             'curah_hujan_mm_bulanan' => 180,
-            'ph_tanah' => 5.5,
             'tanggal_pemupukan_terakhir' => now()->subDays(150),
         ]);
 

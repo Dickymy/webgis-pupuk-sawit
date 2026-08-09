@@ -141,6 +141,7 @@ class RuleBaseController extends Controller
         return [
             'jenis_rule' => $data['jenis_rule'],
             'kondisi_warna_daun' => $isVisual ? $data['kondisi_warna_daun'] : null,
+            'kondisi_topografi' => $isVisual ? $data['kondisi_topografi'] : null,
             'kondisi_curah_hujan_min_mm' => $isVisual ? null : ($data['kondisi_curah_hujan_min_mm'] ?? null),
             'kondisi_curah_hujan_max_mm' => $isVisual ? null : ($data['kondisi_curah_hujan_max_mm'] ?? null),
             'kondisi_ph_min' => null,
@@ -212,7 +213,17 @@ class RuleBaseController extends Controller
     private function ruleSentence(array $data): string
     {
         if ($data['jenis_rule'] === self::JENIS_VISUAL) {
-            return 'IF kondisi daun '.$data['kondisi_warna_daun'].' THEN '.$data['indikasi_masalah'].'.';
+            $parts = [];
+            if (! empty($data['kondisi_warna_daun'])) {
+                $parts[] = 'kondisi daun '.$data['kondisi_warna_daun'];
+            }
+            if (! empty($data['kondisi_topografi'])) {
+                $parts[] = 'topografi '.$data['kondisi_topografi'];
+            }
+
+            $conditionText = empty($parts) ? 'kondisi lahan sesuai' : implode(' AND ', $parts);
+
+            return 'IF '.$conditionText.' THEN '.$data['indikasi_masalah'].'.';
         }
 
         $min = $data['kondisi_curah_hujan_min_mm'] ?? null;

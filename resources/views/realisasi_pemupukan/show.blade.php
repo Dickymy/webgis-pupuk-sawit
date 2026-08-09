@@ -7,7 +7,7 @@
 @section('content')
 
 <div class="mb-4">
-    <a href="{{ route('realisasi-pemupukan.index') }}" class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors">
+    <a href="{{ route('realisasi-pemupukan.index', ['tab' => 'riwayat']) }}" class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         Kembali ke Daftar
     </a>
@@ -175,36 +175,82 @@
         \App\Services\CurrentApplicationCalculator::TAHAP_2_SIAP,
     ]);
 @endphp
-<div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 mt-5">
-    <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
-        <span class="text-base">🎯</span>
-        Langkah Selanjutnya
-    </h3>
-    <div class="p-3 rounded-xl {{ $isSiap ? 'bg-emerald-50 border border-emerald-200' : 'bg-blue-50 border border-blue-200' }}">
-        <p class="text-sm font-semibold {{ $isSiap ? 'text-emerald-800' : 'text-blue-800' }}">
-            @switch($statusStage)
-                @case(\App\Services\CurrentApplicationCalculator::TAHAP_1_SIAP)
-                    Catat realisasi Tahap 1.
-                    @break
-                @case(\App\Services\CurrentApplicationCalculator::TAHAP_1_SEBAGIAN)
-                    Lanjutkan realisasi Tahap 1 (sisa belum terpenuhi).
-                    @break
-                @case(\App\Services\CurrentApplicationCalculator::MENUNGGU_INTERVAL)
-                    Tahap 1 selesai. Tahap 2 dapat dilakukan mulai {{ $rekomendasi->tanggal_minimum_tahap_berikutnya ? $rekomendasi->tanggal_minimum_tahap_berikutnya->format('d M Y') : '—' }}.
-                    @break
-                @case(\App\Services\CurrentApplicationCalculator::MENUNGGU_KELAYAKAN)
-                    Blok belum siap dipupuk karena kondisi lapangan belum memenuhi syarat.
-                    @break
-                @case(\App\Services\CurrentApplicationCalculator::TAHAP_2_SIAP)
-                    Catat realisasi Tahap 2.
-                    @break
-                @case(\App\Services\CurrentApplicationCalculator::SELESAI_TAHUNAN)
-                    Program pemupukan tahun ini telah selesai.
-                    @break
-                @default
-                    {{ $rekomendasi->alasan_tahap ?? 'Jalankan analisis ulang untuk status terkini.' }}
-            @endswitch
-        </p>
+<div class="mt-8 mb-5">
+    <div class="relative overflow-hidden rounded-3xl border {{ $isSiap ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/30' : 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/30' }} shadow-sm">
+        {{-- Background icon (decorative) --}}
+        <div class="absolute -right-8 -top-8 opacity-10 pointer-events-none">
+            @if($isSiap)
+            <svg class="w-48 h-48 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            @else
+            <svg class="w-48 h-48 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+            @endif
+        </div>
+        
+        <div class="p-6 sm:p-8 relative z-10">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                <div class="flex-shrink-0 w-14 h-14 flex items-center justify-center rounded-2xl shadow-sm {{ $isSiap ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-800 dark:text-emerald-300' : 'bg-blue-100 text-blue-600 dark:bg-blue-800 dark:text-blue-300' }}">
+                    @if($isSiap)
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    @else
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    @endif
+                </div>
+                
+                <div class="flex-1">
+                    <h3 class="text-xs font-bold uppercase tracking-widest mb-1 {{ $isSiap ? 'text-emerald-700 dark:text-emerald-400' : 'text-blue-700 dark:text-blue-400' }}">
+                        Langkah Selanjutnya
+                    </h3>
+                    
+                    <p class="text-xl sm:text-2xl font-extrabold {{ $isSiap ? 'text-emerald-900 dark:text-emerald-100' : 'text-blue-900 dark:text-blue-100' }}">
+                        @switch($statusStage)
+                            @case(\App\Services\CurrentApplicationCalculator::TAHAP_1_SIAP)
+                                Catat Realisasi Tahap 1
+                                @break
+                            @case(\App\Services\CurrentApplicationCalculator::TAHAP_1_SEBAGIAN)
+                                Lanjutkan Realisasi Tahap 1
+                                @break
+                            @case(\App\Services\CurrentApplicationCalculator::MENUNGGU_INTERVAL)
+                                Tunggu hingga {{ $rekomendasi->tanggal_minimum_tahap_berikutnya ? $rekomendasi->tanggal_minimum_tahap_berikutnya->format('d M Y') : 'Jadwal Berikutnya' }}
+                                @break
+                            @case(\App\Services\CurrentApplicationCalculator::MENUNGGU_KELAYAKAN)
+                                Blok Belum Memenuhi Syarat
+                                @break
+                            @case(\App\Services\CurrentApplicationCalculator::TAHAP_2_SIAP)
+                                Catat Realisasi Tahap 2
+                                @break
+                            @case(\App\Services\CurrentApplicationCalculator::SELESAI_TAHUNAN)
+                                Program Pemupukan Selesai
+                                @break
+                            @default
+                                Periksa Status Terbaru
+                        @endswitch
+                    </p>
+                    
+                    <p class="mt-2 text-sm font-medium leading-relaxed {{ $isSiap ? 'text-emerald-800 dark:text-emerald-300' : 'text-blue-800 dark:text-blue-300' }}">
+                        @switch($statusStage)
+                            @case(\App\Services\CurrentApplicationCalculator::TAHAP_1_SIAP)
+                            @case(\App\Services\CurrentApplicationCalculator::TAHAP_2_SIAP)
+                                Blok ini siap untuk dipupuk. Silakan lakukan pencatatan realisasi.
+                                @break
+                            @case(\App\Services\CurrentApplicationCalculator::TAHAP_1_SEBAGIAN)
+                                Sebagian dosis pada tahap 1 belum terpenuhi. Lanjutkan realisasi untuk memenuhinya.
+                                @break
+                            @case(\App\Services\CurrentApplicationCalculator::MENUNGGU_INTERVAL)
+                                Tahap sebelumnya telah selesai. Tahap berikutnya dapat dilakukan setelah jarak waktu minimal terpenuhi.
+                                @break
+                            @case(\App\Services\CurrentApplicationCalculator::MENUNGGU_KELAYAKAN)
+                                Kondisi lapangan (misalnya drainase tergenang atau curah hujan berlebihan) menyebabkan blok ini belum dapat dipupuk.
+                                @break
+                            @case(\App\Services\CurrentApplicationCalculator::SELESAI_TAHUNAN)
+                                Kebutuhan Urea dan KCl tahun ini sudah terpenuhi. Tidak ada pemupukan lanjutan di blok ini.
+                                @break
+                            @default
+                                Silakan jalankan ulang analisis RBS untuk mendapatkan status terkini.
+                        @endswitch
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 @endif

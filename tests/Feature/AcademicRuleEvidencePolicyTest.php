@@ -24,6 +24,9 @@ class AcademicRuleEvidencePolicyTest extends TestCase
             ->all();
 
         $this->assertSame([
+            'TOPO-01',
+            'TOPO-02',
+            'TOPO-03',
             'VIS-B-01',
             'VIS-K-02',
             'VIS-MG-01',
@@ -41,7 +44,7 @@ class AcademicRuleEvidencePolicyTest extends TestCase
         $this->assertEquals(100.0, RuleBaseLanjutan::where('kode_rule', 'WAKTU-HUJAN-OPTIMAL')->value('kondisi_curah_hujan_min_mm'));
         $this->assertEquals(250.0, RuleBaseLanjutan::where('kode_rule', 'WAKTU-HUJAN-OPTIMAL')->value('kondisi_curah_hujan_max_mm'));
         $this->assertEquals(300.1, RuleBaseLanjutan::where('kode_rule', 'WAKTU-HUJAN-TINGGI')->value('kondisi_curah_hujan_min_mm'));
-        $this->assertSame(7, RuleBaseLanjutan::where('aktif', true)->where('status_validasi', 'TERVERIFIKASI_SUMBER')->count());
+        $this->assertSame(10, RuleBaseLanjutan::where('aktif', true)->where('status_validasi', 'TERVERIFIKASI_SUMBER')->count());
     }
 
     public function test_rule_page_exposes_controlled_management_without_permanent_delete(): void
@@ -77,7 +80,7 @@ class AcademicRuleEvidencePolicyTest extends TestCase
         }
 
         $activeOutput = RuleBaseLanjutan::where('aktif', true)
-            ->get(['jenis_pupuk_utama', 'jenis_pupuk_pendukung', 'dosis_anjuran'])
+            ->get(['jenis_pupuk_utama'])
             ->toJson();
 
         foreach (['Borax', 'Dolomit', 'KNO3', 'FeSO4', 'TSP', 'ZnSO4'] as $unsupported) {

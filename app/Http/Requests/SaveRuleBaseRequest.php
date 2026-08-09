@@ -23,6 +23,7 @@ class SaveRuleBaseRequest extends FormRequest
 
         $nullableFields = [
             'kondisi_warna_daun',
+            'kondisi_topografi',
             'kondisi_curah_hujan_min_mm',
             'kondisi_curah_hujan_max_mm',
             'jenis_pupuk_utama',
@@ -51,6 +52,12 @@ class SaveRuleBaseRequest extends FormRequest
                 'string',
                 'max:100',
                 Rule::in(config('observation.diagnostic_leaf_conditions')),
+            ],
+            'kondisi_topografi' => [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::in(['Datar (0-8%)', 'Bergelombang (8-15%)', 'Curam (>15%)']),
             ],
             'kondisi_curah_hujan_min_mm' => ['nullable', 'numeric', 'min:0', 'max:2000'],
             'kondisi_curah_hujan_max_mm' => ['nullable', 'numeric', 'min:0', 'max:2000'],

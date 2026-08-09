@@ -2,7 +2,7 @@
 
 @section('title', 'Edit Anggota')
 @section('page-title', 'Edit Anggota')
-@section('page-subtitle', 'Perbarui data: {{ $anggota->nama }}')
+@section('page-subtitle', 'Perbarui data: ' . $anggota->nama)
 
 @section('content')
 <div class="w-full">

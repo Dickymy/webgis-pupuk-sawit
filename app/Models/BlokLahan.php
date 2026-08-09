@@ -23,6 +23,7 @@ class BlokLahan extends Model
         'jenis_tanah',
         'topografi',
         'fase_tanaman',
+        'jumlah_pohon',
     ];
 
     protected function casts(): array
@@ -31,6 +32,7 @@ class BlokLahan extends Model
             'luas_ha' => 'double',
             'sph' => 'integer',
             'tahun_tanam' => 'integer',
+            'jumlah_pohon' => 'integer',
         ];
     }
 
@@ -81,6 +83,19 @@ class BlokLahan extends Model
     public function getNamaPemilikAttribute(): string
     {
         return $this->anggota?->nama ?? '-';
+    }
+
+    /**
+     * Hitung jumlah pokok aktual.
+     * Menggunakan jumlah_pohon manual jika ada, jika tidak otomatis Luas * SPH.
+     */
+    public function getJumlahPokokAktualAttribute(): int
+    {
+        if ($this->jumlah_pohon !== null) {
+            return $this->jumlah_pohon;
+        }
+
+        return (int) ($this->luas_ha * $this->sph);
     }
 
     /**

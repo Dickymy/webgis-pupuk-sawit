@@ -52,7 +52,6 @@ class LegacyDatabaseFixture
             'tanggal_observasi' => '2026-05-15',
             'curah_hujan_mm_bulanan' => 160.0,
             'warna_daun' => 'Hijau Normal',
-            'kondisi_pelepah' => 'Normal',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -95,7 +94,6 @@ class LegacyDatabaseFixture
             $ruleId = DB::table('rule_bases_lanjutan')->insertGetId([
                 'indikasi_masalah' => 'Rule Custom Pengguna',
                 'jenis_pupuk_utama' => 'Urea',
-                'dosis_anjuran' => '1.5 kg/pokok/tahun',
                 'saran_tindakan' => 'Saran custom dari pengguna',
                 'status_kebutuhan' => 'Normal',
                 'prioritas' => 50,
