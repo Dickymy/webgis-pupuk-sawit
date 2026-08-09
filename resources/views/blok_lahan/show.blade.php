@@ -25,7 +25,16 @@
                 <div><p class="text-xs text-slate-400">Nama Pemilik Lahan</p><p class="text-sm font-semibold text-slate-900">{{ $blokLahan->anggota?->nama ?? '—' }}</p></div>
                 <div><p class="text-xs text-slate-400">Luas Lahan</p><p class="text-sm font-semibold text-slate-900">{{ number_format($blokLahan->luas_ha, 2) }} Ha</p></div>
                 <div><p class="text-xs text-slate-400">SPH</p><p class="text-sm font-semibold text-slate-900">{{ number_format($blokLahan->sph) }} pohon/Ha</p></div>
-                <div><p class="text-xs text-slate-400">Total Pohon</p><p class="text-sm font-semibold text-slate-900">{{ number_format($blokLahan->sph * $blokLahan->luas_ha) }} pohon</p></div>
+                <div><p class="text-xs text-slate-400">Total Pohon</p>
+                    <p class="text-sm font-semibold text-slate-900">
+                        {{ number_format($blokLahan->jumlah_pokok_aktual) }} pohon
+                        @if($blokLahan->jumlah_pohon)
+                            <span class="text-xs text-emerald-600 ml-1">(Aktual)</span>
+                        @else
+                            <span class="text-xs text-amber-600 ml-1">(Estimasi Luas × SPH)</span>
+                        @endif
+                    </p>
+                </div>
             </div>
         </div>
 

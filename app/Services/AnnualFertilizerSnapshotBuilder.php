@@ -57,7 +57,7 @@ class AnnualFertilizerSnapshotBuilder
     {
         $luasHa = (float) $blok->luas_ha;
         $sph = (int) $blok->sph;
-        $jumlahPokok = (int) ($luasHa * $sph);
+        $jumlahPokok = $blok->jumlah_pokok_aktual;
 
         // Jika dosis referensi belum tersedia (fase belum ditentukan, dll)
         if ($doseReference['urea']['estimate'] === null || $doseReference['kcl']['estimate'] === null) {

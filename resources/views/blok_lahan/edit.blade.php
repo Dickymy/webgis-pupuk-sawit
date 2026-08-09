@@ -2,7 +2,7 @@
 
 @section('title', 'Edit Blok Lahan')
 @section('page-title', 'Edit Blok Lahan')
-@section('page-subtitle', 'Perbarui data: {{ $blokLahan->nama_blok }}')
+@section('page-subtitle', 'Perbarui data: ' . $blokLahan->nama_blok)
 
 @push('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
@@ -231,7 +231,7 @@
         <form method="POST" action="{{ route('blok-lahan.update', $blokLahan) }}" class="space-y-5" id="form-blok-lahan">
             @csrf @method('PUT')
 
-            <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <div>
                     @include('components.searchable-select', [
                         'name' => 'anggota_id',
@@ -250,14 +250,63 @@
                         class="w-full px-4 py-3 bg-white border {{ $errors->has('nama_blok') ? 'border-red-400' : 'border-slate-300' }} rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
                     @error('nama_blok') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
+            </div>
 
-                <div>
-                    <label for="sph" class="block text-sm font-medium text-slate-700 mb-2">SPH <span class="text-red-400">*</span></label>
-                    <input type="number" id="sph" name="sph" value="{{ old('sph', $blokLahan->sph) }}" min="1" required
-                        class="w-full px-4 py-3 bg-white border {{ $errors->has('sph') ? 'border-red-400' : 'border-slate-300' }} rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
-                    @error('sph') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
+            {{-- Populasi Lahan --}}
+            <div class="border-t border-slate-100 pt-5 mt-5">
+                <p class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                    <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">🌳</span>
+                    Metode Perhitungan Populasi Pohon
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-6 mb-4">
+                    <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                        <input type="radio" name="mode_populasi" value="otomatis" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4" onchange="togglePopulasiMode('otomatis')" {{ old('jumlah_pohon', $blokLahan->jumlah_pohon) ? '' : 'checked' }}>
+                        <span class="font-medium">Otomatis (Berdasarkan Luas × SPH)</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                        <input type="radio" name="mode_populasi" value="manual" class="text-emerald-600 focus:ring-emerald-500 w-4 h-4" onchange="togglePopulasiMode('manual')" {{ old('jumlah_pohon', $blokLahan->jumlah_pohon) ? 'checked' : '' }}>
+                        <span class="font-medium">Input Manual (Jumlah Pohon Aktual)</span>
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div id="populasi_otomatis_wrapper" style="display: {{ old('jumlah_pohon', $blokLahan->jumlah_pohon) ? 'none' : 'block' }}">
+                        <label for="sph" class="block text-sm font-medium text-slate-700 mb-2">SPH (Standar Pohon/Ha) <span class="text-red-400">*</span></label>
+                        <input type="number" id="sph" name="sph" value="{{ old('sph', $blokLahan->sph) }}" min="1" required
+                            class="w-full px-4 py-3 bg-white border {{ $errors->has('sph') ? 'border-red-400' : 'border-slate-300' }} rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                        @error('sph') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
+                        <p class="mt-1 text-xs text-slate-400">Umumnya 136 pohon/Ha (jarak tanam 9×9m).</p>
+                    </div>
+
+                    <div id="populasi_manual_wrapper" style="display: {{ old('jumlah_pohon', $blokLahan->jumlah_pohon) ? 'block' : 'none' }}">
+                        <label for="jumlah_pohon" class="block text-sm font-medium text-slate-700 mb-2">Total Pohon Aktual <span class="text-red-400">*</span></label>
+                        <input type="number" id="jumlah_pohon" name="jumlah_pohon" value="{{ old('jumlah_pohon', $blokLahan->jumlah_pohon) }}" min="1" placeholder="Misal: 270"
+                            class="w-full px-4 py-3 bg-white border {{ $errors->has('jumlah_pohon') ? 'border-red-400' : 'border-slate-300' }} rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
+                        @error('jumlah_pohon') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
+                        <p class="mt-1 text-xs text-slate-400">Masukkan total pohon yang dihitung langsung di lahan.</p>
+                    </div>
                 </div>
             </div>
+
+            <script>
+                function togglePopulasiMode(mode) {
+                    var otomatisWrapper = document.getElementById('populasi_otomatis_wrapper');
+                    var manualWrapper = document.getElementById('populasi_manual_wrapper');
+                    var inputJumlahPohon = document.getElementById('jumlah_pohon');
+
+                    if (mode === 'otomatis') {
+                        otomatisWrapper.style.display = 'block';
+                        manualWrapper.style.display = 'none';
+                        inputJumlahPohon.removeAttribute('required');
+                        inputJumlahPohon.value = ''; 
+                    } else {
+                        otomatisWrapper.style.display = 'none';
+                        manualWrapper.style.display = 'block';
+                        inputJumlahPohon.setAttribute('required', 'required');
+                    }
+                }
+            </script>
 
             {{-- Kriteria Agronomis --}}
             <div class="border-t border-slate-100 pt-5">
@@ -271,6 +320,7 @@
                         <input type="number" id="tahun_tanam" name="tahun_tanam" value="{{ old('tahun_tanam', $blokLahan->tahun_tanam) }}" min="1990" max="{{ now()->year }}" required
                             class="w-full px-4 py-3 bg-white border {{ $errors->has('tahun_tanam') ? 'border-red-400' : 'border-slate-300' }} rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
                         @error('tahun_tanam') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
+                        <p class="mt-1 text-xs text-emerald-600 font-semibold" id="umur-preview"></p>
                     </div>
                     <div>
                         @include('components.custom-select', [
@@ -288,7 +338,7 @@
                             'name'     => 'topografi',
                             'label'    => 'Topografi',
                             'required' => true,
-                            'options'  => ['Datar 0-15°','Bergelombang 15-30°','Curam >30°'],
+                            'options'  => ['Datar - Landai (< 12°)', 'Bergelombang - Miring (12° - 23°)', 'Curam - Berbukit (> 23°)'],
                             'selected' => old('topografi', $blokLahan->topografi),
                             'placeholder' => '— Pilih Topografi —',
                             'error'    => $errors->first('topografi'),
@@ -329,16 +379,16 @@
 
                 <div class="flex gap-1 mb-3 bg-slate-100 p-1 rounded-xl">
                     <button type="button" id="tab-draw" onclick="switchTab('draw')"
-                        class="flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all bg-white text-emerald-700 shadow-sm">
+                        class="flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all bg-white text-emerald-700 shadow-sm">
                         🗺️ Gambar di Peta
                     </button>
                     <button type="button" id="tab-upload" onclick="switchTab('upload')"
-                        class="flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all text-slate-600 hover:text-slate-800">
+                        class="flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all text-slate-600 hover:text-slate-800">
                         📂 Upload File
                     </button>
-                    <button type="button" id="tab-json" onclick="switchTab('json')"
-                        class="flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all text-slate-600 hover:text-slate-800">
-                        📝 Input GeoJSON Manual
+                    <button type="button" id="tab-coords" onclick="switchTab('coords')"
+                        class="flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all text-slate-600 hover:text-slate-800">
+                        📍 Input Koordinat
                     </button>
                 </div>
 
@@ -425,15 +475,41 @@
                     </div>
                 </div>
 
-                <div id="panel-json" class="hidden">
-                    <textarea id="textarea_geojson" rows="8"
-                        class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors font-mono text-xs leading-relaxed resize-y">{{ old('koordinat_geojson', $blokLahan->koordinat_geojson) }}</textarea>
-                    <p class="mt-1.5 text-xs text-slate-500">Paste GeoJSON lalu klik di luar textarea — luas akan otomatis terhitung.</p>
+                <div id="panel-coords" class="hidden space-y-3">
+                    {{-- Daftar titik koordinat --}}
+                    <div id="koordinat-list" class="space-y-2">
+                        {{-- Titik-titik diisi oleh JS --}}
+                    </div>
 
-                    {{-- Preview Map untuk GeoJSON Manual --}}
-                    <div id="json-preview-wrapper" class="hidden mt-3">
+                    {{-- Tombol tambah titik --}}
+                    <button type="button" onclick="tambahTitikKoordinat()"
+                        class="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-emerald-300 rounded-xl text-sm font-medium text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50 transition-colors w-full justify-center">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Tambah Titik
+                    </button>
+
+                    {{-- Tombol aksi --}}
+                    <div class="flex gap-2">
+                        <button type="button" onclick="terapkanKoordinat()"
+                            class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-xl transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                            Terapkan & Tampilkan di Peta
+                        </button>
+                        <button type="button" onclick="resetKoordinat()"
+                            class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-medium rounded-xl transition-colors">
+                            Reset
+                        </button>
+                    </div>
+
+                    {{-- Pesan error koordinat --}}
+                    <div id="coords-error" class="hidden p-3 bg-red-50 border border-red-200 rounded-xl">
+                        <p class="text-sm text-red-700 font-medium" id="coords-error-msg"></p>
+                    </div>
+
+                    {{-- Preview Map koordinat --}}
+                    <div id="coords-preview-wrapper" class="hidden mt-1">
                         <div class="border border-emerald-200 rounded-xl overflow-hidden">
-                            <div id="json-preview-map" style="height: 250px; width: 100%;"></div>
+                            <div id="coords-preview-map" style="height: 260px; width: 100%;"></div>
                         </div>
                         <div class="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
                             <div class="flex items-center gap-2">
@@ -442,11 +518,11 @@
                                 </svg>
                                 <div>
                                     <p class="text-sm font-semibold text-emerald-800">Luas Lahan</p>
-                                    <p class="text-xs text-emerald-600" id="json-preview-info">—</p>
+                                    <p class="text-xs text-emerald-600" id="coords-preview-info">—</p>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-lg font-bold text-emerald-700" id="json-preview-luas">0.00</p>
+                                <p class="text-lg font-bold text-emerald-700" id="coords-preview-luas">0.00</p>
                                 <p class="text-xs text-emerald-600">Hektar</p>
                             </div>
                         </div>
@@ -579,24 +655,91 @@ var existingBloks = @json($existingBloks);
 function switchTab(tab) {
     currentTab = tab;
     document.getElementById('panel-draw').classList.toggle('hidden', tab !== 'draw');
-    document.getElementById('panel-json').classList.toggle('hidden', tab !== 'json');
+    document.getElementById('panel-coords').classList.toggle('hidden', tab !== 'coords');
     document.getElementById('panel-upload').classList.toggle('hidden', tab !== 'upload');
     var tabDraw = document.getElementById('tab-draw');
-    var tabJson = document.getElementById('tab-json');
+    var tabCoords = document.getElementById('tab-coords');
     var tabUpload = document.getElementById('tab-upload');
-    var activeClass = 'flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all bg-white text-emerald-700 shadow-sm';
-    var inactiveClass = 'flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all text-slate-600 hover:text-slate-800';
+    var activeClass = 'flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all bg-white text-emerald-700 shadow-sm';
+    var inactiveClass = 'flex-1 px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all text-slate-600 hover:text-slate-800';
     tabDraw.className = tab === 'draw' ? activeClass : inactiveClass;
-    tabJson.className = tab === 'json' ? activeClass : inactiveClass;
+    tabCoords.className = tab === 'coords' ? activeClass : inactiveClass;
     tabUpload.className = tab === 'upload' ? activeClass : inactiveClass;
-    // Luas Lahan bawah hanya tampil di tab draw
-    var luasWrapper = document.getElementById('luas-lahan-wrapper');
-    if (luasWrapper) luasWrapper.classList.toggle('hidden', tab !== 'draw');
+    // (Dihapus: Luas Lahan kini tampil di semua tab agar pengguna tidak bingung)
     if (tab === 'draw') {
         setTimeout(function() { drawMap.invalidateSize(); }, 100);
     }
 }
 
+// ─── FUNGSI HITUNG LUAS POLYGON (Geodesic - Shoelace formula) ────
+function extractPolygonGeometry(geojson) {
+    if (!geojson || !geojson.type) return null;
+    if (geojson.type === 'Polygon') return geojson;
+    if (geojson.type === 'MultiPolygon') {
+        return { type: 'Polygon', coordinates: geojson.coordinates[0] };
+    }
+    if (geojson.type === 'Feature' && geojson.geometry) {
+        return extractPolygonGeometry(geojson.geometry);
+    }
+    if (geojson.type === 'FeatureCollection' && geojson.features && geojson.features.length > 0) {
+        for (var i = 0; i < geojson.features.length; i++) {
+            var result = extractPolygonGeometry(geojson.features[i]);
+            if (result) return result;
+        }
+    }
+    return null;
+}
+
+function calculateAreaHa(geojson) {
+    try {
+        var coords;
+        if (geojson.type === 'Polygon') {
+            coords = geojson.coordinates[0];
+        } else if (geojson.type === 'Feature' && geojson.geometry.type === 'Polygon') {
+            coords = geojson.geometry.coordinates[0];
+        } else if (geojson.type === 'FeatureCollection' || geojson.type === 'MultiPolygon') {
+            var extracted = extractPolygonGeometry(geojson);
+            if (extracted) return calculateAreaHa(extracted);
+            return 0;
+        } else {
+            return 0;
+        }
+
+        // Haversine-based area calculation (approximate for small polygons)
+        var area = 0;
+        var n = coords.length;
+        for (var i = 0; i < n - 1; i++) {
+            var j = (i + 1) % n;
+            var xi = coords[i][0] * Math.PI / 180;
+            var yi = coords[i][1] * Math.PI / 180;
+            var xj = coords[j][0] * Math.PI / 180;
+            var yj = coords[j][1] * Math.PI / 180;
+            area += (xj - xi) * (2 + Math.sin(yi) + Math.sin(yj));
+        }
+        area = Math.abs(area * 6378137 * 6378137 / 2);
+        // Convert m² to Ha (1 Ha = 10000 m²)
+        return Math.round(area / 10000 * 100) / 100;
+    } catch(e) {
+        return 0;
+    }
+}
+
+function updateLuas(geojson) {
+    var ha = calculateAreaHa(geojson);
+    var luasEl = document.getElementById('luas_ha');
+    var infoEl = document.getElementById('luas-info');
+    if (ha > 0) {
+        luasEl.value = ha;
+        infoEl.textContent = '✓ Luas terhitung: ' + ha + ' Ha dari polygon yang digambar';
+        infoEl.className = 'mt-1 text-xs text-emerald-600 font-medium';
+    } else {
+        luasEl.value = '';
+        infoEl.textContent = 'Luas dihitung otomatis saat polygon digambar';
+        infoEl.className = 'mt-1 text-xs text-slate-400';
+    }
+}
+
+// ─── MAP ─────────────────────────────────────────────────────────
 var drawMap = L.map('draw-map', { center: [-1.5, 110.0], zoom: 10, zoomControl: false, zoomSnap: 0, zoomDelta: 0.25, wheelDebounceTime: 40, wheelPxPerZoomLevel: 120 });
 var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OSM' });
 var satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: 17 }).addTo(drawMap);
@@ -661,12 +804,11 @@ L.control.layers({'🗺️ Peta': osmLayer, '🛰️ Satelit': satLayer}, null, 
     zoomOutBtn.addEventListener('contextmenu', function(e) { e.preventDefault(); });
 })();
 
-// Existing polygons
 existingBloks.forEach(function(blok) {
     if (!blok.geojson) return;
     L.geoJSON(blok.geojson, {
         style: { color: '#d97706', fillColor: '#fbbf24', fillOpacity: 0.25, weight: 1.5, dashArray: '4 4' }
-    }).bindTooltip(blok.nama, { sticky: true }).addTo(drawMap);
+    }).bindTooltip(blok.nama, { sticky: true, className: 'text-xs' }).addTo(drawMap);
 });
 
 var drawnItems = new L.FeatureGroup();
@@ -689,73 +831,10 @@ drawMap.on(L.Draw.Event.DELETED, syncGeoJson);
 drawMap.on('draw:editvertex', syncGeoJson);
 drawMap.on('draw:editmove', syncGeoJson);
 
-// Warning jika user submit saat mode edit masih aktif
+// Tracking mode edit
 var isEditingPolygon = false;
 drawMap.on('draw:editstart', function() { isEditingPolygon = true; });
 drawMap.on('draw:editstop', function() { isEditingPolygon = false; });
-
-document.getElementById('form-blok-lahan').addEventListener('submit', function(e) {
-    // Jika sedang mode edit, force sync dulu sebelum submit
-    if (isEditingPolygon) {
-        syncGeoJson();
-    }
-    if (currentTab === 'json') document.getElementById('koordinat_geojson').value = document.getElementById('textarea_geojson').value.trim();
-});
-
-function extractPolygonGeometry(geojson) {
-    if (!geojson || !geojson.type) return null;
-    if (geojson.type === 'Polygon') return geojson;
-    if (geojson.type === 'MultiPolygon') {
-        return { type: 'Polygon', coordinates: geojson.coordinates[0] };
-    }
-    if (geojson.type === 'Feature' && geojson.geometry) {
-        return extractPolygonGeometry(geojson.geometry);
-    }
-    if (geojson.type === 'FeatureCollection' && geojson.features && geojson.features.length > 0) {
-        for (var i = 0; i < geojson.features.length; i++) {
-            var result = extractPolygonGeometry(geojson.features[i]);
-            if (result) return result;
-        }
-    }
-    return null;
-}
-
-function calculateAreaHa(geojson) {
-    try {
-        var coords;
-        if (geojson.type === 'Polygon') coords = geojson.coordinates[0];
-        else if (geojson.type === 'Feature' && geojson.geometry.type === 'Polygon') coords = geojson.geometry.coordinates[0];
-        else if (geojson.type === 'FeatureCollection' || geojson.type === 'MultiPolygon') {
-            var extracted = extractPolygonGeometry(geojson);
-            if (extracted) return calculateAreaHa(extracted);
-            return 0;
-        }
-        else return 0;
-        var area = 0, n = coords.length;
-        for (var i = 0; i < n - 1; i++) {
-            var j = (i + 1) % n;
-            area += (coords[j][0] * Math.PI / 180 - coords[i][0] * Math.PI / 180) * (2 + Math.sin(coords[i][1] * Math.PI / 180) + Math.sin(coords[j][1] * Math.PI / 180));
-        }
-        area = Math.abs(area * 6378137 * 6378137 / 2);
-        return Math.round(area / 10000 * 100) / 100;
-    } catch(e) { return 0; }
-}
-
-function updateLuas(geojson) {
-    var ha = calculateAreaHa(geojson);
-    var luasEl = document.getElementById('luas_ha');
-    var infoEl = document.getElementById('luas-info');
-    if (ha > 0) {
-        luasEl.value = ha;
-        infoEl.textContent = '✓ Luas: ' + ha + ' Ha';
-        infoEl.className = 'mt-1 text-xs text-emerald-600 font-medium';
-    } else {
-        luasEl.value = '';
-        infoEl.textContent = 'Gambar polygon untuk menghitung luas';
-        infoEl.className = 'mt-1 text-xs text-slate-400';
-    }
-    syncLuasFullscreen();
-}
 
 function syncGeoJson() {
     var layers = drawnItems.getLayers();
@@ -763,76 +842,54 @@ function syncGeoJson() {
         var geojson = layers[0].toGeoJSON().geometry;
         var geoStr = JSON.stringify(geojson);
         document.getElementById('koordinat_geojson').value = geoStr;
-        document.getElementById('textarea_geojson').value = geoStr;
         updateLuas(geojson);
     } else {
         document.getElementById('koordinat_geojson').value = '';
-        document.getElementById('textarea_geojson').value = '';
         updateLuas({});
     }
+    syncLuasFullscreen();
 }
 
-// Load existing polygon
-var existingGeojson = document.getElementById('koordinat_geojson').value;
-if (existingGeojson) {
+// ─── FORM SUBMIT ─────────────────────────────────────────────────
+document.getElementById('form-blok-lahan').addEventListener('submit', function() {
+    // Force sync jika masih dalam mode edit
+    if (isEditingPolygon) {
+        syncGeoJson();
+    }
+});
+
+// ─── LOAD OLD VALUE ──────────────────────────────────────────────
+var oldGeojson = document.getElementById('koordinat_geojson').value;
+if (oldGeojson) {
     try {
-        var parsed = JSON.parse(existingGeojson);
+        var parsed = JSON.parse(oldGeojson);
         L.geoJSON(parsed, { style: { color: '#059669', fillColor: '#059669', fillOpacity: 0.3, weight: 2 } })
             .eachLayer(function(l) { drawnItems.addLayer(l); });
         drawMap.fitBounds(drawnItems.getBounds().pad(0.2));
         updateLuas(parsed);
     } catch(e) {}
+} else if (existingBloks.length > 0) {
+    var allBounds = L.featureGroup();
+    existingBloks.forEach(function(b) { if (b.geojson) L.geoJSON(b.geojson).eachLayer(function(l) { allBounds.addLayer(l); }); });
+    if (allBounds.getLayers().length > 0) drawMap.fitBounds(allBounds.getBounds().pad(0.1));
+} else if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(pos) { drawMap.setView([pos.coords.latitude, pos.coords.longitude], 14); });
 }
 
-// Textarea blur → recalculate
-document.getElementById('textarea_geojson').addEventListener('blur', function() {
-    var val = this.value.trim();
-    var jsonPreviewWrapper = document.getElementById('json-preview-wrapper');
-    if (!val) {
-        updateLuas({});
-        if (jsonPreviewWrapper) jsonPreviewWrapper.classList.add('hidden');
-        return;
-    }
-    try {
-        var parsed = JSON.parse(val);
-        var polygon = extractPolygonGeometry(parsed);
-        if (polygon) {
-            var geoStr = JSON.stringify(polygon);
-            document.getElementById('koordinat_geojson').value = geoStr;
-            updateLuas(polygon);
-            drawnItems.clearLayers();
-            L.geoJSON(polygon, { style: { color: '#059669', fillColor: '#059669', fillOpacity: 0.3, weight: 2 } })
-                .eachLayer(function(l) { drawnItems.addLayer(l); });
-            drawMap.fitBounds(drawnItems.getBounds().pad(0.2));
-
-            // ─── Preview Map di panel GeoJSON ───
-            if (jsonPreviewWrapper) {
-                jsonPreviewWrapper.classList.remove('hidden');
-                var ha = calculateAreaHa(polygon);
-                document.getElementById('json-preview-luas').textContent = ha > 0 ? ha.toFixed(2) : '—';
-                document.getElementById('json-preview-info').textContent = ha > 0 ? '✓ Luas terhitung: ' + ha.toFixed(2) + ' Ha' : 'Polygon dimuat';
-
-                var previewMapEl = document.getElementById('json-preview-map');
-                if (window._jsonPreviewMap) { window._jsonPreviewMap.remove(); }
-                window._jsonPreviewMap = L.map(previewMapEl, { zoomControl: true, attributionControl: false, dragging: true, scrollWheelZoom: true });
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(window._jsonPreviewMap);
-                var previewLayer = L.geoJSON(polygon, {
-                    style: { color: '#059669', fillColor: '#059669', fillOpacity: 0.35, weight: 2.5 }
-                }).addTo(window._jsonPreviewMap);
-                window._jsonPreviewMap.fitBounds(previewLayer.getBounds().pad(0.15));
-            }
-        } else {
-            document.getElementById('koordinat_geojson').value = val;
-            updateLuas(parsed);
-            drawnItems.clearLayers();
-            L.geoJSON(parsed, { style: { color: '#059669', fillColor: '#059669', fillOpacity: 0.3, weight: 2 } })
-                .eachLayer(function(l) { drawnItems.addLayer(l); });
-            drawMap.fitBounds(drawnItems.getBounds().pad(0.2));
-            if (jsonPreviewWrapper) jsonPreviewWrapper.classList.add('hidden');
-        }
-    } catch(e) {
-        updateLuas({});
-        if (jsonPreviewWrapper) jsonPreviewWrapper.classList.add('hidden');
+// ─── PREVIEW UMUR ────────────────────────────────────────────────
+document.getElementById('tahun_tanam').addEventListener('input', function() {
+    var tahun = parseInt(this.value), sekarang = new Date().getFullYear();
+    if (tahun >= 1990 && tahun <= sekarang) {
+        var umur = sekarang - tahun;
+        var kat = umur < 3 ? 'Belum Menghasilkan' : umur <= 8 ? 'Remaja' : umur <= 14 ? 'Menghasilkan Muda' : umur <= 25 ? 'Menghasilkan Tua' : 'Tua Renta';
+        document.getElementById('umur-preview').textContent = 'Umur: ' + umur + ' tahun — ' + kat;
+    } else { document.getElementById('umur-preview').textContent = ''; }
+});
+// Trigger preview pada saat halaman dimuat (untuk data yang sudah tersimpan)
+window.addEventListener('DOMContentLoaded', function() {
+    var el = document.getElementById('tahun_tanam');
+    if(el && el.value) {
+        el.dispatchEvent(new Event('input'));
     }
 });
 
@@ -905,7 +962,7 @@ document.addEventListener('sidebarToggled', function() {
     }
 });
 
-// ─── FITUR 5: DETEKSI OVERLAP POLYGON (EDIT) ────────────────────────
+// ─── FITUR 5: DETEKSI OVERLAP POLYGON ───────────────────────────────
 (function() {
     var overlapWarning = document.getElementById('overlap-warning');
     var overlapCheckbox = document.getElementById('overlap-confirm');
@@ -944,10 +1001,13 @@ document.addEventListener('sidebarToggled', function() {
         }
     }
 
+    // Simple polygon intersection check using bounding box + point-in-polygon
     function polygonsIntersect(geojsonA, geojsonB) {
         var coordsA = getCoords(geojsonA);
         var coordsB = getCoords(geojsonB);
         if (!coordsA || !coordsB) return false;
+
+        // Check if any point of A is inside B or vice versa
         for (var i = 0; i < coordsA.length - 1; i++) {
             if (pointInPolygon(coordsA[i], coordsB)) return true;
         }
@@ -978,21 +1038,30 @@ document.addEventListener('sidebarToggled', function() {
         return inside;
     }
 
+    // Observe geojson input changes
     var geojsonInput = document.getElementById('koordinat_geojson');
     if (geojsonInput) {
+        var observer = new MutationObserver(checkOverlapOnChange);
+        observer.observe(geojsonInput, { attributes: true, attributeFilter: ['value'] });
         geojsonInput.addEventListener('change', checkOverlapOnChange);
         geojsonInput.addEventListener('input', checkOverlapOnChange);
     }
 
+    // Checkbox enable submit
     if (overlapCheckbox) {
         overlapCheckbox.addEventListener('change', function() {
             if (submitBtn) submitBtn.disabled = !this.checked && !overlapWarning.classList.contains('hidden');
         });
     }
 
+    // Hook into Leaflet draw events to trigger overlap check
     if (typeof drawnItems !== 'undefined') {
-        drawMap.on(L.Draw.Event.CREATED, function() { setTimeout(checkOverlapOnChange, 200); });
-        drawMap.on(L.Draw.Event.EDITED, function() { setTimeout(checkOverlapOnChange, 200); });
+        drawMap.on(L.Draw.Event.CREATED, function() {
+            setTimeout(checkOverlapOnChange, 200);
+        });
+        drawMap.on(L.Draw.Event.EDITED, function() {
+            setTimeout(checkOverlapOnChange, 200);
+        });
     }
 })();
 
@@ -1009,22 +1078,31 @@ document.addEventListener('sidebarToggled', function() {
 
     if (!fileInput || !dropzone) return;
 
+    // File input change
     fileInput.addEventListener('change', function() {
-        if (this.files.length > 0) uploadFile(this.files[0]);
+        if (this.files.length > 0) {
+            uploadFile(this.files[0]);
+        }
     });
 
+    // Drag & drop
     dropzone.addEventListener('dragover', function(e) {
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         this.classList.add('border-emerald-400', 'bg-emerald-50');
     });
     dropzone.addEventListener('dragleave', function(e) {
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         this.classList.remove('border-emerald-400', 'bg-emerald-50');
     });
     dropzone.addEventListener('drop', function(e) {
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         this.classList.remove('border-emerald-400', 'bg-emerald-50');
-        if (e.dataTransfer.files.length > 0) uploadFile(e.dataTransfer.files[0]);
+        if (e.dataTransfer.files.length > 0) {
+            uploadFile(e.dataTransfer.files[0]);
+        }
     });
 
     function showStatus(type) {
@@ -1035,12 +1113,15 @@ document.addEventListener('sidebarToggled', function() {
     }
 
     function uploadFile(file) {
+        // Validate extension
         var ext = file.name.split('.').pop().toLowerCase();
         if (!['zip', 'geojson', 'json'].includes(ext)) {
             showStatus('error');
             errorMsg.textContent = 'Format file tidak didukung. Gunakan .zip (Shapefile) atau .geojson.';
             return;
         }
+
+        // Validate size (10MB)
         if (file.size > 10 * 1024 * 1024) {
             showStatus('error');
             errorMsg.textContent = 'Ukuran file terlalu besar. Maksimal 10 MB.';
@@ -1056,7 +1137,10 @@ document.addEventListener('sidebarToggled', function() {
         fetch('{{ route("api.geo.upload") }}', {
             method: 'POST',
             body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            }
         })
         .then(function(response) { return response.json(); })
         .then(function(data) {
@@ -1064,11 +1148,12 @@ document.addEventListener('sidebarToggled', function() {
                 showStatus('success');
                 successMsg.textContent = '✓ ' + data.message;
 
+                // Load polygon to map
                 var geojson = data.geojson;
                 var geoStr = JSON.stringify(geojson);
                 document.getElementById('koordinat_geojson').value = geoStr;
-                document.getElementById('textarea_geojson').value = geoStr;
 
+                // Render on main draw map
                 drawnItems.clearLayers();
                 L.geoJSON(geojson, {
                     style: { color: '#059669', fillColor: '#059669', fillOpacity: 0.3, weight: 2 }
@@ -1084,10 +1169,12 @@ document.addEventListener('sidebarToggled', function() {
                 var previewInfo = document.getElementById('upload-preview-info');
                 previewWrapper.classList.remove('hidden');
 
+                // Hitung luas
                 var ha = calculateAreaHa(geojson);
                 previewLuas.textContent = ha > 0 ? ha.toFixed(2) : '—';
                 previewInfo.textContent = ha > 0 ? '✓ Polygon berhasil dimuat dari file' : 'Polygon dimuat';
 
+                // Init preview map (destroy old one if exists)
                 var previewMapEl = document.getElementById('upload-preview-map');
                 if (window._uploadPreviewMap) {
                     window._uploadPreviewMap.remove();
@@ -1101,14 +1188,18 @@ document.addEventListener('sidebarToggled', function() {
 
                 window._uploadPreviewMap.fitBounds(previewLayer.getBounds().pad(0.15));
 
+                // Trigger overlap check
                 setTimeout(function() {
-                    if (typeof checkOverlapOnChange === 'function') checkOverlapOnChange();
+                    if (typeof checkOverlapOnChange === 'function') {
+                        checkOverlapOnChange();
+                    }
                     var evt = new Event('change', { bubbles: true });
                     document.getElementById('koordinat_geojson').dispatchEvent(evt);
                 }, 300);
             } else {
                 showStatus('error');
                 errorMsg.textContent = data.message || 'Gagal memproses file.';
+                // Hide preview on error
                 document.getElementById('upload-preview-wrapper').classList.add('hidden');
             }
         })
@@ -1119,6 +1210,266 @@ document.addEventListener('sidebarToggled', function() {
             console.error('Upload error:', err);
         });
     }
+})(); // ─── END UPLOAD IIFE ─────────────────────────────────────
+
+// ─── INPUT KOORDINAT MANUAL ──────────────────────────────────────
+var koordinatTitikCount = 0;
+
+function buatBarisTitik(index) {
+    var row = document.createElement('div');
+    row.className = 'flex items-center gap-2';
+    row.id = 'titik-row-' + index;
+    row.innerHTML =
+        '<div class="titik-badge w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center flex-shrink-0">' + index + '</div>' +
+        '<div class="flex-1 grid grid-cols-2 gap-2">' +
+            '<div>' +
+                '<label class="block text-[10px] text-slate-500 mb-1">Garis Lintang (Latitude)</label>' +
+                '<input type="number" id="titik-lat-' + index + '" step="any" placeholder="contoh: -0.0215"' +
+                    ' class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">' +
+            '</div>' +
+            '<div>' +
+                '<label class="block text-[10px] text-slate-500 mb-1">Garis Bujur (Longitude)</label>' +
+                '<input type="number" id="titik-lng-' + index + '" step="any" placeholder="contoh: 109.3425"' +
+                    ' class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">' +
+            '</div>' +
+        '</div>' +
+        '<button type="button" id="hapus-btn-' + index + '" onclick="hapusTitik(' + index + ')" title="Hapus titik ini"' +
+            ' class="w-7 h-7 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors flex-shrink-0">' +
+            '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>' +
+        '</button>';
+    return row;
+}
+
+function getTitikRows() {
+    return document.getElementById('koordinat-list').querySelectorAll('[id^="titik-row-"]');
+}
+
+function updateHapusBtns() {
+    var rows = getTitikRows();
+    var isMinimal = rows.length <= 3;
+    rows.forEach(function(row) {
+        var idNum = row.id.replace('titik-row-', '');
+        var btn = document.getElementById('hapus-btn-' + idNum);
+        if (!btn) return;
+        if (isMinimal) {
+            btn.disabled = true;
+            btn.classList.add('opacity-30', 'cursor-not-allowed');
+            btn.classList.remove('hover:bg-red-50', 'hover:text-red-600');
+            btn.title = 'Minimal 3 titik diperlukan';
+        } else {
+            btn.disabled = false;
+            btn.classList.remove('opacity-30', 'cursor-not-allowed');
+            btn.classList.add('hover:bg-red-50', 'hover:text-red-600');
+            btn.title = 'Hapus titik ini';
+        }
+    });
+}
+
+function tambahTitikKoordinat() {
+    koordinatTitikCount++;
+    var list = document.getElementById('koordinat-list');
+    list.appendChild(buatBarisTitik(koordinatTitikCount));
+    updateHapusBtns();
+}
+
+function hapusTitik(index) {
+    var rows = getTitikRows();
+    if (rows.length <= 3) return; // guard: tidak bisa hapus kalau tinggal 3
+    var row = document.getElementById('titik-row-' + index);
+    if (row) row.remove();
+    renumberTitik();
+    updateHapusBtns();
+}
+
+function renumberTitik() {
+    var rows = getTitikRows();
+    rows.forEach(function(row, i) {
+        var newNum = i + 1;
+        var oldId = row.id.replace('titik-row-', '');
+
+        // Update nomor bulat
+        var badge = row.querySelector('.titik-badge');
+        if (badge) badge.textContent = newNum;
+
+        // Simpan nilai lat/lng lama sebelum ganti id input
+        var latEl = document.getElementById('titik-lat-' + oldId);
+        var lngEl = document.getElementById('titik-lng-' + oldId);
+        var latVal = latEl ? latEl.value : '';
+        var lngVal = lngEl ? lngEl.value : '';
+
+        // Update semua id & onclick pada row
+        row.id = 'titik-row-' + newNum;
+
+        if (latEl) { latEl.id = 'titik-lat-' + newNum; latEl.value = latVal; }
+        if (lngEl) { lngEl.id = 'titik-lng-' + newNum; lngEl.value = lngVal; }
+
+        var btn = document.getElementById('hapus-btn-' + oldId);
+        if (btn) {
+            btn.id = 'hapus-btn-' + newNum;
+            btn.setAttribute('onclick', 'hapusTitik(' + newNum + ')');
+        }
+    });
+    // Reset counter ke jumlah baris saat ini agar tambah titik lanjut dari sini
+    koordinatTitikCount = rows.length;
+}
+
+function resetKoordinat() {
+    koordinatTitikCount = 0;
+    document.getElementById('koordinat-list').innerHTML = '';
+    document.getElementById('coords-error').classList.add('hidden');
+    document.getElementById('coords-preview-wrapper').classList.add('hidden');
+    document.getElementById('koordinat_geojson').value = '';
+    updateLuas({});
+    if (window._coordsPreviewMap) { window._coordsPreviewMap.remove(); window._coordsPreviewMap = null; }
+    // Inisialisasi ulang 3 titik kosong (minimal)
+    for (var i = 0; i < 3; i++) tambahTitikKoordinat();
+    updateHapusBtns();
+}
+
+function terapkanKoordinat() {
+    var errorDiv = document.getElementById('coords-error');
+    var errorMsg = document.getElementById('coords-error-msg');
+    errorDiv.classList.add('hidden');
+
+    // Kumpulkan semua baris titik yang ada
+    var list = document.getElementById('koordinat-list');
+    var rows = list.querySelectorAll('[id^="titik-row-"]');
+    var coords = [];
+
+    rows.forEach(function(row) {
+        var idNum = row.id.replace('titik-row-', '');
+        var latEl = document.getElementById('titik-lat-' + idNum);
+        var lngEl = document.getElementById('titik-lng-' + idNum);
+        if (!latEl || !lngEl) return;
+        var lat = latEl.value.trim();
+        var lng = lngEl.value.trim();
+        // Lewati baris yang keduanya kosong
+        if (lat === '' && lng === '') return;
+        coords.push({ lat: parseFloat(lat), lng: parseFloat(lng), idNum: idNum });
+    });
+
+    // Validasi minimal 3 titik
+    if (coords.length < 3) {
+        errorMsg.textContent = 'Minimal 3 titik koordinat diperlukan untuk membentuk polygon.';
+        errorDiv.classList.remove('hidden');
+        return;
+    }
+
+    // Validasi nilai lat/lng valid
+    for (var i = 0; i < coords.length; i++) {
+        var c = coords[i];
+        if (isNaN(c.lat) || isNaN(c.lng)) {
+            errorMsg.textContent = 'Titik ' + (i + 1) + ': nilai latitude atau longitude tidak valid.';
+            errorDiv.classList.remove('hidden');
+            var latEl2 = document.getElementById('titik-lat-' + c.idNum);
+            var lngEl2 = document.getElementById('titik-lng-' + c.idNum);
+            if (isNaN(c.lat) && latEl2) latEl2.classList.add('border-red-400');
+            if (isNaN(c.lng) && lngEl2) lngEl2.classList.add('border-red-400');
+            return;
+        }
+        if (c.lat < -90 || c.lat > 90) {
+            errorMsg.textContent = 'Titik ' + (i + 1) + ': Latitude harus antara -90 dan 90.';
+            errorDiv.classList.remove('hidden');
+            return;
+        }
+        if (c.lng < -180 || c.lng > 180) {
+            errorMsg.textContent = 'Titik ' + (i + 1) + ': Longitude harus antara -180 dan 180.';
+            errorDiv.classList.remove('hidden');
+            return;
+        }
+    }
+
+    // Bentuk GeoJSON Polygon — tutup ring dengan mengulang titik pertama
+    var ring = coords.map(function(c) { return [c.lng, c.lat]; });
+    ring.push([coords[0].lng, coords[0].lat]); // tutup polygon
+
+    var polygon = { type: 'Polygon', coordinates: [ring] };
+    var geoStr = JSON.stringify(polygon);
+
+    // Simpan ke hidden input
+    document.getElementById('koordinat_geojson').value = geoStr;
+
+    // Hitung & tampilkan luas
+    var ha = calculateAreaHa(polygon);
+    var luasEl = document.getElementById('luas_ha');
+    var infoEl = document.getElementById('luas-info');
+    if (ha > 0) {
+        luasEl.value = ha;
+        infoEl.textContent = '✓ Luas terhitung: ' + ha + ' Ha dari ' + coords.length + ' titik koordinat';
+        infoEl.className = 'mt-1 text-xs text-emerald-600 font-medium';
+    }
+
+    // Render polygon di peta utama (tab Gambar di Peta)
+    drawnItems.clearLayers();
+    L.geoJSON(polygon, { style: { color: '#059669', fillColor: '#059669', fillOpacity: 0.3, weight: 2 } })
+        .eachLayer(function(l) { drawnItems.addLayer(l); });
+    syncLuasFullscreen();
+
+    // Tampilkan preview peta di panel koordinat
+    var previewWrapper = document.getElementById('coords-preview-wrapper');
+    previewWrapper.classList.remove('hidden');
+
+    document.getElementById('coords-preview-luas').textContent = ha > 0 ? ha.toFixed(2) : '—';
+    document.getElementById('coords-preview-info').textContent = ha > 0
+        ? '✓ Luas terhitung: ' + ha.toFixed(2) + ' Ha dari ' + coords.length + ' titik'
+        : 'Polygon terbentuk dari ' + coords.length + ' titik';
+
+    var previewMapEl = document.getElementById('coords-preview-map');
+    if (window._coordsPreviewMap) { window._coordsPreviewMap.remove(); }
+    window._coordsPreviewMap = L.map(previewMapEl, { zoomControl: true, attributionControl: false, dragging: true, scrollWheelZoom: true });
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, maxNativeZoom: 17 }).addTo(window._coordsPreviewMap);
+    var previewLayer = L.geoJSON(polygon, {
+        style: { color: '#059669', fillColor: '#059669', fillOpacity: 0.35, weight: 2.5 }
+    }).addTo(window._coordsPreviewMap);
+    window._coordsPreviewMap.fitBounds(previewLayer.getBounds().pad(0.2));
+
+    // Tambahkan marker nomor titik
+    coords.forEach(function(c, idx) {
+        L.marker([c.lat, c.lng], {
+            icon: L.divIcon({
+                className: '',
+                html: '<div style="width:20px;height:20px;background:#059669;border:2px solid #fff;border-radius:50%;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,0.3)">' + (idx + 1) + '</div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(window._coordsPreviewMap);
+    });
+
+    // Trigger overlap check
+    setTimeout(function() {
+        var evt = new Event('change', { bubbles: true });
+        document.getElementById('koordinat_geojson').dispatchEvent(evt);
+    }, 300);
+}
+
+
+// ─── INIT KOORDINAT FOR EDIT ───
+(function() {
+    var geojsonStr = document.getElementById('koordinat_geojson').value;
+    if (geojsonStr) {
+        try {
+            var geojson = JSON.parse(geojsonStr);
+            if (geojson && geojson.coordinates && geojson.coordinates.length > 0) {
+                var coords = geojson.coordinates[0];
+                if (coords.length > 0 && Array.isArray(coords[0])) {
+                    koordinatTitikCount = 0;
+                    document.getElementById('koordinat-list').innerHTML = '';
+                    var len = coords.length;
+                    if(len > 3 && coords[0][0] === coords[len-1][0] && coords[0][1] === coords[len-1][1]) {
+                        len = len - 1;
+                    }
+                    for (var i = 0; i < len; i++) {
+                        tambahTitikKoordinat();
+                        var idNum = i + 1;
+                        document.getElementById('titik-lng-' + idNum).value = coords[i][0];
+                        document.getElementById('titik-lat-' + idNum).value = coords[i][1];
+                    }
+                    setTimeout(terapkanKoordinat, 500);
+                }
+            }
+        } catch(e) { console.error('Error parsing existing geojson', e); }
+    }
 })();
+
 </script>
 @endpush

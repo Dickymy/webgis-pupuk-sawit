@@ -27,26 +27,39 @@
             @if($isEdit)
                 <input type="hidden" name="jenis_rule" value="{{ $rule->jenis_rule }}">
                 <div class="flex min-h-11 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200">
-                    {{ $rule->jenis_rule === 'DIAGNOSIS_VISUAL' ? 'Kondisi daun' : 'Waktu pemupukan' }}
+                    {{ $rule->jenis_rule === 'DIAGNOSIS_VISUAL' ? 'Diagnosis Visual' : 'Waktu pemupukan' }}
                 </div>
                 <p class="mt-1 text-xs text-slate-400">Jenis rule tidak diubah agar kode dan riwayat tetap konsisten.</p>
             @else
                 <select id="jenis_rule" name="jenis_rule" class="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
-                    <option value="DIAGNOSIS_VISUAL" @selected($selectedType === 'DIAGNOSIS_VISUAL')>Kondisi daun</option>
+                    <option value="DIAGNOSIS_VISUAL" @selected($selectedType === 'DIAGNOSIS_VISUAL')>Diagnosis Visual</option>
                     <option value="PEMBATAS_APLIKASI" @selected($selectedType === 'PEMBATAS_APLIKASI')>Waktu pemupukan</option>
                 </select>
             @endif
         </div>
 
         <div data-rule-section="visual" class="lg:col-span-2">
-            <label for="kondisi_warna_daun" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Kondisi daun <span class="text-red-500">*</span></label>
-            <select id="kondisi_warna_daun" name="kondisi_warna_daun" class="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
-                <option value="">Pilih kondisi hasil observasi</option>
-                @foreach($leafOptions as $option)
-                    <option value="{{ $option }}" @selected(old('kondisi_warna_daun', $rule->kondisi_warna_daun ?? '') === $option)>{{ $option }}</option>
-                @endforeach
-            </select>
-            <p class="mt-1 text-xs text-slate-400">Pilihan ini sama dengan data yang tersedia pada form observasi.</p>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="kondisi_warna_daun" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Kondisi daun <span class="text-red-500">*</span></label>
+                    <select id="kondisi_warna_daun" name="kondisi_warna_daun" class="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+                        <option value="">(Abaikan) - Tidak mengecek daun</option>
+                        @foreach($leafOptions as $option)
+                            <option value="{{ $option }}" @selected(old('kondisi_warna_daun', $rule->kondisi_warna_daun ?? '') === $option)>{{ $option }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="kondisi_topografi" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Kondisi Topografi <span class="text-red-500">*</span></label>
+                    <select id="kondisi_topografi" name="kondisi_topografi" class="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+                        <option value="">(Abaikan) - Semua topografi</option>
+                        @foreach(['Datar - Landai (< 12°)', 'Bergelombang - Miring (12° - 23°)', 'Curam - Berbukit (> 23°)'] as $option)
+                            <option value="{{ $option }}" @selected(old('kondisi_topografi', $rule->kondisi_topografi ?? '') === $option)>{{ $option }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <p class="mt-2 text-xs text-slate-400">Pilih salah satu atau keduanya. Kosongkan jika tidak relevan dengan rule yang dibuat.</p>
         </div>
 
         <div data-rule-section="timing" class="hidden lg:col-span-2">

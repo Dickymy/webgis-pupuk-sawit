@@ -101,7 +101,7 @@
                                 <td class="px-4 py-3 text-xs text-slate-600 dark:text-slate-300">
                                     @if($kondisi)
                                         <p>{{ $kondisi->warna_daun ?? 'Warna daun belum dicatat' }}</p>
-                                        <p class="text-[10px] text-slate-400">pH {{ $kondisi->ph_tanah ? number_format($kondisi->ph_tanah, 1) : '—' }} · {{ $kondisi->kondisi_drainase ?? 'drainase belum dicatat' }}</p>
+                                        <p class="text-[10px] text-slate-400">Drainase: {{ $kondisi->kondisi_drainase ?? 'belum dicatat' }}</p>
                                     @else
                                         <span class="text-slate-400">Isi fakta lapangan terlebih dahulu.</span>
                                     @endif

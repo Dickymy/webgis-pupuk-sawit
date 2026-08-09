@@ -142,7 +142,7 @@ class RbsService
                     continue;
                 }
 
-                if (! $this->evaluasiRule($rule, $kondisi, $kategoriUmur)) {
+                if (! $this->evaluasiRule($rule, $kondisi, $kategoriUmur, $blok)) {
                     continue;
                 }
 
@@ -237,7 +237,7 @@ class RbsService
      * Semua kondisi yang diisi di rule harus terpenuhi (AND logic).
      * Kondisi NULL di rule = tidak relevan / diabaikan.
      */
-    private function evaluasiRule(RuleBaseLanjutan $rule, KondisiLahan $kondisi, ?string $kategoriUmur): bool
+    private function evaluasiRule(RuleBaseLanjutan $rule, KondisiLahan $kondisi, ?string $kategoriUmur, BlokLahan $blok): bool
     {
         $jumlahKondisiDiRule = 0;
         $jumlahKondisiCocok = 0;
@@ -254,16 +254,13 @@ class RbsService
             $jumlahKondisiCocok++;
         }
 
-        // Cek range pH
-        if ($rule->kondisi_ph_min !== null || $rule->kondisi_ph_max !== null) {
+        // Cek topografi
+        if ($rule->kondisi_topografi !== null) {
             $jumlahKondisiDiRule++;
-            if ($kondisi->ph_tanah === null) {
+            if ($blok->topografi === null) {
                 return false;
             }
-            if ($rule->kondisi_ph_min !== null && (float) $kondisi->ph_tanah < (float) $rule->kondisi_ph_min) {
-                return false;
-            }
-            if ($rule->kondisi_ph_max !== null && (float) $kondisi->ph_tanah > (float) $rule->kondisi_ph_max) {
+            if ($rule->kondisi_topografi !== $blok->topografi) {
                 return false;
             }
             $jumlahKondisiCocok++;
@@ -333,27 +330,6 @@ class RbsService
             if ($rule->kondisi_drainase !== $kondisi->kondisi_drainase) {
                 return false;
             }
-            $jumlahKondisiCocok++;
-        }
-
-        // Cek defisiensi (array contains check)
-        // PERBAIKAN: Jika rule mensyaratkan defisiensi tertentu,
-        // kondisi WAJIB memiliki data defisiensi yang cocok (AND logic ketat)
-        if ($rule->kondisi_defisiensi !== null) {
-            $jumlahKondisiDiRule++;
-
-            $defisiensiInput = $kondisi->gejala_defisiensi ?? [];
-
-            // Jika input defisiensi kosong, rule tidak boleh terpicu
-            if (empty($defisiensiInput)) {
-                return false;
-            }
-
-            // Strict comparison untuk mencegah type juggling
-            if (! in_array($rule->kondisi_defisiensi, $defisiensiInput, true)) {
-                return false;
-            }
-
             $jumlahKondisiCocok++;
         }
 
@@ -866,7 +842,7 @@ class RbsService
             'kcl_max_kg_per_pokok_tahun' => null,
             'kcl_estimasi_kg_per_pokok_tahun' => null,
             'strategi_estimasi_dosis' => config('fertilization.reference_dose_strategy'),
-            'jumlah_pokok_snapshot' => (int) ($blok->luas_ha * $blok->sph),
+            'jumlah_pokok_snapshot' => $blok->jumlah_pokok_aktual,
             'dasar_perhitungan_json' => ['catatan' => 'Fase belum diverifikasi, dosis tidak dapat ditentukan.'],
             'peringatan_json' => ['Umur tepat 3 tahun dan fase belum diverifikasi.'],
             'kelengkapan_data_score' => $reliability['score'],

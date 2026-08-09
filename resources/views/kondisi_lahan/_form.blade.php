@@ -151,7 +151,22 @@ $control='w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm t
   document.getElementById('block-facts').innerHTML=fact('Luas',Number(block.luas_ha).toLocaleString('id-ID',{minimumFractionDigits:2})+' Ha')+fact('Pohon/Ha',Number(block.sph||0).toLocaleString('id-ID'))+fact('Perkiraan pohon',estimatedTrees.toLocaleString('id-ID'))+fact('Tahun tanam',block.tahun_tanam)+fact('Umur',block.umur!==null?block.umur+' tahun':'-')+fact('Fase',block.fase||block.kategori);
   const immature=block.kategori==='Belum Menghasilkan'||block.fase==='Tanaman Belum Menghasilkan';banner?.classList.toggle('hidden',!immature);
   if(weatherButton)weatherButton.disabled=!(block.centroid_lat&&block.centroid_lng);
-  if(fillHistory&&!isEdit&&!lastDateTouched&&lastDate){lastDate.value=block.tanggal_pemupukan_terakhir||'';document.getElementById('last-date-help').textContent=block.tanggal_pemupukan_terakhir?'Diisi otomatis dari Pelaksanaan Pemupukan. Ubah bila catatan lapangan lebih baru.':'Belum ada riwayat pelaksanaan. Isi jika diketahui atau biarkan kosong.'}
+  if(lastDate){
+   const hasHistory=!!block.tanggal_pemupukan_terakhir;
+   if(hasHistory){
+    lastDate.value=block.tanggal_pemupukan_terakhir;
+    lastDate.readOnly=true;
+    lastDate.classList.add('bg-slate-100','text-slate-500','cursor-not-allowed','opacity-75');
+    const help=document.getElementById('last-date-help');
+    if(help) help.innerHTML='<span class="text-amber-700 dark:text-amber-400 font-semibold">Dikunci:</span> Data diambil langsung dari riwayat Pelaksanaan Pemupukan resmi di sistem.';
+   }else{
+    lastDate.readOnly=false;
+    lastDate.classList.remove('bg-slate-100','text-slate-500','cursor-not-allowed','opacity-75');
+    if(fillHistory&&!isEdit&&!lastDateTouched) lastDate.value='';
+    const help=document.getElementById('last-date-help');
+    if(help) help.textContent='Belum ada riwayat pelaksanaan resmi. Isi jika diketahui atau biarkan kosong.';
+   }
+  }
  }
  function filterBlocks(autoSelectSingle){
   if(!ownerSelect||!blockSelect)return;const ownerId=ownerSelect.value,available=blockOptions.filter(o=>String(o.dataset.ownerId)===String(ownerId));

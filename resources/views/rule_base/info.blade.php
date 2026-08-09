@@ -38,7 +38,7 @@
 
     <section class="grid gap-4 xl:grid-cols-2">
         <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-            <p class="text-xs font-bold uppercase tracking-wide text-emerald-600">Empat rule kondisi daun</p>
+            <p class="text-xs font-bold uppercase tracking-wide text-emerald-600">Rule Diagnosis Visual</p>
             <h2 class="mt-1 text-base font-bold text-slate-900 dark:text-white">Gejala yang diperiksa</h2>
             <div class="mt-4 divide-y divide-slate-200 dark:divide-slate-700">
                 @foreach([

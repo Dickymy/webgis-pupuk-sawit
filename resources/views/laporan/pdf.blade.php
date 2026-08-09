@@ -12,344 +12,194 @@
         }
         
         body { 
-            font-family: 'Times-Roman', 'DejaVu Serif', 'Times New Roman', serif; 
-            font-size: 10.5px; 
-            color: #0f172a; 
+            font-family: 'Times New Roman', Times, serif; 
+            font-size: 11pt; 
+            color: #000000; 
             line-height: 1.5; 
             background: #ffffff;
         }
 
         /* Header */
-        .header { 
-            text-align: center; 
-            margin-bottom: 20px; 
-            border-bottom: 2px double #1e293b; 
-            padding-bottom: 12px; 
+        .kop-surat {
+            width: 100%;
+            border-bottom: 3px double #000000;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
         }
-        .header h1 { 
-            font-size: 14px; 
-            font-weight: 700; 
-            color: #0f172a; 
-            margin-bottom: 2px; 
+        
+        .kop-surat table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .kop-surat td {
+            vertical-align: middle;
+            text-align: center;
+        }
+        
+        .kop-surat h1 {
+            font-size: 14pt;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.5px; 
+            margin: 0;
+            padding: 0;
         }
-        .header h2 { 
-            font-size: 11px; 
-            font-weight: 600; 
-            color: #334155; 
-            margin-bottom: 4px; 
+        
+        .kop-surat h2 {
+            font-size: 12pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 3px 0;
+            padding: 0;
         }
-        .header p { 
-            font-size: 9px; 
-            color: #64748b; 
+        
+        .kop-surat p {
+            font-size: 10pt;
+            margin: 0;
+            padding: 0;
         }
-
-        /* Status Banner — print-friendly grayscale */
-        .status-banner { 
-            padding: 10px; 
-            border: 1px solid #1e293b; 
-            background: #f8fafc;
-            border-radius: 4px; 
-            margin-bottom: 16px; 
-            text-align: center; 
-            page-break-inside: avoid;
+        
+        .report-title {
+            text-align: center;
+            margin-bottom: 20px;
         }
-        .status-banner .label { 
-            font-size: 8px; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            font-weight: 700; 
-            color: #475569; 
+        
+        .report-title h3 {
+            font-size: 12pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-decoration: underline;
+            margin-bottom: 5px;
         }
-        .status-banner .value { 
-            font-size: 15px; 
-            font-weight: 800; 
-            color: #0f172a;
-            margin-top: 2px; 
+        
+        .report-title p {
+            font-size: 10pt;
         }
 
         /* Section */
         .section { 
-            margin-bottom: 18px; 
+            margin-bottom: 15px; 
             page-break-inside: avoid;
         }
         .section-title { 
-            font-size: 10px; 
-            font-weight: 700; 
-            color: #0f172a; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px; 
-            margin-bottom: 6px; 
-            padding-bottom: 3px; 
-            border-bottom: 1px solid #475569; 
+            font-size: 11pt; 
+            font-weight: bold; 
+            margin-bottom: 8px; 
+            text-transform: uppercase;
         }
 
-        /* Info Grid */
-        .info-grid { 
+        /* Standard Table */
+        .standard-table { 
             width: 100%; 
             border-collapse: collapse; 
             margin-bottom: 10px; 
         }
-        .info-grid td { 
-            padding: 5px 8px; 
-            border: 1px solid #cbd5e1; 
-            vertical-align: top; 
-            font-size: 10px; 
-        }
-        .info-grid .label { 
-            color: #475569; 
-            width: 25%; 
-            background: #f8fafc; 
-            font-weight: 600; 
-        }
-        .info-grid .value { 
-            color: #0f172a; 
-            font-weight: 600; 
-        }
-
-        /* Logistik — table */
-        .logistik-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-bottom: 10px; 
-        }
-        .logistik-table th, .logistik-table td { 
-            border: 1px solid #1e293b; 
-            padding: 6px 10px; 
-            text-align: center; 
-        }
-        .logistik-table th { 
-            background: #f1f5f9; 
-            font-size: 9px; 
-            font-weight: 700; 
-            color: #0f172a; 
-            text-transform: uppercase; 
-        }
-        .logistik-table td { 
-            font-size: 11px; 
-            font-weight: 700; 
-            color: #0f172a;
-        }
-
-        /* Jadwal table */
-        .jadwal-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-bottom: 10px; 
-        }
-        .jadwal-table th, .jadwal-table td { 
-            border: 1px solid #cbd5e1; 
-            padding: 5px 7px; 
-            text-align: left; 
-            font-size: 9.5px; 
-        }
-        .jadwal-table th { 
-            background: #f8fafc; 
-            font-weight: 700; 
-            color: #0f172a; 
-            font-size: 8.5px; 
-            text-transform: uppercase; 
-        }
-        .jadwal-table .num { 
-            text-align: right; 
-            font-weight: 700; 
-            color: #0f172a;
-        }
-
-        /* Saran box */
-        .saran-box { 
-            background: #f8fafc; 
-            border: 1px solid #cbd5e1; 
-            border-radius: 4px; 
-            padding: 8px 10px; 
-            margin-bottom: 12px; 
-            page-break-inside: avoid;
-        }
-        .saran-box .title { 
-            font-size: 9px; 
-            font-weight: 700; 
-            color: #0f172a; 
-            text-transform: uppercase; 
-            margin-bottom: 3px; 
-        }
-        .saran-box .text { 
-            font-size: 10px; 
-            color: #334155; 
-            line-height: 1.5; 
-        }
-
-        /* Catatan box */
-        .catatan-box { 
-            background: #f8fafc; 
-            border: 1px solid #cbd5e1; 
-            border-radius: 4px; 
-            padding: 8px 10px; 
-            margin-bottom: 12px; 
-            page-break-inside: avoid;
-        }
-        .catatan-box .title { 
-            font-size: 9px; 
-            font-weight: 700; 
-            color: #0f172a; 
-            text-transform: uppercase; 
-            margin-bottom: 3px; 
-        }
-        .catatan-box .text { 
-            font-size: 10px; 
-            color: #334155; 
-            line-height: 1.5; 
-        }
-
-        /* Masalah */
-        .masalah-item { 
-            display: inline-block; 
-            background: #f8fafc; 
-            border: 1px solid #cbd5e1; 
-            border-radius: 3px; 
-            padding: 2px 6px; 
-            font-size: 9px; 
-            margin: 2px 3px 2px 0; 
-            color: #0f172a; 
-            font-weight: 600; 
-        }
-
-        /* Pupuk card */
-        .pupuk-card { 
-            background: #f8fafc; 
-            border: 1px solid #cbd5e1; 
-            border-radius: 4px; 
-            padding: 6px 10px; 
-            margin-bottom: 5px; 
-            page-break-inside: avoid;
-        }
-        .pupuk-card .nama { 
-            font-size: 10.5px; 
-            font-weight: 700; 
-            color: #0f172a; 
-            margin-bottom: 2px; 
-        }
-        .pupuk-card .detail { 
-            font-size: 9px; 
-            color: #334155; 
-            line-height: 1.4; 
-        }
-
-        /* Rules table */
-        .rules-table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-bottom: 10px; 
-        }
-        .rules-table th, .rules-table td { 
-            border: 1px solid #e2e8f0; 
-            padding: 4px 6px; 
-            text-align: left; 
-            font-size: 8.5px; 
-        }
-        .rules-table th { 
-            background: #f8fafc; 
-            font-weight: 700; 
-            color: #475569; 
-        }
-        .rules-table td { 
-            color: #334155; 
-        }
-
-        .badge { 
-            display: inline-block; 
-            padding: 1px 4px; 
-            border-radius: 2px; 
-            font-size: 7.5px; 
-            font-weight: 700; 
-            border: 1px solid #cbd5e1;
-            background: #f8fafc;
-            color: #0f172a;
-        }
-
-        /* Disclaimer */
-        .disclaimer { 
-            background: #f8fafc; 
-            border: 1px solid #cbd5e1; 
-            border-radius: 4px; 
+        .standard-table th, .standard-table td { 
+            border: 1px solid #000000; 
             padding: 6px 8px; 
-            margin-bottom: 10px; 
-            font-size: 8px; 
-            color: #475569; 
-            line-height: 1.4; 
+            font-size: 10pt;
+            vertical-align: top;
+        }
+        .standard-table th { 
+            font-weight: bold; 
+            text-align: center;
+        }
+        
+        .info-table td.label {
+            width: 25%;
+            font-weight: bold;
+        }
+        .info-table td.value {
+            width: 25%;
+        }
+
+        /* Boxed Text (Saran, Catatan) */
+        .text-box { 
+            border: 1px solid #000000; 
+            padding: 8px 12px; 
+            margin-bottom: 12px; 
             page-break-inside: avoid;
+            font-size: 10pt;
+        }
+        .text-box .title { 
+            font-weight: bold; 
+            margin-bottom: 5px; 
+            text-transform: uppercase;
+        }
+
+        /* Unordered lists */
+        ul {
+            margin-left: 20px;
+            padding-left: 0;
         }
 
         /* Footer */
         .footer { 
-            margin-top: 15px; 
-            padding-top: 8px; 
-            border-top: 1px solid #cbd5e1; 
+            margin-top: 30px; 
+            padding-top: 10px; 
             text-align: center; 
-            font-size: 8px; 
-            color: #64748b; 
+            font-size: 9pt; 
         }
-
-        /* Meta info kecil */
-        .meta-info { 
-            font-size: 8.5px; 
-            color: #475569; 
-            margin-bottom: 12px; 
-            padding: 5px 8px; 
-            background: #f8fafc; 
-            border-radius: 4px; 
-            border: 1px solid #cbd5e1; 
-            page-break-inside: avoid;
+        
+        .meta-info {
+            font-size: 9pt;
+            margin-bottom: 15px;
         }
+        
+        .disclaimer {
+            font-size: 9pt;
+            font-style: italic;
+            text-align: justify;
+        }
+        
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .font-bold { font-weight: bold; }
     </style>
 </head>
 <body>
 
     {{-- ═══ 1. KOP SURAT RESMI ═══ --}}
-    <table style="width: 100%; border-collapse: collapse; border: none; margin-bottom: 5px;">
-        <tr>
-            <td style="width: 80px; text-align: center; vertical-align: middle; border: none; padding: 0;">
-                <img src="{{ public_path('img/logo-150.png') }}" style="width: 70px; height: 70px; object-fit: contain;" alt="Logo Suluh Tani">
-            </td>
-            <td style="text-align: center; vertical-align: middle; border: none; padding: 0; font-family: 'Times-Roman', 'DejaVu Serif', serif;">
-                <div style="font-size: 15px; font-weight: bold; text-transform: uppercase; color: #0f172a; letter-spacing: 0.5px;">KELOMPOK TANI SULUH TANI</div>
-                <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #1e293b; margin-top: 2px;">DESA RESAK, KECAMATAN BONGAN</div>
-                <div style="font-size: 10px; font-weight: 500; color: #334155; margin-top: 2px;">Kabupaten Kutai Barat - Provinsi Kalimantan Timur</div>
-            </td>
-            <td style="width: 80px; border: none; padding: 0;"></td>
-        </tr>
-    </table>
-    <div style="border-top: 2px solid #0f172a; border-bottom: 0.5px solid #0f172a; height: 3px; margin-bottom: 12px; margin-top: 4px;"></div>
-
-    <div style="text-align: center; margin-bottom: 15px; font-family: 'Times-Roman', 'DejaVu Serif', serif;">
-        <h2 style="font-size: 12px; font-weight: bold; color: #0f172a; text-transform: uppercase; text-decoration: underline; margin-bottom: 2px;">LAPORAN REKOMENDASI PEMUPUKAN KELAPA SAWIT</h2>
-        <p style="font-size: 9px; color: #334155; font-weight: 600;">Nomor Dokumen: LHP-RBS/{{ $rekomendasiRbs->blokLahan->id }}/{{ $rekomendasiRbs->id }}/{{ $rekomendasiRbs->tanggal_analisis->format('Y') }}</p>
+    <div class="kop-surat">
+        <table>
+            <tr>
+                <td style="width: 90px;">
+                    <img src="{{ public_path('img/logo-150.png') }}" style="width: 80px; height: 80px; object-fit: contain;" alt="Logo Suluh Tani">
+                </td>
+                <td>
+                    <h1>KELOMPOK TANI SULUH TANI</h1>
+                    <h2>DESA JAMBUK MAKMUR, KECAMATAN BONGAN</h2>
+                    <p>Kabupaten Kutai Barat - Provinsi Kalimantan Timur</p>
+                </td>
+                <td style="width: 90px;"></td>
+            </tr>
+        </table>
     </div>
 
-    {{-- ═══ 2. STATUS — Dua Status Terpisah (v2.4) ═══ --}}
-    <div style="display: flex; gap: 10px; margin-bottom: 16px;">
-        {{-- Status Kondisi Tanaman --}}
-        <div class="status-banner" style="flex: 1;">
-            <div class="label">Kondisi Tanaman</div>
-            <div class="value">{{ $rekomendasiRbs->label_kondisi_tanaman }}</div>
-        </div>
-        {{-- Status Kelayakan Aplikasi --}}
-        <div class="status-banner" style="flex: 1;">
-            <div class="label">Kesiapan Pemupukan</div>
-            <div class="value">{{ $rekomendasiRbs->label_kelayakan }}</div>
-        </div>
+    <div class="report-title">
+        <h3>LAPORAN REKOMENDASI PEMUPUKAN KELAPA SAWIT</h3>
+        <p>Nomor Dokumen: LHP-RBS/{{ $rekomendasiRbs->blokLahan->id }}/{{ $rekomendasiRbs->id }}/{{ $rekomendasiRbs->tanggal_analisis->format('Y') }}</p>
     </div>
 
-    @if($rekomendasiRbs->alasan_kelayakan)
-    <div style="font-size: 9px; color: #475569; margin-bottom: 12px; padding: 4px 8px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 3px;">
-        <strong>Alasan Kesiapan:</strong> {{ $rekomendasiRbs->alasan_kelayakan }}
-    </div>
-    @endif
-
-    {{-- ═══ 3. INFO LAHAN — ringkas ═══ --}}
+    {{-- ═══ 2. STATUS ═══ --}}
     <div class="section">
-        <div class="section-title">Informasi Blok Lahan</div>
-        <table class="info-grid">
+        <table class="standard-table info-table">
+            <tr>
+                <td class="label">Kondisi Tanaman</td>
+                <td class="value font-bold">{{ $rekomendasiRbs->label_kondisi_tanaman }}</td>
+                <td class="label">Kesiapan Pemupukan</td>
+                <td class="value font-bold">{{ $rekomendasiRbs->label_kelayakan }}</td>
+            </tr>
+        </table>
+        @if($rekomendasiRbs->alasan_kelayakan)
+        <p style="font-size: 10pt; margin-top: -5px; margin-bottom: 10px;"><strong>Catatan Kesiapan:</strong> {{ $rekomendasiRbs->alasan_kelayakan }}</p>
+        @endif
+    </div>
+
+    {{-- ═══ 3. INFO LAHAN ═══ --}}
+    <div class="section">
+        <div class="section-title">A. INFORMASI BLOK LAHAN</div>
+        <table class="standard-table info-table">
             <tr>
                 <td class="label">Nama Blok</td>
                 <td class="value">{{ $rekomendasiRbs->blokLahan->nama_blok }}</td>
@@ -373,35 +223,35 @@
                 <td class="label">Jenis Tanah</td>
                 <td class="value">{{ $rekomendasiRbs->blokLahan->jenis_tanah }}</td>
                 <td class="label">Total Pohon</td>
-                <td class="value">{{ number_format($rekomendasiRbs->jumlah_pokok_snapshot ?? ($rekomendasiRbs->blokLahan->sph * $rekomendasiRbs->blokLahan->luas_ha)) }} pohon</td>
+                <td class="value">{{ number_format($rekomendasiRbs->jumlah_pokok_snapshot ?? $rekomendasiRbs->blokLahan->jumlah_pokok_aktual) }} pohon</td>
             </tr>
             @endif
         </table>
     </div>
 
-    {{-- ═══ 4. KEBUTUHAN PUPUK — Tahunan & Aplikasi Saat Ini (v2.4) ═══ --}}
+    {{-- ═══ 4. KEBUTUHAN PUPUK ═══ --}}
     <div class="section">
-        <div class="section-title">Kebutuhan Pupuk</div>
+        <div class="section-title">B. KEBUTUHAN PUPUK</div>
 
         {{-- Rentang Referensi Pahan --}}
         @if($rekomendasiRbs->urea_min_kg_per_pokok_tahun)
-        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 9px;">
-            <p style="font-weight: 700; color: #1e40af; margin-bottom: 4px;">Acuan dosis: Iyung Pahan (2013)</p>
-            <p style="color: #1e3a5f;">
+        <div class="text-box">
+            <div class="title">Acuan Dosis: Iyung Pahan (2013)</div>
+            <p>
                 Urea: {{ number_format($rekomendasiRbs->urea_min_kg_per_pokok_tahun, 2) }}–{{ number_format($rekomendasiRbs->urea_max_kg_per_pokok_tahun, 2) }} kg/pokok/tahun
                 &nbsp;|&nbsp;
                 KCl: {{ number_format($rekomendasiRbs->kcl_min_kg_per_pokok_tahun, 2) }}–{{ number_format($rekomendasiRbs->kcl_max_kg_per_pokok_tahun, 2) }} kg/pokok/tahun
             </p>
-            <p style="color: #64748b; font-size: 8px; margin-top: 2px;">
-                Fase: {{ $rekomendasiRbs->label_fase }} · Umur saat observasi: {{ $rekomendasiRbs->umur_tanaman_snapshot ?? '-' }} thn · Strategi: {{ $rekomendasiRbs->strategi_estimasi_dosis ?? 'midpoint' }}
+            <p style="font-size: 9pt; margin-top: 3px;">
+                Fase: {{ $rekomendasiRbs->label_fase }} | Umur observasi: {{ $rekomendasiRbs->umur_tanaman_snapshot ?? '-' }} thn | Strategi: {{ $rekomendasiRbs->strategi_estimasi_dosis ?? 'midpoint' }}
             </p>
         </div>
         @endif
 
-        {{-- Kebutuhan Tahunan (selalu tampil jika data tersedia) --}}
+        {{-- Kebutuhan Tahunan --}}
         @if($rekomendasiRbs->urea_total_estimasi_tahunan || $rekomendasiRbs->kcl_total_estimasi_tahunan)
-        <p style="font-size: 8.5px; color: #6b7280; font-weight: 600; margin-bottom: 4px;">KEBUTUHAN TAHUNAN (TOTAL):</p>
-        <table class="logistik-table">
+        <p class="font-bold" style="margin-bottom: 5px;">Kebutuhan Tahunan (Total):</p>
+        <table class="standard-table">
             <thead>
                 <tr>
                     <th>Jenis Pupuk</th>
@@ -414,20 +264,20 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>Urea</td>
-                    <td>{{ $rekomendasiRbs->urea_estimasi_kg_per_pokok_tahun ? number_format($rekomendasiRbs->urea_estimasi_kg_per_pokok_tahun, 2) . ' kg' : '-' }}</td>
-                    <td>{{ $rekomendasiRbs->urea_total_min_tahunan ? number_format($rekomendasiRbs->urea_total_min_tahunan, 1) . ' kg' : '-' }}</td>
-                    <td style="font-weight: 800;">{{ $rekomendasiRbs->urea_total_estimasi_tahunan ? number_format($rekomendasiRbs->urea_total_estimasi_tahunan, 1) . ' kg' : '-' }}</td>
-                    <td>{{ $rekomendasiRbs->urea_total_max_tahunan ? number_format($rekomendasiRbs->urea_total_max_tahunan, 1) . ' kg' : '-' }}</td>
-                    <td>{{ $rekomendasiRbs->urea_karung_estimasi_tahunan ?? '-' }} karung</td>
+                    <td class="text-center">Urea</td>
+                    <td class="text-center">{{ $rekomendasiRbs->urea_estimasi_kg_per_pokok_tahun ? number_format($rekomendasiRbs->urea_estimasi_kg_per_pokok_tahun, 2) . ' kg' : '-' }}</td>
+                    <td class="text-center">{{ $rekomendasiRbs->urea_total_min_tahunan ? number_format($rekomendasiRbs->urea_total_min_tahunan, 1) . ' kg' : '-' }}</td>
+                    <td class="text-center font-bold">{{ $rekomendasiRbs->urea_total_estimasi_tahunan ? number_format($rekomendasiRbs->urea_total_estimasi_tahunan, 1) . ' kg' : '-' }}</td>
+                    <td class="text-center">{{ $rekomendasiRbs->urea_total_max_tahunan ? number_format($rekomendasiRbs->urea_total_max_tahunan, 1) . ' kg' : '-' }}</td>
+                    <td class="text-center">{{ $rekomendasiRbs->urea_karung_estimasi_tahunan ?? '-' }} karung</td>
                 </tr>
                 <tr>
-                    <td>KCl</td>
-                    <td>{{ $rekomendasiRbs->kcl_estimasi_kg_per_pokok_tahun ? number_format($rekomendasiRbs->kcl_estimasi_kg_per_pokok_tahun, 2) . ' kg' : '-' }}</td>
-                    <td>{{ $rekomendasiRbs->kcl_total_min_tahunan ? number_format($rekomendasiRbs->kcl_total_min_tahunan, 1) . ' kg' : '-' }}</td>
-                    <td style="font-weight: 800;">{{ $rekomendasiRbs->kcl_total_estimasi_tahunan ? number_format($rekomendasiRbs->kcl_total_estimasi_tahunan, 1) . ' kg' : '-' }}</td>
-                    <td>{{ $rekomendasiRbs->kcl_total_max_tahunan ? number_format($rekomendasiRbs->kcl_total_max_tahunan, 1) . ' kg' : '-' }}</td>
-                    <td>{{ $rekomendasiRbs->kcl_karung_estimasi_tahunan ?? '-' }} karung</td>
+                    <td class="text-center">KCl</td>
+                    <td class="text-center">{{ $rekomendasiRbs->kcl_estimasi_kg_per_pokok_tahun ? number_format($rekomendasiRbs->kcl_estimasi_kg_per_pokok_tahun, 2) . ' kg' : '-' }}</td>
+                    <td class="text-center">{{ $rekomendasiRbs->kcl_total_min_tahunan ? number_format($rekomendasiRbs->kcl_total_min_tahunan, 1) . ' kg' : '-' }}</td>
+                    <td class="text-center font-bold">{{ $rekomendasiRbs->kcl_total_estimasi_tahunan ? number_format($rekomendasiRbs->kcl_total_estimasi_tahunan, 1) . ' kg' : '-' }}</td>
+                    <td class="text-center">{{ $rekomendasiRbs->kcl_total_max_tahunan ? number_format($rekomendasiRbs->kcl_total_max_tahunan, 1) . ' kg' : '-' }}</td>
+                    <td class="text-center">{{ $rekomendasiRbs->kcl_karung_estimasi_tahunan ?? '-' }} karung</td>
                 </tr>
             </tbody>
         </table>
@@ -441,74 +291,73 @@
         @endphp
 
         @if($isDitunda)
-        <div class="saran-box" style="border-left: 3px solid #d97706; background-color: #fffbeb; margin-top: 8px;">
-            <div class="title" style="color: #b45309;">APLIKASI SAAT INI: DITUNDA (0 kg)</div>
-            <div class="text" style="color: #92400e; font-size: 9px;">
+        <div class="text-box" style="margin-top: 10px;">
+            <div class="title">Status Aplikasi Saat Ini: DITUNDA (0 kg)</div>
+            <p>
                 Kebutuhan tahunan tetap tercatat di atas. Aplikasi saat ini ditunda karena kondisi kelayakan belum terpenuhi.
                 @if($rekomendasiRbs->alasan_kelayakan)
                 <br><strong>Alasan:</strong> {{ $rekomendasiRbs->alasan_kelayakan }}
                 @endif
-            </div>
+            </p>
         </div>
         @elseif($ureaAplikasi > 0 || $kclAplikasi > 0)
-        <p style="font-size: 8.5px; color: #6b7280; font-weight: 600; margin-top: 8px; margin-bottom: 4px;">TAHAP AKTIF SAAT INI{{ $rekomendasiRbs->active_stage ? ' (TAHAP ' . $rekomendasiRbs->active_stage . ')' : '' }}:</p>
-        <table class="logistik-table">
+        <p class="font-bold" style="margin-top: 10px; margin-bottom: 5px;">Tahap Aktif Saat Ini{{ $rekomendasiRbs->active_stage ? ' (Tahap ' . $rekomendasiRbs->active_stage . ')' : '' }}:</p>
+        <table class="standard-table">
             <thead>
                 <tr>
-                    <th>Jenis Pupuk</th>
-                    <th>Jumlah Tahap Aktif</th>
-                    <th>Karung (50 kg)</th>
+                    <th style="width: 40%;">Jenis Pupuk</th>
+                    <th style="width: 30%;">Jumlah Tahap Aktif</th>
+                    <th style="width: 30%;">Estimasi Karung (50 kg)</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>Urea</td>
-                    <td style="font-weight: 800;">{{ number_format($ureaAplikasi, 1) }} kg</td>
-                    <td>{{ $ureaAplikasi > 0 ? (int) ceil($ureaAplikasi / 50) : 0 }} karung</td>
+                    <td class="text-center">Urea</td>
+                    <td class="text-center font-bold">{{ number_format($ureaAplikasi, 1) }} kg</td>
+                    <td class="text-center">{{ $ureaAplikasi > 0 ? (int) ceil($ureaAplikasi / 50) : 0 }} karung</td>
                 </tr>
                 <tr>
-                    <td>KCl</td>
-                    <td style="font-weight: 800;">{{ number_format($kclAplikasi, 1) }} kg</td>
-                    <td>{{ $kclAplikasi > 0 ? (int) ceil($kclAplikasi / 50) : 0 }} karung</td>
+                    <td class="text-center">KCl</td>
+                    <td class="text-center font-bold">{{ number_format($kclAplikasi, 1) }} kg</td>
+                    <td class="text-center">{{ $kclAplikasi > 0 ? (int) ceil($kclAplikasi / 50) : 0 }} karung</td>
                 </tr>
             </tbody>
         </table>
         @if($rekomendasiRbs->alasan_tahap)
-        <p style="font-size: 9px; color: #475569; margin-top: 2px;">{{ $rekomendasiRbs->alasan_tahap }}</p>
+        <p style="font-size: 10pt; margin-top: 5px;"><strong>Catatan:</strong> {{ $rekomendasiRbs->alasan_tahap }}</p>
         @endif
         @endif
-
-        <p style="font-size: 9px; color: #6b7280; text-align: right;">*1 karung = 50 kg · Pembulatan karung ke atas (ceil)</p>
+        
+        <p style="font-size: 9pt; text-align: right; margin-top: 5px;">*Keterangan: 1 karung = 50 kg (pembulatan ke atas)</p>
     </div>
 
-    {{-- ═══ 5. JADWAL PEMUPUKAN — kapan harus bertindak ═══ --}}
+    {{-- ═══ 5. JADWAL PEMUPUKAN ═══ --}}
     @if($rekomendasiRbs->jadwal_pemupukan && count($rekomendasiRbs->jadwal_pemupukan) > 0)
     <div class="section">
-        <div class="section-title">Jadwal Pemupukan</div>
+        <div class="section-title">C. JADWAL PEMUPUKAN</div>
         @if($rekomendasiRbs->kondisiLahan?->ada_gulma_dominan || $rekomendasiRbs->kondisiLahan?->ada_serangan_hama)
-        <div class="saran-box" style="border-left: 3px solid #d97706; background-color: #fffbeb; margin-bottom: 8px; padding: 8px 10px;">
-            <div class="title" style="color: #b45309; font-weight: 700; font-size: 9px;">TINDAKAN SEBELUM PEMUPUKAN KIMIA</div>
-            <div class="text" style="color: #92400e; font-size: 9px; line-height: 1.4; margin-top: 4px;">
-                Sebelum melakukan pemupukan sesuai jadwal di bawah, pastikan tindakan berikut telah diselesaikan:
-                <ul style="margin-left: 12px; margin-top: 3px; padding-left: 0; list-style-type: disc;">
-                    @if($rekomendasiRbs->kondisiLahan?->ada_gulma_dominan)
-                    <li><strong>Pengendalian Gulma</strong>: Bersihkan gulma di piringan pohon terlebih dahulu agar pupuk kimia terserap sepenuhnya oleh tanaman utama, bukan oleh gulma pengganggu.</li>
-                    @endif
-                    @if($rekomendasiRbs->kondisiLahan?->ada_serangan_hama)
-                    <li><strong>Pengendalian Hama &amp; Penyakit</strong>: Tangani serangan hama aktif menggunakan pestisida/fungisida yang sesuai sebelum pemupukan dilakukan, agar tanaman dapat fokus pulih secara optimal.</li>
-                    @endif
-                </ul>
-            </div>
+        <div class="text-box" style="margin-bottom: 10px;">
+            <div class="title">Tindakan Pendahuluan (Sebelum Pemupukan)</div>
+            <p style="margin-bottom: 5px;">Sebelum melakukan pemupukan sesuai jadwal di bawah, pastikan tindakan berikut telah diselesaikan:</p>
+            <ul>
+                @if($rekomendasiRbs->kondisiLahan?->ada_gulma_dominan)
+                <li><strong>Pengendalian Gulma</strong>: Bersihkan gulma di piringan pohon terlebih dahulu agar pupuk kimia terserap sepenuhnya oleh tanaman utama.</li>
+                @endif
+                @if($rekomendasiRbs->kondisiLahan?->ada_serangan_hama)
+                <li><strong>Pengendalian Hama &amp; Penyakit</strong>: Tangani serangan hama aktif menggunakan pestisida/fungisida yang sesuai sebelum pemupukan dilakukan.</li>
+                @endif
+            </ul>
         </div>
         @endif
-        <table class="jadwal-table">
+        
+        <table class="standard-table">
             <thead>
                 <tr>
-                    <th style="width:18%">Tahap</th>
-                    <th style="width:22%">Waktu Aplikasi</th>
-                    <th style="width:14%">Dosis/Pokok</th>
-                    <th style="width:14%">Total Blok</th>
-                    <th style="width:32%">Cara & Petunjuk</th>
+                    <th style="width:15%">Tahap</th>
+                    <th style="width:20%">Waktu Aplikasi</th>
+                    <th style="width:15%">Dosis/Pokok</th>
+                    <th style="width:15%">Total Blok</th>
+                    <th style="width:35%">Cara & Petunjuk Aplikasi</th>
                 </tr>
             </thead>
             <tbody>
@@ -518,8 +367,7 @@
                     $hasKcl = isset($jadwal['kcl_kg']) && $jadwal['kcl_kg'] > 0;
                     $isCombined = $hasUrea && $hasKcl;
                     
-                    // Pahan v2.6: Gunakan jumlah_pokok_snapshot untuk dosis per pokok
-                    $jumlahPokokPdf = $rekomendasiRbs->jumlah_pokok_snapshot ?? (($rekomendasiRbs->sph_snapshot ?? $rekomendasiRbs->blokLahan->sph) * ($rekomendasiRbs->luas_ha_snapshot ?? $rekomendasiRbs->blokLahan->luas_ha));
+                    $jumlahPokokPdf = $rekomendasiRbs->jumlah_pokok_snapshot ?? $rekomendasiRbs->blokLahan->jumlah_pokok_aktual;
                     
                     $dosisPokok = '-';
                     $totalKg = '-';
@@ -540,14 +388,14 @@
                     }
                 @endphp
                 <tr>
-                    <td style="font-weight:600;">{{ $jadwal['nama_tahap'] }}</td>
-                    <td>{{ $jadwal['estimasi_waktu'] }}</td>
-                    <td class="num">{{ $dosisPokok }}</td>
-                    <td class="num">{{ $totalKg }}</td>
+                    <td class="text-center font-bold">{{ $jadwal['nama_tahap'] }}</td>
+                    <td class="text-center">{{ $jadwal['estimasi_waktu'] }}</td>
+                    <td class="text-center">{{ $dosisPokok }}</td>
+                    <td class="text-center">{{ $totalKg }}</td>
                     <td>
-                        <span style="font-size:8.5px;">{{ $jadwal['metode_aplikasi'] }}</span>
+                        {{ $jadwal['metode_aplikasi'] }}
                         @if(!empty($jadwal['catatan']))
-                        <div style="font-size:8px; color:#92400e; margin-top:2px; font-style:italic;">⚠️ {{ $jadwal['catatan'] }}</div>
+                        <div style="font-size: 9pt; font-style: italic; margin-top: 4px;">Catatan: {{ $jadwal['catatan'] }}</div>
                         @endif
                     </td>
                 </tr>
@@ -557,61 +405,77 @@
     </div>
     @endif
 
-    {{-- ═══ 6. CATATAN DOSIS — peringatan penting ═══ --}}
-    @if($rekomendasiRbs->catatan_dosis)
-    <div class="catatan-box">
-        <div class="title">⚠ Catatan Penting</div>
-        <div class="text">{{ $rekomendasiRbs->catatan_dosis }}</div>
-    </div>
-    @endif
-
-    {{-- ═══ 7. SARAN TINDAKAN — apa yang harus dilakukan ═══ --}}
-    @if($rekomendasiRbs->saran_tindakan_utama)
-    <div class="saran-box">
-        <div class="title">Saran Tindakan</div>
-        <div class="text">{{ $rekomendasiRbs->saran_tindakan_utama }}</div>
-    </div>
-    @endif
-
-    {{-- ═══ 8. MASALAH TERIDENTIFIKASI ═══ --}}
-    @if($rekomendasiRbs->masalah_teridentifikasi && count($rekomendasiRbs->masalah_teridentifikasi) > 0)
+    {{-- ═══ 6. CATATAN DOSIS & SARAN TINDAKAN ═══ --}}
+    @if($rekomendasiRbs->catatan_dosis || $rekomendasiRbs->saran_tindakan_utama)
     <div class="section">
-        <div class="section-title">Masalah Teridentifikasi</div>
-        <div style="margin-bottom: 8px;">
+        <div class="section-title">D. REKOMENDASI DAN CATATAN TAMBAHAN</div>
+        
+        @if($rekomendasiRbs->catatan_dosis)
+        <div class="text-box">
+            <div class="title">Catatan Mengenai Dosis:</div>
+            <p>{{ $rekomendasiRbs->catatan_dosis }}</p>
+        </div>
+        @endif
+        
+        @if($rekomendasiRbs->saran_tindakan_utama)
+        <div class="text-box">
+            <div class="title">Saran Tindakan Agronomis:</div>
+            <p>{{ $rekomendasiRbs->saran_tindakan_utama }}</p>
+        </div>
+        @endif
+    </div>
+    @endif
+
+    {{-- ═══ 7. MASALAH TERIDENTIFIKASI & REKOMENDASI SPESIFIK ═══ --}}
+    @if(($rekomendasiRbs->masalah_teridentifikasi && count($rekomendasiRbs->masalah_teridentifikasi) > 0) || ($rekomendasiRbs->rekomendasi_pupuk && count($rekomendasiRbs->rekomendasi_pupuk) > 0))
+    <div class="section">
+        <div class="section-title">E. KONDISI KHUSUS LAHAN</div>
+        
+        @if($rekomendasiRbs->masalah_teridentifikasi && count($rekomendasiRbs->masalah_teridentifikasi) > 0)
+        <p class="font-bold" style="margin-bottom: 5px;">Masalah yang Teridentifikasi:</p>
+        <ul style="margin-bottom: 10px;">
             @foreach($rekomendasiRbs->masalah_teridentifikasi as $masalah)
-                <span class="masalah-item">{{ $masalah }}</span>
+                <li>{{ $masalah }}</li>
             @endforeach
-        </div>
+        </ul>
+        @endif
+        
+        @if($rekomendasiRbs->rekomendasi_pupuk && count($rekomendasiRbs->rekomendasi_pupuk) > 0)
+        <p class="font-bold" style="margin-bottom: 5px;">Rekomendasi Pupuk Tambahan (Spesifik):</p>
+        <table class="standard-table">
+            <thead>
+                <tr>
+                    <th style="width: 30%;">Jenis Pupuk</th>
+                    <th style="width: 25%;">Dosis</th>
+                    <th style="width: 20%;">Waktu</th>
+                    <th style="width: 25%;">Metode</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($rekomendasiRbs->rekomendasi_pupuk as $pupuk)
+                <tr>
+                    <td>{{ $pupuk['jenis_utama'] ?? '' }}@if(!empty($pupuk['jenis_pendukung'])) + {{ $pupuk['jenis_pendukung'] }}@endif</td>
+                    <td class="text-center">{{ $pupuk['dosis'] ?? '-' }}</td>
+                    <td class="text-center">{{ $pupuk['waktu'] ?? '-' }}</td>
+                    <td class="text-center">{{ $pupuk['metode'] ?? '-' }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        @endif
     </div>
     @endif
 
-    {{-- ═══ 9. REKOMENDASI PUPUK SPESIFIK ═══ --}}
-    @if($rekomendasiRbs->rekomendasi_pupuk && count($rekomendasiRbs->rekomendasi_pupuk) > 0)
-    <div class="section">
-        <div class="section-title">Rekomendasi Pupuk Spesifik</div>
-        @foreach($rekomendasiRbs->rekomendasi_pupuk as $pupuk)
-        <div class="pupuk-card">
-            <div class="nama">{{ $pupuk['jenis_utama'] ?? '' }}@if(!empty($pupuk['jenis_pendukung'])) + {{ $pupuk['jenis_pendukung'] }}@endif</div>
-            <div class="detail">
-                @if(!empty($pupuk['dosis']))Dosis: {{ $pupuk['dosis'] }}<br>@endif
-                @if(!empty($pupuk['metode']))Metode: {{ $pupuk['metode'] }}<br>@endif
-                @if(!empty($pupuk['waktu']))Waktu: {{ $pupuk['waktu'] }}@endif
-            </div>
-        </div>
-        @endforeach
-    </div>
-    @endif
-
-    {{-- ═══ 10. DETAIL TEKNIS (font kecil, untuk dokumentasi) ═══ --}}
+    {{-- ═══ 8. DETAIL TEKNIS ═══ --}}
     @if($rekomendasiRbs->rules_terpicu && count($rekomendasiRbs->rules_terpicu) > 0)
     <div class="section">
-        <div class="section-title">Detail Teknis — Aturan yang Sesuai ({{ $rekomendasiRbs->jumlah_rule_terpicu }})</div>
-        <table class="rules-table">
+        <div class="section-title">F. LAMPIRAN TEKNIS ({{ $rekomendasiRbs->jumlah_rule_terpicu }} Aturan Terpicu)</div>
+        <table class="standard-table">
             <thead>
                 <tr>
                     <th style="width:5%">No</th>
-                    <th style="width:40%">Indikasi</th>
-                    <th style="width:25%">Pupuk</th>
+                    <th style="width:45%">Indikasi</th>
+                    <th style="width:20%">Tindakan/Pupuk</th>
                     <th style="width:15%">Status</th>
                     <th style="width:15%">Prioritas</th>
                 </tr>
@@ -619,19 +483,11 @@
             <tbody>
                 @foreach($rekomendasiRbs->rules_terpicu as $i => $rule)
                 <tr>
-                    <td>{{ $i + 1 }}</td>
+                    <td class="text-center">{{ $i + 1 }}</td>
                     <td>{{ $rule['indikasi'] ?? '-' }}</td>
                     <td>{{ $rule['pupuk'] ?? '-' }}</td>
-                    <td>
-                        @php $badgeClass = match($rule['status'] ?? '') {
-                            'Darurat' => 'badge-darurat',
-                            'Segera' => 'badge-segera',
-                            'Normal' => 'badge-normal',
-                            default => 'badge-tunda',
-                        }; @endphp
-                        <span class="badge {{ $badgeClass }}">{{ \App\Models\RekomendasiRbs::labelStatus($rule['status'] ?? '') }}</span>
-                    </td>
-                    <td>{{ $rule['prioritas'] ?? '-' }}</td>
+                    <td class="text-center">{{ \App\Models\RekomendasiRbs::labelStatus($rule['status'] ?? '') }}</td>
+                    <td class="text-center">{{ $rule['prioritas'] ?? '-' }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -639,22 +495,21 @@
     </div>
     @endif
 
-    {{-- ═══ RIWAYAT REALISASI PEMUPUKAN (Pahan v2.7) ═══ --}}
+    {{-- ═══ 9. RIWAYAT REALISASI PEMUPUKAN ═══ --}}
     @if(isset($realisasis) && $realisasis->count() > 0)
-    <div class="section" style="page-break-inside: avoid;">
-        <div class="section-title" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 8px;">RIWAYAT REALISASI PEMUPUKAN</div>
-        <table style="width: 100%; border-collapse: collapse; font-size: 9px;">
+    <div class="section">
+        <div class="section-title">G. RIWAYAT REALISASI PEMUPUKAN</div>
+        <table class="standard-table" style="font-size: 9pt;">
             <thead>
-                <tr style="background: #f1f5f9; border-bottom: 1px solid #cbd5e1;">
-                    <th style="padding: 4px 6px; text-align: left; font-weight: 700;">Tahap</th>
-                    <th style="padding: 4px 6px; text-align: left; font-weight: 700;">Tanggal</th>
-                    <th style="padding: 4px 6px; text-align: right; font-weight: 700;">Urea Rencana</th>
-                    <th style="padding: 4px 6px; text-align: right; font-weight: 700;">Urea Realisasi</th>
-                    <th style="padding: 4px 6px; text-align: right; font-weight: 700;">KCl Rencana</th>
-                    <th style="padding: 4px 6px; text-align: right; font-weight: 700;">KCl Realisasi</th>
-                    <th style="padding: 4px 6px; text-align: center; font-weight: 700;">Status</th>
-                    <th style="padding: 4px 6px; text-align: left; font-weight: 700;">Catatan</th>
-                    <th style="padding: 4px 6px; text-align: center; font-weight: 700;">Override</th>
+                <tr>
+                    <th>Tahap</th>
+                    <th>Tanggal</th>
+                    <th>Urea (Rencana)</th>
+                    <th>Urea (Realisasi)</th>
+                    <th>KCl (Rencana)</th>
+                    <th>KCl (Realisasi)</th>
+                    <th>Status</th>
+                    <th>Catatan</th>
                 </tr>
             </thead>
             <tbody>
@@ -665,46 +520,44 @@
                 @foreach($realisasis as $r)
                 @php
                     $isBatal = $r->status_realisasi === 'BATAL';
-                    $rowStyle = $isBatal ? 'color: #94a3b8; text-decoration: line-through;' : '';
                     if (!$isBatal) {
                         $totalUreaRealisasi += (float) $r->urea_realisasi_kg;
                         $totalKclRealisasi += (float) $r->kcl_realisasi_kg;
                     }
                 @endphp
-                <tr style="border-bottom: 1px solid #f1f5f9; {{ $rowStyle }}">
-                    <td style="padding: 3px 6px;">Tahap {{ $r->tahap }}</td>
-                    <td style="padding: 3px 6px;">{{ $r->tanggal_realisasi?->format('d/m/Y') }}</td>
-                    <td style="padding: 3px 6px; text-align: right;">{{ number_format($r->urea_rencana_kg, 1) }}</td>
-                    <td style="padding: 3px 6px; text-align: right; font-weight: 600;">{{ number_format($r->urea_realisasi_kg, 1) }}</td>
-                    <td style="padding: 3px 6px; text-align: right;">{{ number_format($r->kcl_rencana_kg, 1) }}</td>
-                    <td style="padding: 3px 6px; text-align: right; font-weight: 600;">{{ number_format($r->kcl_realisasi_kg, 1) }}</td>
-                    <td style="padding: 3px 6px; text-align: center;">{{ $isBatal ? 'Dibatalkan' : ($r->status_realisasi === 'SELESAI' ? 'Selesai' : 'Sebagian') }}</td>
-                    <td style="padding: 3px 6px; font-size: 8px;">{{ \Illuminate\Support\Str::limit($r->catatan_pelaksana, 40) }}</td>
-                    <td style="padding: 3px 6px; text-align: center;">{{ $r->override_annual_limit ? '✓' : '-' }}</td>
+                <tr>
+                    <td class="text-center">Tahap {{ $r->tahap }}</td>
+                    <td class="text-center">{{ $r->tanggal_realisasi?->format('d/m/Y') }}</td>
+                    <td class="text-center">{{ number_format($r->urea_rencana_kg, 1) }} kg</td>
+                    <td class="text-center font-bold">{{ $isBatal ? '-' : number_format($r->urea_realisasi_kg, 1) . ' kg' }}</td>
+                    <td class="text-center">{{ number_format($r->kcl_rencana_kg, 1) }} kg</td>
+                    <td class="text-center font-bold">{{ $isBatal ? '-' : number_format($r->kcl_realisasi_kg, 1) . ' kg' }}</td>
+                    <td class="text-center">{{ $isBatal ? 'Batal' : ($r->status_realisasi === 'SELESAI' ? 'Selesai' : 'Sebagian') }}</td>
+                    <td>{{ \Illuminate\Support\Str::limit($r->catatan_pelaksana, 40) }}</td>
                 </tr>
                 @endforeach
             </tbody>
             <tfoot>
-                <tr style="border-top: 2px solid #334155; font-weight: 700;">
-                    <td colspan="3" style="padding: 4px 6px;">Total Realisasi Aktif</td>
-                    <td style="padding: 4px 6px; text-align: right;">{{ number_format($totalUreaRealisasi, 1) }} kg</td>
-                    <td style="padding: 4px 6px;"></td>
-                    <td style="padding: 4px 6px; text-align: right;">{{ number_format($totalKclRealisasi, 1) }} kg</td>
-                    <td colspan="3"></td>
+                <tr>
+                    <td colspan="3" class="font-bold text-right">Total Realisasi Aktif:</td>
+                    <td class="text-center font-bold">{{ number_format($totalUreaRealisasi, 1) }} kg</td>
+                    <td></td>
+                    <td class="text-center font-bold">{{ number_format($totalKclRealisasi, 1) }} kg</td>
+                    <td colspan="2"></td>
                 </tr>
             </tfoot>
         </table>
 
         {{-- Info Program --}}
-        <div style="margin-top: 8px; font-size: 9px; color: #475569;">
+        <div style="margin-top: 10px; font-size: 10pt;">
             @if($rekomendasiRbs->urea_sisa_tahunan !== null)
-            <p><strong>Sisa kebutuhan tahunan:</strong> Urea {{ number_format($rekomendasiRbs->urea_sisa_tahunan, 1) }} kg · KCl {{ number_format($rekomendasiRbs->kcl_sisa_tahunan ?? 0, 1) }} kg</p>
+            <p><strong>Sisa Kebutuhan Tahunan:</strong> Urea {{ number_format($rekomendasiRbs->urea_sisa_tahunan, 1) }} kg | KCl {{ number_format($rekomendasiRbs->kcl_sisa_tahunan ?? 0, 1) }} kg</p>
             @endif
             @if($rekomendasiRbs->status_stage)
-            <p><strong>Status program:</strong> {{ \App\Services\CurrentApplicationCalculator::labelStatusStage($rekomendasiRbs->status_stage) }}</p>
+            <p><strong>Status Program:</strong> {{ \App\Services\CurrentApplicationCalculator::labelStatusStage($rekomendasiRbs->status_stage) }}</p>
             @endif
             @if($rekomendasiRbs->tanggal_minimum_tahap_berikutnya)
-            <p><strong>Tanggal minimum tahap berikutnya:</strong> {{ $rekomendasiRbs->tanggal_minimum_tahap_berikutnya->format('d/m/Y') }}</p>
+            <p><strong>Tanggal Minimum Tahap Berikutnya:</strong> {{ $rekomendasiRbs->tanggal_minimum_tahap_berikutnya->format('d/m/Y') }}</p>
             @endif
         </div>
     </div>
@@ -714,26 +567,23 @@
         $currentDataReady = $observationCompleteness['can_run_diagnosis'] ?? $rekomendasiRbs->data_cukup;
         $dataPendukungKurang = collect($observationCompleteness['missing_fields'] ?? $rekomendasiRbs->data_kurang ?? [])->filter()->values();
     @endphp
-    {{-- ═══ 11. META INFO — ketersediaan data ═══ --}}
+    {{-- ═══ 10. META INFO ═══ --}}
     <div class="meta-info">
-        <strong>Data analisis:</strong> {{ $currentDataReady ? 'Tersedia' : 'Belum lengkap' }}
+        <strong>Data Analisis:</strong> {{ $currentDataReady ? 'Tersedia' : 'Belum lengkap' }}
         @if($dataPendukungKurang->isNotEmpty())
-        &nbsp;·&nbsp; <strong>Data pendukung belum tersedia:</strong> {{ $dataPendukungKurang->implode(', ') }}
-        @else
-        &nbsp;·&nbsp; <strong>Data pendukung:</strong> Lengkap
+        <br><strong>Kekurangan Data Pendukung:</strong> {{ $dataPendukungKurang->implode(', ') }}
         @endif
     </div>
 
-    {{-- ═══ 12. DISCLAIMER ═══ --}}
+    {{-- ═══ 11. DISCLAIMER ═══ --}}
     <div class="disclaimer">
         <strong>Disclaimer:</strong> Estimasi sistem merupakan nilai kerja dari acuan Iyung Pahan (2013) dan bukan pengganti analisis laboratorium atau rekomendasi agronomis lapangan. Perhitungan kuantitatif dibatasi pada Urea dan MOP/KCl. Unsur P, Mg, B, dan unsur lain tetap dapat diperlukan sesuai kondisi tanaman dan hasil evaluasi ahli.
     </div>
 
-
     {{-- ═══ FOOTER ═══ --}}
     <div class="footer">
         Sistem Pendukung Keputusan Pemupukan Kelapa Sawit (SawitGIS)<br>
-        Dicetak: {{ now()->translatedFormat('d F Y, H:i') }} WITA
+        Dicetak pada: {{ now()->translatedFormat('d F Y, H:i') }} WITA
     </div>
 </body>
 </html>

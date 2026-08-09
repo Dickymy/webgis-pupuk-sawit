@@ -42,7 +42,7 @@
             <p class="mt-1 text-xl font-bold text-slate-800 dark:text-slate-100">{{ $activeRules->count() }}</p>
         </div>
         <div class="rounded-xl border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900 dark:bg-amber-950/30">
-            <p class="text-[10px] uppercase text-amber-700 dark:text-amber-300">Kondisi daun</p>
+            <p class="text-[10px] uppercase text-amber-700 dark:text-amber-300">Diagnosis Visual</p>
             <p class="mt-1 text-xl font-bold text-amber-800 dark:text-amber-200">{{ $visualRuleCount }}</p>
         </div>
         <div class="rounded-xl border border-blue-200 bg-blue-50/60 p-3 dark:border-blue-900 dark:bg-blue-950/30">
@@ -65,7 +65,9 @@
         @forelse($rules as $rule)
             @php
                 $isVisual = $rule->jenis_rule === 'DIAGNOSIS_VISUAL';
-                if ($isVisual) {
+                if ($rule->kondisi_topografi !== null) {
+                    $condition = 'Topografi lahan: '.$rule->kondisi_topografi;
+                } elseif ($isVisual) {
                     $condition = 'Kondisi daun: '.$rule->kondisi_warna_daun;
                 } elseif ($rule->kondisi_curah_hujan_min_mm !== null && $rule->kondisi_curah_hujan_max_mm !== null) {
                     $condition = 'Curah hujan '.(float) $rule->kondisi_curah_hujan_min_mm.'–'.(float) $rule->kondisi_curah_hujan_max_mm.' mm/bulan';
@@ -118,7 +120,7 @@
 
                 <footer class="flex flex-col gap-1 border-t border-slate-100 px-4 py-3 text-[10px] text-slate-500 dark:border-slate-700 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
                     <span><strong>Sumber:</strong> {{ $source ?: 'Belum lengkap' }}</span>
-                    <span>{{ $isVisual ? 'Kondisi daun' : 'Waktu pemupukan' }}</span>
+                    <span>{{ $isVisual ? ($rule->kondisi_topografi !== null ? 'Kondisi topografi' : 'Kondisi daun') : 'Waktu pemupukan' }}</span>
                 </footer>
             </article>
         @empty

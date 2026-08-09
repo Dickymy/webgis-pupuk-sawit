@@ -23,7 +23,7 @@ class FertilizationCalculationService
      */
     public function calculate(BlokLahan $blok, array $doseReference): array
     {
-        $jumlahPokok = $blok->luas_ha * $blok->sph;
+        $jumlahPokok = $blok->jumlah_pokok_aktual;
 
         $urea = $doseReference['urea'];
         $kcl = $doseReference['kcl'];

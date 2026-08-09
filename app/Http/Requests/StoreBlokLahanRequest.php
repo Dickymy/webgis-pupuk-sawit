@@ -22,8 +22,9 @@ class StoreBlokLahanRequest extends FormRequest
             'koordinat_geojson' => ['required', 'string'],
             'tahun_tanam' => ['required', 'integer', 'min:1990', 'max:'.now()->year],
             'jenis_tanah' => ['required', 'in:Tanah Lempung,Tanah Lempung Berpasir,Tanah Berpasir,Tanah Liat,Tanah Gambut,Tanah Aluvial,Tanah Podsolik Merah Kuning (PMK),Tanah Laterit,Tanah Berbatu,Lainnya'],
-            'topografi' => ['required', 'in:Datar 0-15°,Bergelombang 15-30°,Curam >30°'],
+            'topografi' => ['required', 'in:Datar - Landai (< 12°),Bergelombang - Miring (12° - 23°),Curam - Berbukit (> 23°)'],
             'fase_tanaman' => ['nullable', 'in:TBM,TM'],
+            'jumlah_pohon' => ['nullable', 'integer', 'min:1'],
         ];
     }
 

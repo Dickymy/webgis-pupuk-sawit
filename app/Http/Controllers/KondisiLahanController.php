@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateKondisiLahanRequest;
 use App\Models\Anggota;
 use App\Models\BlokLahan;
 use App\Models\KondisiLahan;
+use App\Models\RealisasiPemupukan;
 use App\Models\RekomendasiRbs;
 use App\Models\RuleBaseLanjutan;
 use App\Services\RbsService;
@@ -296,7 +297,6 @@ class KondisiLahanController extends Controller
     {
         $validated['ada_gulma_dominan'] = $request->boolean('ada_gulma_dominan');
         $validated['ada_serangan_hama'] = $request->boolean('ada_serangan_hama');
-        $validated['gejala_defisiensi'] = $validated['gejala_defisiensi'] ?? [];
 
         $leafValue = $validated['warna_daun'] ?? null;
         if (array_key_exists((string) $leafValue, config('observation.unmatched_leaf_values', []))) {
@@ -316,6 +316,17 @@ class KondisiLahanController extends Controller
             $validated['curah_hujan_mm_bulanan'] = null;
             $validated['periode_curah_hujan'] = null;
             $validated['sumber_curah_hujan'] = null;
+        }
+
+        // Pahan v2.6: Cegah manipulasi interval manual jika ada Realisasi resmi.
+        // Sumber Kebenaran (Source of Truth) untuk pemupukan terakhir adalah RealisasiPemupukan.
+        $latestRealisasi = RealisasiPemupukan::where('blok_lahan_id', $validated['blok_lahan_id'])
+            ->where('status_realisasi', '!=', 'BATAL')
+            ->latest('tanggal_realisasi')
+            ->first();
+
+        if ($latestRealisasi) {
+            $validated['tanggal_pemupukan_terakhir'] = $latestRealisasi->tanggal_realisasi;
         }
 
         unset(
@@ -426,10 +437,8 @@ class KondisiLahanController extends Controller
             $warnings[] = 'Curah hujan sangat rendah tapi kelembaban tinggi — mohon verifikasi apakah ada sumber air lain.';
         }
 
-        // Daun hijau normal tapi ada gejala defisiensi
-        if ($warnaDaun === 'Hijau Normal' && ! empty($defisiensi)) {
-            $warnings[] = 'Warna daun normal tapi ada dugaan unsur hara kurang — mohon verifikasi.';
-        }
+        // Musim hujan tapi kelembaban sangat kering — mungkin data tidak sinkron
+        // (validasi defisiensi vs warna daun dihapus karena gejala_defisiensi sudah tidak dipakai)
 
         // Musim hujan + curah hujan sangat rendah
         if ($musim === 'Musim Hujan' && $curahHujan === 'Sangat Rendah') {
