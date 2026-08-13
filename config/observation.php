@@ -47,9 +47,11 @@ return [
     /*
     | Nilai khusus hanya dipakai pada form. Controller mengubahnya menjadi
     | NULL sehingga tidak dianggap sebagai fakta yang cocok dengan rule.
+    | Ditampilkan terpisah di bawah garis pemisah agar petugas tahu ini
+    | bukan gejala yang akan diproses rule, melainkan catatan lapangan.
     */
     'unmatched_leaf_values' => [
-        '__gejala_lain' => 'Ada gejala lain',
-        '__tidak_pasti' => 'Belum dapat dipastikan',
+        '__gejala_lain' => '— Ada gejala lain (catat di catatan lapangan)',
+        '__tidak_pasti' => '— Tidak dapat dipastikan (perlu pemeriksaan lanjutan)',
     ],
 ];

@@ -54,7 +54,6 @@ class TrueLegacySchemaUpgradeTest extends TestCase
             'luas_ha' => 2.5,
             'sph' => 136,
             'tahun_tanam' => 2015,
-            'jenis_tanah' => 'Tanah Lempung',
             'topografi' => 'Datar 0-15°',
             'koordinat_geojson' => json_encode(['type' => 'Polygon', 'coordinates' => [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]]),
             'created_at' => now(),

@@ -68,8 +68,7 @@ class DemoSawitGisSeeder extends Seeder
                 'sph' => 136,
                 'tahun_tanam' => 2012,
                 'fase_tanaman' => 'TM',
-                'jenis_tanah' => 'Tanah Lempung',
-                'topografi' => 'Datar 0-15°',
+                'topografi' => 'Datar - Landai (< 12°)',
             ],
             // Blok 2: gejala daun bagian bawah menguning
             [
@@ -79,8 +78,7 @@ class DemoSawitGisSeeder extends Seeder
                 'sph' => 130,
                 'tahun_tanam' => 2015,
                 'fase_tanaman' => 'TM',
-                'jenis_tanah' => 'Tanah Lempung Berpasir',
-                'topografi' => 'Datar 0-15°',
+                'topografi' => 'Datar - Landai (< 12°)',
             ],
             // Blok 3: gejala bercak pada daun tua
             [
@@ -90,8 +88,7 @@ class DemoSawitGisSeeder extends Seeder
                 'sph' => 140,
                 'tahun_tanam' => 2010,
                 'fase_tanaman' => 'TM',
-                'jenis_tanah' => 'Tanah Podsolik Merah Kuning (PMK)',
-                'topografi' => 'Bergelombang 15-30°',
+                'topografi' => 'Bergelombang - Miring (12° - 23°)',
             ],
             // Blok 4: gejala tepi daun tua
             [
@@ -101,8 +98,7 @@ class DemoSawitGisSeeder extends Seeder
                 'sph' => 125,
                 'tahun_tanam' => 2008,
                 'fase_tanaman' => 'TM',
-                'jenis_tanah' => 'Tanah Berpasir',
-                'topografi' => 'Datar 0-15°',
+                'topografi' => 'Datar - Landai (< 12°)',
             ],
             // Blok 5: Curah hujan rendah (tunda)
             [
@@ -112,8 +108,7 @@ class DemoSawitGisSeeder extends Seeder
                 'sph' => 138,
                 'tahun_tanam' => 2014,
                 'fase_tanaman' => 'TM',
-                'jenis_tanah' => 'Tanah Lempung',
-                'topografi' => 'Datar 0-15°',
+                'topografi' => 'Datar - Landai (< 12°)',
             ],
             // Blok 6: Curah hujan tinggi
             [
@@ -123,8 +118,7 @@ class DemoSawitGisSeeder extends Seeder
                 'sph' => 132,
                 'tahun_tanam' => 2016,
                 'fase_tanaman' => 'TM',
-                'jenis_tanah' => 'Tanah Liat',
-                'topografi' => 'Datar 0-15°',
+                'topografi' => 'Datar - Landai (< 12°)',
             ],
             // Blok 7: Drainase buruk
             [
@@ -134,8 +128,7 @@ class DemoSawitGisSeeder extends Seeder
                 'sph' => 128,
                 'tahun_tanam' => 2013,
                 'fase_tanaman' => 'TM',
-                'jenis_tanah' => 'Tanah Gambut',
-                'topografi' => 'Datar 0-15°',
+                'topografi' => 'Datar - Landai (< 12°)',
             ],
             // Blok 8: TBM (tanaman muda)
             [
@@ -145,8 +138,7 @@ class DemoSawitGisSeeder extends Seeder
                 'sph' => 143,
                 'tahun_tanam' => 2024,
                 'fase_tanaman' => 'TBM',
-                'jenis_tanah' => 'Tanah Lempung',
-                'topografi' => 'Datar 0-15°',
+                'topografi' => 'Datar - Landai (< 12°)',
             ],
             // Blok 9: Belum diobservasi
             [
@@ -156,8 +148,7 @@ class DemoSawitGisSeeder extends Seeder
                 'sph' => 135,
                 'tahun_tanam' => 2011,
                 'fase_tanaman' => 'TM',
-                'jenis_tanah' => 'Tanah Aluvial',
-                'topografi' => 'Datar 0-15°',
+                'topografi' => 'Datar - Landai (< 12°)',
             ],
             // Blok 10: Tanpa polygon (belum ada GeoJSON)
             [
@@ -167,8 +158,7 @@ class DemoSawitGisSeeder extends Seeder
                 'sph' => 130,
                 'tahun_tanam' => 2017,
                 'fase_tanaman' => 'TM',
-                'jenis_tanah' => 'Tanah Lempung',
-                'topografi' => 'Datar 0-15°',
+                'topografi' => 'Datar - Landai (< 12°)',
             ],
         ];
 

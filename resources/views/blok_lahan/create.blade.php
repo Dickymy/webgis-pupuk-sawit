@@ -240,17 +240,26 @@
                         'placeholder' => 'Cari nama anggota...',
                         'options' => $anggotas,
                         'displayField' => 'nama',
-                        'selected' => old('anggota_id'),
+                        'selected' => old('anggota_id', $selectedAnggotaId),
                         'required' => true,
                         'error' => $errors->first('anggota_id'),
                         'helpText' => 'Belum ada? <a href="' . route('anggota.create') . '" class="text-emerald-600 font-medium hover:underline">Tambah anggota →</a>',
+                        'id' => 'anggota_id_select',
                     ])
+
+                    {{-- Panel ringkasan blok anggota (muncul saat anggota dipilih & sudah punya blok) --}}
+                    <div id="anggota-summary-panel" class="hidden mt-3 rounded-xl border border-emerald-200 bg-emerald-50/70 px-3.5 py-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-700" id="anggota-summary-title"></p>
+                        <div id="anggota-blok-list" class="mt-1.5 space-y-1"></div>
+                        <p class="mt-2 text-[10px] text-emerald-600 font-medium" id="anggota-next-blok"></p>
+                    </div>
                 </div>
                 <div>
                     <label for="nama_blok" class="block text-sm font-medium text-slate-700 mb-2">Nama Blok <span class="text-red-400">*</span></label>
                     <input type="text" id="nama_blok" name="nama_blok" value="{{ old('nama_blok') }}" required placeholder="contoh: Blok A, Blok Utara"
                         class="w-full px-4 py-3 bg-white border {{ $errors->has('nama_blok') ? 'border-red-400' : 'border-slate-300' }} rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
                     @error('nama_blok') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
+                    <p id="nama-blok-suggestion" class="mt-1.5 hidden text-[11px] text-emerald-600"></p>
                 </div>
             </div>
 
@@ -296,16 +305,19 @@
                     var otomatisWrapper = document.getElementById('populasi_otomatis_wrapper');
                     var manualWrapper = document.getElementById('populasi_manual_wrapper');
                     var inputJumlahPohon = document.getElementById('jumlah_pohon');
+                    var inputSph = document.getElementById('sph');
 
                     if (mode === 'otomatis') {
                         otomatisWrapper.style.display = 'block';
                         manualWrapper.style.display = 'none';
                         inputJumlahPohon.removeAttribute('required');
                         inputJumlahPohon.value = ''; 
+                        if (inputSph) inputSph.setAttribute('required', 'required');
                     } else {
                         otomatisWrapper.style.display = 'none';
                         manualWrapper.style.display = 'block';
                         inputJumlahPohon.setAttribute('required', 'required');
+                        if (inputSph) inputSph.removeAttribute('required');
                     }
                 }
             </script>
@@ -316,24 +328,13 @@
                     <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">🌱</span>
                     Kriteria Agronomis
                 </p>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label for="tahun_tanam" class="block text-sm font-medium text-slate-700 mb-2">Tahun Tanam <span class="text-red-400">*</span></label>
                         <input type="number" id="tahun_tanam" name="tahun_tanam" value="{{ old('tahun_tanam') }}" min="1990" max="{{ now()->year }}" required placeholder="2015"
                             class="w-full px-4 py-3 bg-white border {{ $errors->has('tahun_tanam') ? 'border-red-400' : 'border-slate-300' }} rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
                         @error('tahun_tanam') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                         <p class="mt-1 text-xs text-emerald-600 font-semibold" id="umur-preview"></p>
-                    </div>
-                    <div>
-                        @include('components.custom-select', [
-                            'name'     => 'jenis_tanah',
-                            'label'    => 'Jenis Tanah',
-                            'required' => true,
-                            'options'  => ['Tanah Lempung','Tanah Lempung Berpasir','Tanah Berpasir','Tanah Liat','Tanah Gambut','Tanah Aluvial','Tanah Podsolik Merah Kuning (PMK)','Tanah Laterit','Tanah Berbatu','Lainnya'],
-                            'selected' => old('jenis_tanah'),
-                            'placeholder' => '— Pilih Jenis Tanah —',
-                            'error'    => $errors->first('jenis_tanah'),
-                        ])
                     </div>
                     <div>
                         @include('components.custom-select', [
@@ -627,6 +628,16 @@
                     </div>
                 </div>
                 @error('luas_ha') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
+            </div>
+
+            {{-- Running total luas anggota (muncul jika anggota sudah punya blok) --}}
+            <div id="luas-total-panel" class="hidden rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+                <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500 mb-2">Akumulasi Luas Blok Anggota Ini</p>
+                <div id="luas-total-list" class="space-y-1 text-xs text-slate-600"></div>
+                <div class="mt-2 border-t border-slate-200 pt-2 flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-700">Total</span>
+                    <span class="text-sm font-bold text-emerald-700" id="luas-total-sum">0.00 Ha</span>
+                </div>
             </div>
 
             {{-- Overlap Warning (Fitur 5) --}}
@@ -1452,6 +1463,111 @@ function terapkanKoordinat() {
 // Inisialisasi 3 baris titik kosong saat halaman load (minimal)
 (function() {
     for (var i = 0; i < 3; i++) tambahTitikKoordinat();
+})();
+</script>
+@endpush
+
+@push('scripts')
+<script>
+// ─── Multi-Blok UX: Panel ringkasan anggota + auto-suggest + running total ───
+(function() {
+    var bloksPerAnggota = @json($bloksPerAnggota);
+    var namaBlokAlphabet = ['Blok A','Blok B','Blok C','Blok D','Blok E','Blok F','Blok G','Blok H'];
+
+    function updateAnggotaContext(anggotaId) {
+        var panel = document.getElementById('anggota-summary-panel');
+        var titleEl = document.getElementById('anggota-summary-title');
+        var listEl = document.getElementById('anggota-blok-list');
+        var nextEl = document.getElementById('anggota-next-blok');
+        var suggestionEl = document.getElementById('nama-blok-suggestion');
+        var luasTotalPanel = document.getElementById('luas-total-panel');
+        var luasTotalList = document.getElementById('luas-total-list');
+        var luasTotalSum = document.getElementById('luas-total-sum');
+        var namaBlokInput = document.getElementById('nama_blok');
+        var luasInput = document.getElementById('luas_ha');
+
+        if (!anggotaId || !bloksPerAnggota[anggotaId] || bloksPerAnggota[anggotaId].length === 0) {
+            panel.classList.add('hidden');
+            if (suggestionEl) suggestionEl.classList.add('hidden');
+            luasTotalPanel.classList.add('hidden');
+            return;
+        }
+
+        var bloks = bloksPerAnggota[anggotaId];
+        var jumlah = bloks.length;
+        var totalLuas = bloks.reduce(function(sum, b) { return sum + b.luas_ha; }, 0);
+
+        // Panel ringkasan
+        titleEl.textContent = 'Sudah punya ' + jumlah + ' blok · Total ' + totalLuas.toFixed(2) + ' Ha';
+        listEl.innerHTML = bloks.map(function(b) {
+            return '<div class="flex justify-between"><span class="text-emerald-800 font-medium">' + b.nama_blok + '</span><span class="text-emerald-600">' + b.luas_ha.toFixed(2) + ' Ha</span></div>';
+        }).join('');
+        nextEl.textContent = 'Blok ini akan menjadi blok ke-' + (jumlah + 1);
+        panel.classList.remove('hidden');
+
+        // Auto-suggest nama blok (hanya jika belum diisi user)
+        var usedNames = bloks.map(function(b) { return b.nama_blok.toLowerCase().trim(); });
+        var suggested = null;
+        for (var i = 0; i < namaBlokAlphabet.length; i++) {
+            if (usedNames.indexOf(namaBlokAlphabet[i].toLowerCase()) === -1) {
+                suggested = namaBlokAlphabet[i];
+                break;
+            }
+        }
+        if (suggested && namaBlokInput && !namaBlokInput.value) {
+            namaBlokInput.value = suggested;
+            if (suggestionEl) {
+                suggestionEl.textContent = 'Saran nama: ' + suggested + ' (dapat diubah)';
+                suggestionEl.classList.remove('hidden');
+            }
+        } else if (suggested && suggestionEl) {
+            suggestionEl.textContent = 'Saran nama berikutnya: ' + suggested;
+            suggestionEl.classList.remove('hidden');
+        }
+
+        // Running total luas
+        function updateRunningTotal() {
+            var luasIni = parseFloat(luasInput ? luasInput.value : 0) || 0;
+            luasTotalList.innerHTML = bloks.map(function(b) {
+                return '<div class="flex justify-between"><span>' + b.nama_blok + '</span><span class="font-medium">' + b.luas_ha.toFixed(2) + ' Ha</span></div>';
+            }).join('') +
+            '<div class="flex justify-between text-emerald-700 font-medium"><span>Blok ini (baru)</span><span>' + luasIni.toFixed(2) + ' Ha</span></div>';
+            luasTotalSum.textContent = (totalLuas + luasIni).toFixed(2) + ' Ha';
+        }
+        updateRunningTotal();
+        luasTotalPanel.classList.remove('hidden');
+        if (luasInput) {
+            luasInput.addEventListener('change', updateRunningTotal);
+            luasInput.addEventListener('input', updateRunningTotal);
+        }
+    }
+
+    // Listen for anggota selection change
+    // searchable-select sets a hidden input with name="anggota_id"
+    document.addEventListener('change', function(e) {
+        var el = e.target;
+        if (el && el.name === 'anggota_id') {
+            updateAnggotaContext(el.value);
+        }
+    });
+
+    // Trigger on page load if anggota_id already selected (e.g. from URL param or old())
+    document.addEventListener('DOMContentLoaded', function() {
+        var hiddenInput = document.querySelector('input[name="anggota_id"]');
+        if (hiddenInput && hiddenInput.value) {
+            updateAnggotaContext(hiddenInput.value);
+        }
+    });
+
+    // Also watch for hidden input value changes (searchable-select may set it programmatically)
+    var observer = new MutationObserver(function() {
+        var hiddenInput = document.querySelector('input[name="anggota_id"]');
+        if (hiddenInput && hiddenInput.value) {
+            updateAnggotaContext(hiddenInput.value);
+        }
+    });
+    var hiddenInput = document.querySelector('input[name="anggota_id"]');
+    if (hiddenInput) observer.observe(hiddenInput, { attributes: true, attributeFilter: ['value'] });
 })();
 </script>
 @endpush

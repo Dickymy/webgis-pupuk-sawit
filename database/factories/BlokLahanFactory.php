@@ -18,8 +18,7 @@ class BlokLahanFactory extends Factory
             'luas_ha' => $this->faker->randomFloat(2, 0.5, 5.0),
             'sph' => $this->faker->numberBetween(130, 160),
             'tahun_tanam' => $this->faker->numberBetween(2010, 2022),
-            'jenis_tanah' => 'Tanah Lempung',
-            'topografi' => 'Datar 0-15°',
+            'topografi' => 'Datar - Landai (< 12°)',
             'fase_tanaman' => 'TM',
             'koordinat_geojson' => json_encode([
                 'type' => 'Polygon',

@@ -10,6 +10,9 @@
     $pendingRules = $rules->where('aktif', false);
     $visualRuleCount = $activeRules->where('jenis_rule', 'DIAGNOSIS_VISUAL')->count();
     $timingRuleCount = $activeRules->where('jenis_rule', 'PEMBATAS_APLIKASI')->count();
+    $lahanRuleCount = $activeRules->where('jenis_rule', 'KONDISI_LAHAN')->count();
+    $methodRuleCount = $activeRules->where('jenis_rule', 'PENENTU_METODE')->count();
+    $dosisRuleCount = $activeRules->where('jenis_rule', 'PENENTU_DOSIS')->count();
 @endphp
 
 <div class="w-full space-y-4">
@@ -36,18 +39,30 @@
         </div>
     </section>
 
-    <section class="grid grid-cols-3 gap-2 sm:gap-3" aria-label="Ringkasan rule">
-        <div class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+    <section class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6 sm:gap-3" aria-label="Ringkasan rule">
+        <div onclick="filterRules('all', this)" class="rule-filter-card cursor-pointer transition-all ring-2 ring-slate-400 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800" data-active-ring="ring-slate-400">
             <p class="text-[10px] uppercase text-slate-400">Rule digunakan</p>
             <p class="mt-1 text-xl font-bold text-slate-800 dark:text-slate-100">{{ $activeRules->count() }}</p>
         </div>
-        <div class="rounded-xl border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900 dark:bg-amber-950/30">
+        <div onclick="filterRules('DIAGNOSIS_VISUAL', this)" class="rule-filter-card opacity-80 hover:opacity-100 cursor-pointer transition-all rounded-xl border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900 dark:bg-amber-950/30" data-active-ring="ring-amber-400">
             <p class="text-[10px] uppercase text-amber-700 dark:text-amber-300">Diagnosis Visual</p>
             <p class="mt-1 text-xl font-bold text-amber-800 dark:text-amber-200">{{ $visualRuleCount }}</p>
         </div>
-        <div class="rounded-xl border border-blue-200 bg-blue-50/60 p-3 dark:border-blue-900 dark:bg-blue-950/30">
+        <div onclick="filterRules('PEMBATAS_APLIKASI', this)" class="rule-filter-card opacity-80 hover:opacity-100 cursor-pointer transition-all rounded-xl border border-blue-200 bg-blue-50/60 p-3 dark:border-blue-900 dark:bg-blue-950/30" data-active-ring="ring-blue-400">
             <p class="text-[10px] uppercase text-blue-700 dark:text-blue-300">Waktu pemupukan</p>
             <p class="mt-1 text-xl font-bold text-blue-800 dark:text-blue-200">{{ $timingRuleCount }}</p>
+        </div>
+        <div onclick="filterRules('KONDISI_LAHAN', this)" class="rule-filter-card opacity-80 hover:opacity-100 cursor-pointer transition-all rounded-xl border border-rose-200 bg-rose-50/60 p-3 dark:border-rose-900 dark:bg-rose-950/30" data-active-ring="ring-rose-400">
+            <p class="text-[10px] uppercase text-rose-700 dark:text-rose-300">Kondisi Lahan</p>
+            <p class="mt-1 text-xl font-bold text-rose-800 dark:text-rose-200">{{ $lahanRuleCount }}</p>
+        </div>
+        <div onclick="filterRules('PENENTU_METODE', this)" class="rule-filter-card opacity-80 hover:opacity-100 cursor-pointer transition-all rounded-xl border border-purple-200 bg-purple-50/60 p-3 dark:border-purple-900 dark:bg-purple-950/30" data-active-ring="ring-purple-400">
+            <p class="text-[10px] uppercase text-purple-700 dark:text-purple-300">Penentu Metode</p>
+            <p class="mt-1 text-xl font-bold text-purple-800 dark:text-purple-200">{{ $methodRuleCount }}</p>
+        </div>
+        <div onclick="filterRules('PENENTU_DOSIS', this)" class="rule-filter-card opacity-80 hover:opacity-100 cursor-pointer transition-all rounded-xl border border-teal-200 bg-teal-50/60 p-3 dark:border-teal-900 dark:bg-teal-950/30" data-active-ring="ring-teal-400">
+            <p class="text-[10px] uppercase text-teal-700 dark:text-teal-300">Penentu Dosis</p>
+            <p class="mt-1 text-xl font-bold text-teal-800 dark:text-teal-200">{{ $dosisRuleCount }}</p>
         </div>
     </section>
 
@@ -65,23 +80,47 @@
         @forelse($rules as $rule)
             @php
                 $isVisual = $rule->jenis_rule === 'DIAGNOSIS_VISUAL';
-                if ($rule->kondisi_topografi !== null) {
-                    $condition = 'Topografi lahan: '.$rule->kondisi_topografi;
+                $isLahan = $rule->jenis_rule === 'KONDISI_LAHAN';
+                $isDosis = $rule->jenis_rule === 'PENENTU_DOSIS';
+
+                if ($isDosis) {
+                    if ($rule->kondisi_umur_tahun !== null && $rule->kondisi_kategori_umur !== null) {
+                        $condition = 'Umur Tanaman: ' . $rule->kondisi_umur_tahun . ' Tahun (Fase ' . $rule->kondisi_kategori_umur . ')';
+                    } elseif ($rule->kondisi_umur_tahun !== null) {
+                        $condition = 'Umur Tanaman: ' . $rule->kondisi_umur_tahun . ' Tahun';
+                    } elseif ($rule->kondisi_kategori_umur !== null) {
+                        $condition = 'Fase: ' . $rule->kondisi_kategori_umur;
+                    } else {
+                        $condition = 'Berlaku untuk semua umur tanaman';
+                    }
+                } elseif ($rule->jenis_rule === 'PENENTU_METODE' || $rule->kondisi_topografi !== null) {
+                    $condition = 'Topografi lahan: ' . ($rule->kondisi_topografi ?? 'Semua topografi');
                 } elseif ($isVisual) {
-                    $condition = 'Kondisi daun: '.$rule->kondisi_warna_daun;
+                    $condition = $rule->kondisi_warna_daun
+                        ? 'Kondisi daun: ' . $rule->kondisi_warna_daun
+                        : 'Semua kondisi daun';
+                } elseif ($isLahan) {
+                    $parts = [];
+                    if ($rule->kondisi_kelembaban) $parts[] = 'Kelembapan: '.$rule->kondisi_kelembaban;
+                    if ($rule->kondisi_drainase) $parts[] = 'Drainase: '.$rule->kondisi_drainase;
+                    if ($rule->ada_gulma_dominan !== null) $parts[] = 'Gulma: '.($rule->ada_gulma_dominan ? 'Ya' : 'Tidak');
+                    if ($rule->ada_serangan_hama !== null) $parts[] = 'Hama: '.($rule->ada_serangan_hama ? 'Ya' : 'Tidak');
+                    $condition = empty($parts) ? 'Kondisi lahan sesuai' : implode(' AND ', $parts);
                 } elseif ($rule->kondisi_curah_hujan_min_mm !== null && $rule->kondisi_curah_hujan_max_mm !== null) {
                     $condition = 'Curah hujan '.(float) $rule->kondisi_curah_hujan_min_mm.'–'.(float) $rule->kondisi_curah_hujan_max_mm.' mm/bulan';
                 } elseif ($rule->kondisi_curah_hujan_min_mm !== null) {
                     $condition = 'Curah hujan minimal '.(float) $rule->kondisi_curah_hujan_min_mm.' mm/bulan';
-                } else {
+                } elseif ($rule->kondisi_curah_hujan_max_mm !== null) {
                     $condition = 'Curah hujan maksimal '.(float) $rule->kondisi_curah_hujan_max_mm.' mm/bulan';
+                } else {
+                    $condition = 'Kondisi belum ditentukan';
                 }
                 $source = filled($rule->sumber_penulis)
                     ? $rule->sumber_penulis.($rule->sumber_tahun ? ' ('.$rule->sumber_tahun.')' : '')
                     : $rule->sumber_judul;
             @endphp
 
-            <article class="overflow-hidden rounded-xl border bg-white shadow-sm dark:bg-slate-800 {{ $rule->aktif ? 'border-slate-200 dark:border-slate-700' : 'border-amber-200 dark:border-amber-900' }}">
+            <article data-rule-type="{{ $rule->jenis_rule }}" class="rule-item overflow-hidden rounded-xl border bg-white shadow-sm dark:bg-slate-800 {{ $rule->aktif ? 'border-slate-200 dark:border-slate-700' : 'border-amber-200 dark:border-amber-900' }}">
                 <header class="flex flex-col gap-3 border-b border-slate-100 px-4 py-3 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="rounded-md bg-slate-900 px-2 py-1 font-mono text-[10px] font-bold text-white dark:bg-slate-100 dark:text-slate-900">{{ $rule->kode_rule }}</span>
@@ -108,11 +147,11 @@
 
                 <div class="grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
                     <div class="p-4">
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-blue-600">Jika</p>
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-blue-600">IF (OBSERVASI)</p>
                         <p class="mt-1 text-sm font-semibold leading-6 text-slate-900 dark:text-white">{{ $condition }}</p>
                     </div>
                     <div class="border-t border-slate-100 bg-slate-50/70 p-4 dark:border-slate-700 dark:bg-slate-900/30 lg:border-l lg:border-t-0">
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-600">Maka</p>
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-600">THEN</p>
                         <p class="mt-1 text-sm font-semibold leading-6 text-slate-900 dark:text-white">{{ $rule->indikasi_masalah }}</p>
                         <p class="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-300">{{ $rule->saran_tindakan }}</p>
                     </div>
@@ -120,7 +159,21 @@
 
                 <footer class="flex flex-col gap-1 border-t border-slate-100 px-4 py-3 text-[10px] text-slate-500 dark:border-slate-700 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
                     <span><strong>Sumber:</strong> {{ $source ?: 'Belum lengkap' }}</span>
-                    <span>{{ $isVisual ? ($rule->kondisi_topografi !== null ? 'Kondisi topografi' : 'Kondisi daun') : 'Waktu pemupukan' }}</span>
+                    <span>
+                        @if($rule->jenis_rule === 'DIAGNOSIS_VISUAL')
+                            Diagnosis Visual
+                        @elseif($rule->jenis_rule === 'PEMBATAS_APLIKASI')
+                            Waktu pemupukan
+                        @elseif($rule->jenis_rule === 'KONDISI_LAHAN')
+                            Kondisi lingkungan
+                        @elseif($rule->jenis_rule === 'PENENTU_METODE')
+                            Penentu metode
+                        @elseif($rule->jenis_rule === 'PENENTU_DOSIS')
+                            Penentu dosis
+                        @else
+                            {{ str_replace('_', ' ', $rule->jenis_rule) }}
+                        @endif
+                    </span>
                 </footer>
             </article>
         @empty
@@ -130,5 +183,40 @@
             </div>
         @endforelse
     </section>
+
 </div>
+
+@push('scripts')
+<script>
+    function filterRules(type, element) {
+        // Handle styling of filter cards
+        const cards = document.querySelectorAll('.rule-filter-card');
+        cards.forEach(card => {
+            // Remove active rings and add opacity
+            const ringClass = card.getAttribute('data-active-ring');
+            if (ringClass) {
+                card.classList.remove('ring-2', ringClass);
+            }
+            card.classList.add('opacity-80', 'hover:opacity-100');
+        });
+        
+        // Add active style to clicked card
+        element.classList.remove('opacity-80', 'hover:opacity-100');
+        const activeRingClass = element.getAttribute('data-active-ring');
+        if (activeRingClass) {
+            element.classList.add('ring-2', activeRingClass);
+        }
+
+        // Filter the rule items
+        const items = document.querySelectorAll('.rule-item');
+        items.forEach(item => {
+            if (type === 'all' || item.getAttribute('data-rule-type') === type) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+    }
+</script>
+@endpush
 @endsection

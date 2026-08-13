@@ -49,14 +49,28 @@ class BlokLahanController extends Controller
         return view('blok_lahan.index', compact('grouped', 'anggotas', 'totalBlok'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $anggotas = Anggota::orderBy('nama')->get();
         $existingBloks = BlokLahan::select('id', 'nama_blok', 'koordinat_geojson')->get()
             ->map(fn ($b) => ['nama' => $b->nama_blok, 'geojson' => json_decode($b->koordinat_geojson, true)])
             ->filter(fn ($b) => $b['geojson'] !== null)->values();
 
-        return view('blok_lahan.create', compact('anggotas', 'existingBloks'));
+        // Blok per anggota untuk panel ringkasan (JSON untuk JS)
+        $bloksPerAnggota = BlokLahan::select('id', 'anggota_id', 'nama_blok', 'luas_ha')
+            ->get()
+            ->groupBy('anggota_id')
+            ->map(fn ($bloks) => $bloks->map(fn ($b) => [
+                'id' => $b->id,
+                'nama_blok' => $b->nama_blok,
+                'luas_ha' => (float) $b->luas_ha,
+            ])->values())
+            ->toArray();
+
+        // Anggota yang sudah dipilih dari query param (misal dari link "Tambah Blok" di halaman show)
+        $selectedAnggotaId = $request->query('anggota_id');
+
+        return view('blok_lahan.create', compact('anggotas', 'existingBloks', 'bloksPerAnggota', 'selectedAnggotaId'));
     }
 
     public function store(StoreBlokLahanRequest $request)
@@ -82,7 +96,13 @@ class BlokLahanController extends Controller
     {
         $blokLahan->load(['anggota', 'kondisiTerbaru', 'rekomendasiRbsTerbaru']);
 
-        return view('blok_lahan.show', compact('blokLahan'));
+        // Blok saudara: blok lain milik anggota yang sama
+        $siblingBloks = BlokLahan::where('anggota_id', $blokLahan->anggota_id)
+            ->where('id', '!=', $blokLahan->id)
+            ->orderBy('nama_blok')
+            ->get(['id', 'nama_blok', 'luas_ha']);
+
+        return view('blok_lahan.show', compact('blokLahan', 'siblingBloks'));
     }
 
     public function edit(BlokLahan $blokLahan)

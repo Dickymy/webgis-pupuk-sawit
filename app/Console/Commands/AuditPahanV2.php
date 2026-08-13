@@ -32,9 +32,11 @@ class AuditPahanV2 extends Command
             $issues[] = "Ada {$blokTanpaFase} blok tanpa fase tanaman";
         }
 
-        // 2. Blok umur 3 tahun belum diverifikasi
+        // 2. Blok umur 3 tahun belum diverifikasi (database-agnostic)
+        $tahunIni = now()->year;
         $blokUmur3 = BlokLahan::whereNull('fase_tanaman')
-            ->whereRaw('(YEAR(CURDATE()) - tahun_tanam) = 3')
+            ->whereNotNull('tahun_tanam')
+            ->whereRaw('(? - tahun_tanam) = 3', [$tahunIni])
             ->count();
         $this->line("Blok umur 3 tahun belum verifikasi: {$blokUmur3}");
         if ($blokUmur3 > 0) {

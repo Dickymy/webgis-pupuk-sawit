@@ -68,6 +68,7 @@ class CuacaController extends Controller
             return response()->json([
                 'success' => true,
                 'curah_hujan_kategori' => $kategoriCurahHujan,
+                'curah_hujan_mm_bulanan' => round($totalPrecipitation, 1),
                 'musim_saat_ini' => $musimSaatIni,
                 'detail' => [
                     'total_curah_hujan_mm' => round($totalPrecipitation, 2),

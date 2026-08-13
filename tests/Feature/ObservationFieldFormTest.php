@@ -56,7 +56,7 @@ class ObservationFieldFormTest extends TestCase
             'tanggal_observasi' => now()->toDateString(),
             'warna_daun' => '__gejala_lain',
             'catatan_observasi' => 'Daun tampak tidak biasa dan perlu diperiksa lebih lanjut.',
-            'metode_data_hujan' => 'tidak_tersedia',
+            'metode_data_hujan' => 'perkiraan',
             'mode_data_hujan_dikonfirmasi' => 1,
         ])->assertSessionHasNoErrors();
 
@@ -115,7 +115,7 @@ class ObservationFieldFormTest extends TestCase
             'blok_lahan_id' => $blok->id,
             'tanggal_observasi' => now()->toDateString(),
             'warna_daun' => 'Hijau Normal',
-            'metode_data_hujan' => 'tidak_tersedia',
+            'metode_data_hujan' => 'perkiraan',
             'mode_data_hujan_dikonfirmasi' => 1,
             'foto_observasi' => UploadedFile::fake()->image('daun.jpg', 120, 120),
         ])->assertSessionHasNoErrors();
@@ -137,7 +137,7 @@ class ObservationFieldFormTest extends TestCase
             'blok_lahan_id' => $blok->id,
             'tanggal_observasi' => now()->toDateString(),
             'warna_daun' => 'Hijau Normal',
-            'metode_data_hujan' => 'tidak_tersedia',
+            'metode_data_hujan' => 'perkiraan',
             'mode_data_hujan_dikonfirmasi' => 1,
         ])->assertSessionHasErrors('blok_lahan_id');
     }
@@ -160,7 +160,7 @@ class ObservationFieldFormTest extends TestCase
             'blok_lahan_id' => $blok->id,
             'tanggal_observasi' => now()->toDateString(),
             'warna_daun' => 'Hijau Normal',
-            'metode_data_hujan' => 'tidak_tersedia',
+            'metode_data_hujan' => 'perkiraan',
             'mode_data_hujan_dikonfirmasi' => 1,
             'hapus_foto' => 1,
         ])->assertSessionHasNoErrors();

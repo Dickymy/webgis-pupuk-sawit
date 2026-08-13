@@ -59,12 +59,8 @@ class SimplifiedWorkflowUiTest extends TestCase
     {
         $detail = file_get_contents(resource_path('views/rbs/partials/_detail_readable.blade.php'));
 
-        $this->assertStringContainsString('Jadwal Pemupukan', $detail);
-        $this->assertStringContainsString('Penjelasan Tambahan', $detail);
-        $this->assertStringContainsString('Dasar Keputusan', $detail);
-        $this->assertStringContainsString('Data yang digunakan', $detail);
-        $this->assertStringNotContainsString('Jadwal dan cara aplikasi', $detail);
-        $this->assertLessThan(strpos($detail, 'Penjelasan Tambahan'), strpos($detail, 'Jadwal Pemupukan'));
+        $this->assertStringContainsString('IF (FAKTA DARI OBSERVASI LAPANGAN)', $detail);
+        $this->assertStringContainsString('THEN (KESIMPULAN SISTEM)', $detail);
     }
 
     public function test_observation_form_uses_three_progressive_steps(): void

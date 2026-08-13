@@ -32,7 +32,6 @@ class BlokLahanFaseTest extends TestCase
             'sph' => 136,
             'koordinat_geojson' => json_encode(['type' => 'Polygon', 'coordinates' => [[[0, 0], [1, 0], [1, 1], [0, 0]]]]),
             'tahun_tanam' => now()->year - 5,
-            'jenis_tanah' => 'Tanah Lempung',
             'topografi' => 'Datar - Landai (< 12°)',
         ], $overrides);
     }

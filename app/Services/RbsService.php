@@ -119,45 +119,20 @@ class RbsService
         // 8. Ambil semua rule aktif, urutkan dari prioritas tertinggi
         $rules = RuleBaseLanjutan::aktif()->orderBy('prioritas')->get();
 
-        // 9. Forward chaining sampai tidak ada fakta baru (fixpoint).
-        // Rule hanya boleh terpicu sekali, tetapi seluruh agenda dievaluasi ulang
-        // ketika sebuah rule menghasilkan fakta intermediate baru.
+        // 9. Forward Chaining Eksplisit (3 Tahapan)
+        // Rule dievaluasi berdasarkan tahap_eksekusi (1 -> 2 -> 3).
+        // Setiap tahap dapat menghasilkan fakta baru yang disuntikkan ke Working Memory.
         $rulesTerpicu = [];
-        $triggeredRuleIds = [];
-        $intermediateFlags = [];
-        $factsChanged = true;
-        $iteration = 0;
-        $maxIterations = max(1, $rules->count());
+        $workingMemory = []; // Menyimpan fakta antara (intermediate facts)
 
-        while ($factsChanged && $iteration < $maxIterations) {
-            $factsChanged = false;
-            $iteration++;
+        // TAHAP 1: Diagnosis Kondisi Tanaman & Lingkungan (tahap_eksekusi = 1 atau null)
+        $this->eksekusiTahap(1, $rules, $kondisi, $kategoriUmur, $blok, $umurSaatObservasi, $workingMemory, $rulesTerpicu);
 
-            foreach ($rules as $rule) {
-                if (isset($triggeredRuleIds[$rule->id])) {
-                    continue;
-                }
+        // TAHAP 2: Penentuan Dosis Awal (tahap_eksekusi = 2)
+        $this->eksekusiTahap(2, $rules, $kondisi, $kategoriUmur, $blok, $umurSaatObservasi, $workingMemory, $rulesTerpicu);
 
-                if (! $this->cekPrasyaratIntermediate($rule, $intermediateFlags)) {
-                    continue;
-                }
-
-                if (! $this->evaluasiRule($rule, $kondisi, $kategoriUmur, $blok)) {
-                    continue;
-                }
-
-                $rulesTerpicu[] = $rule;
-                $triggeredRuleIds[$rule->id] = true;
-
-                if (! empty($rule->kondisi_intermediate) && is_array($rule->kondisi_intermediate)) {
-                    $newFacts = array_merge($intermediateFlags, $rule->kondisi_intermediate);
-                    if ($newFacts !== $intermediateFlags) {
-                        $intermediateFlags = $newFacts;
-                        $factsChanged = true;
-                    }
-                }
-            }
-        }
+        // TAHAP 3: Penyesuaian Final / Tunda (tahap_eksekusi = 3)
+        $this->eksekusiTahap(3, $rules, $kondisi, $kategoriUmur, $blok, $umurSaatObservasi, $workingMemory, $rulesTerpicu);
 
         $hasVisualRule = collect($rulesTerpicu)
             ->contains(fn ($rule) => $rule->jenis_rule === 'DIAGNOSIS_VISUAL');
@@ -215,16 +190,52 @@ class RbsService
     // Evaluasi aturan secara berurutan.
 
     /**
-     * Cek apakah prasyarat intermediate terpenuhi (Rule Chaining - A2).
+     * Eksekusi satu tahapan Forward Chaining.
      */
-    private function cekPrasyaratIntermediate(RuleBaseLanjutan $rule, array $intermediateFlags): bool
+    private function eksekusiTahap(
+        int $tahap,
+        $rules,
+        KondisiLahan $kondisi,
+        ?string $kategoriUmur,
+        BlokLahan $blok,
+        int $umurSaatObservasi,
+        array &$workingMemory,
+        array &$rulesTerpicu
+    ): void {
+        $rulesDiTahapIni = $rules->filter(fn ($r) => ($r->tahap_eksekusi ?? 1) === $tahap);
+
+        foreach ($rulesDiTahapIni as $rule) {
+            // Cek apakah prasyarat fakta dari tahap sebelumnya terpenuhi
+            if (! $this->cekPrasyaratFakta($rule, $workingMemory)) {
+                continue;
+            }
+
+            // Cek apakah kondisi observasi (IF) terpenuhi
+            if (! $this->evaluasiRule($rule, $kondisi, $kategoriUmur, $blok, $umurSaatObservasi)) {
+                continue;
+            }
+
+            // Rule Terpicu!
+            $rulesTerpicu[] = $rule;
+
+            // Masukkan fakta baru yang dihasilkan (THEN) ke dalam Working Memory
+            if (! empty($rule->fakta_yang_dihasilkan) && is_array($rule->fakta_yang_dihasilkan)) {
+                $workingMemory = array_merge($workingMemory, $rule->fakta_yang_dihasilkan);
+            }
+        }
+    }
+
+    /**
+     * Cek apakah prasyarat fakta terpenuhi di dalam working memory.
+     */
+    private function cekPrasyaratFakta(RuleBaseLanjutan $rule, array $workingMemory): bool
     {
-        if (empty($rule->prasyarat_intermediate) || ! is_array($rule->prasyarat_intermediate)) {
+        if (empty($rule->prasyarat_fakta) || ! is_array($rule->prasyarat_fakta)) {
             return true;
         }
 
-        foreach ($rule->prasyarat_intermediate as $key => $value) {
-            if (! isset($intermediateFlags[$key]) || $intermediateFlags[$key] !== $value) {
+        foreach ($rule->prasyarat_fakta as $key => $value) {
+            if (! isset($workingMemory[$key]) || $workingMemory[$key] !== $value) {
                 return false;
             }
         }
@@ -237,7 +248,7 @@ class RbsService
      * Semua kondisi yang diisi di rule harus terpenuhi (AND logic).
      * Kondisi NULL di rule = tidak relevan / diabaikan.
      */
-    private function evaluasiRule(RuleBaseLanjutan $rule, KondisiLahan $kondisi, ?string $kategoriUmur, BlokLahan $blok): bool
+    private function evaluasiRule(RuleBaseLanjutan $rule, KondisiLahan $kondisi, ?string $kategoriUmur, BlokLahan $blok, int $umurTahun = 0): bool
     {
         $jumlahKondisiDiRule = 0;
         $jumlahKondisiCocok = 0;
@@ -345,10 +356,10 @@ class RbsService
             $jumlahKondisiCocok++;
         }
 
-        // Cek serangan hama
-        if ($rule->ada_serangan_hama === true) {
+        // Cek serangan hama (null = abaikan, true/false = evaluasi keduanya)
+        if ($rule->ada_serangan_hama !== null) {
             $jumlahKondisiDiRule++;
-            if (! $kondisi->ada_serangan_hama) {
+            if ((bool) $kondisi->ada_serangan_hama !== (bool) $rule->ada_serangan_hama) {
                 return false;
             }
             $jumlahKondisiCocok++;
@@ -384,10 +395,19 @@ class RbsService
             $jumlahKondisiCocok++;
         }
 
-        // Rule kesimpulan boleh bergantung penuh pada fakta intermediate.
+        // Cek umur spesifik (Untuk Rule Dosis)
+        if ($rule->kondisi_umur_tahun !== null) {
+            $jumlahKondisiDiRule++;
+            if ($rule->kondisi_umur_tahun !== $umurTahun) {
+                return false;
+            }
+            $jumlahKondisiCocok++;
+        }
+
+        // Rule kesimpulan boleh bergantung penuh pada prasyarat_fakta.
         // Rule biasa tetap wajib memiliki minimal satu kondisi observasi yang cocok.
         if ($jumlahKondisiDiRule === 0) {
-            return ! empty($rule->prasyarat_intermediate);
+            return ! empty($rule->prasyarat_fakta);
         }
 
         if ($jumlahKondisiCocok === 0) {
@@ -570,8 +590,38 @@ class RbsService
             $saranUtama = implode(' & ', $saranTambahan).' sebelum pemupukan kimia dilakukan. | '.$saranUtama;
         }
 
-        // Hitung dosis referensi Pahan (selalu dihitung untuk kebutuhan tahunan)
+        // Hitung dosis referensi Pahan (selalu dihitung untuk kebutuhan tahunan sebagai fallback)
         $dosisRef = $this->hitungDosisStandar($blok, $kondisi, $plantContext);
+
+        // OVERRIDE Dosis menggunakan Rule Base (Dinamis — rule PENENTU_DOSIS)
+        // Strategi resolusi konflik: jika >1 rule PENENTU_DOSIS terpicu bersamaan,
+        // digunakan rule dengan prioritas terendah (nilai integer terkecil = prioritas tertinggi).
+        // Rule lainnya dicatat di peringatan_json untuk transparansi.
+        $rulesDosis = collect($rules)
+            ->filter(fn ($r) => $r->jenis_rule === 'PENENTU_DOSIS')
+            ->sortBy('prioritas');
+
+        $ruleDosis = $rulesDosis->first();
+
+        if ($ruleDosis) {
+            $dosisRef['dosis_urea'] = $ruleDosis->rekomendasi_dosis_urea;
+            $dosisRef['dosis_kcl'] = $ruleDosis->rekomendasi_dosis_kcl;
+
+            // Sinkronisasi dengan dose_reference agar builder snapshot mendapatkan nilai yang sama
+            if (isset($dosisRef['dose_reference'])) {
+                $dosisRef['dose_reference']['urea']['estimate'] = $ruleDosis->rekomendasi_dosis_urea;
+                $dosisRef['dose_reference']['kcl']['estimate'] = $ruleDosis->rekomendasi_dosis_kcl;
+            }
+
+            // Catat ke peringatan_json jika ada lebih dari 1 rule PENENTU_DOSIS terpicu
+            if ($rulesDosis->count() > 1) {
+                $kodeIgnored = $rulesDosis->skip(1)->pluck('kode_rule')->implode(', ');
+                $dosisRef['peringatan'] = array_merge(
+                    $dosisRef['peringatan'] ?? [],
+                    ["Conflict resolution PENENTU_DOSIS: digunakan '{$ruleDosis->kode_rule}' (prioritas {$ruleDosis->prioritas}). Rule diabaikan: {$kodeIgnored}."]
+                );
+            }
+        }
 
         // Evaluasi kelayakan waktu
         $window = $dosisRef['window'];
@@ -582,10 +632,51 @@ class RbsService
         // Status kelayakan aplikasi (HANYA dari FertilizationWindowService)
         $statusKelayakan = $window ? $window['status'] : FertilizationWindowService::PERLU_VERIFIKASI_DATA;
         $alasanKelayakan = $window ? implode(' ', $window['alasan']) : 'Data penentuan waktu pemupukan belum tersedia.';
+        $isApplicable = $window ? $window['layak'] : false;
+
+        // Override status jika ada aturan rule base (jenis KONDISI_LAHAN atau PEMBATAS_APLIKASI
+        // dengan status_kebutuhan = 'Tunda') yang mewajibkan penundaan.
+        //
+        // Strategi resolusi konflik antara FertilizationWindowService dan Rule Base:
+        // - FertilizationWindowService berjalan PERTAMA dan menghasilkan status kelayakan awal
+        //   berdasarkan curah hujan, kelembaban, drainase, dan interval waktu.
+        // - Rule KONDISI_LAHAN/PEMBATAS_APLIKASI dengan status 'Tunda' berjalan SETELAH itu
+        //   dan dapat meng-override status menjadi TUNDA_KONDISI_LAHAN.
+        // - Alasan dari kedua sumber DIGABUNG sehingga narasi tidak bertentangan.
+        // - Keputusan akhir: satu status (TUNDA_KONDISI_LAHAN), satu sumber kebenaran.
+        if ($statusDominan === 'Tunda') {
+            $alasanDariWindow = $alasanKelayakan;
+            $rulesTunda = collect($rules)
+                ->filter(fn ($r) => $r->status_kebutuhan === 'Tunda')
+                ->sortBy('prioritas');
+            $alasanDariRule = $rulesTunda->pluck('indikasi_masalah')->filter()->implode('; ');
+
+            $statusKelayakan = \App\Enums\ApplicationFeasibilityStatus::TUNDA_KONDISI_LAHAN->value;
+            $isApplicable = false;
+            // Gabungkan alasan: rule kondisi lahan di depan, lalu alasan window (jika ada)
+            $alasanKelayakan = 'Pemupukan ditunda berdasarkan hasil evaluasi kondisi lahan'
+                . ($alasanDariRule ? " ({$alasanDariRule})" : ' (hama/gulma/lingkungan)') . '.'
+                . ($alasanDariWindow ? ' ' . $alasanDariWindow : '');
+
+            // Override window agar kalkulator downstream konsisten
+            if (is_array($window)) {
+                $window['status'] = $statusKelayakan;
+                $window['layak'] = false;
+                $window['alasan'] = [$alasanKelayakan];
+            } else {
+                $window = [
+                    'status' => $statusKelayakan,
+                    'layak' => false,
+                    'alasan' => [$alasanKelayakan],
+                    'curah_hujan_mm' => null,
+                    'interval_hari' => null,
+                    'terlambat' => false,
+                ];
+            }
+        }
 
         // Build annual snapshot
         $doseReference = $dosisRef['dose_reference'] ?? null;
-        $isApplicable = $window ? $window['layak'] : false;
         $annualSnapshot = $this->snapshotBuilder->build($blok, $doseReference ?? ['urea' => ['estimate' => null], 'kcl' => ['estimate' => null]], $isApplicable);
 
         // Pahan v2.5: Hitung aplikasi saat ini via CurrentApplicationCalculator
@@ -653,6 +744,9 @@ class RbsService
                 'rule_id' => $r->id,
                 'kode_rule' => $r->kode_rule,
                 'jenis_rule' => $r->jenis_rule,
+                'tahap_eksekusi' => $r->tahap_eksekusi,
+                'prasyarat_fakta' => $r->prasyarat_fakta,
+                'fakta_yang_dihasilkan' => $r->fakta_yang_dihasilkan,
                 'indikasi' => $r->indikasi_masalah,
                 'pupuk' => $r->jenis_pupuk_utama,
                 'status' => $r->status_kebutuhan,
@@ -738,6 +832,11 @@ class RbsService
      * - Hanya rule jenis_rule = DIAGNOSIS_VISUAL yang mempengaruhi status kondisi
      * - Rule PEMBATAS_APLIKASI, SARAN_PENDUKUNG, PERINGATAN_DATA TIDAK mengubah status
      * - Mapping dari tingkat_keparahan ke PlantConditionStatus
+     *
+     * Strategi resolusi konflik (Conflict Resolution Strategy):
+     * - Jika >1 rule DIAGNOSIS_VISUAL terpicu bersamaan, diambil tingkat_keparahan TERTINGGI.
+     * - Urutan: BERAT (4) > SEDANG (3) > RINGAN (2) > PERLU_VERIFIKASI (1) > NORMAL (0).
+     * - Rule lain tetap berkontribusi ke masalah_teridentifikasi dan saran_tindakan.
      */
     private function tentukanStatusKondisiTanaman(array $rules, ?KondisiLahan $kondisi = null): string
     {
@@ -1148,8 +1247,8 @@ class RbsService
             // Kondisi normal bukan sebuah "temuan masalah".
             // Simpan array kosong agar jumlah temuan tetap bermakna.
             'masalah_teridentifikasi' => [],
-            'rekomendasi_pupuk' => [['jenis_utama' => 'Urea dan KCl berdasarkan umur/fase', 'dosis' => 'Gunakan hasil perhitungan kebutuhan tahunan dari Iyung Pahan (2013)']],
-            'saran_tindakan_utama' => 'Tidak ditemukan gejala daun yang sesuai dengan aturan aktif. Hasil ini bukan bukti bahwa seluruh kebutuhan hara sudah cukup. Gunakan kebutuhan Urea dan KCl berdasarkan umur serta fase tanaman; lakukan analisis daun atau tanah bila diperlukan.',
+            'rekomendasi_pupuk' => [['jenis_utama' => 'Urea dan KCl berdasarkan umur/fase', 'dosis' => 'Dosis diambil dari sistem Rule Base Penentu Dosis dinamis']],
+            'saran_tindakan_utama' => 'Tidak ditemukan gejala daun yang sesuai dengan aturan aktif. Hasil ini bukan bukti bahwa seluruh kebutuhan hara sudah cukup. Dosis dihasilkan secara dinamis dari Rule Base berdasarkan umur tanaman.',
             'status_kebutuhan_dominan' => 'Normal', // LEGACY ONLY — kompatibilitas histori, bukan keputusan operasional
             'jumlah_rule_terpicu' => 0,
             'dosis_urea' => $isApplicable ? ($dosisRef['dosis_urea'] ?? 0) : 0.0,

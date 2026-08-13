@@ -6,6 +6,19 @@
 
 @section('content')
 <div class="space-y-5">
+
+    {{-- Breadcrumb / Konteks Anggota --}}
+    <nav class="flex items-center gap-2 text-sm" aria-label="Breadcrumb">
+        <a href="{{ route('blok-lahan.index') }}" class="text-slate-500 hover:text-emerald-600 transition-colors">Data Kebun</a>
+        <svg class="w-3.5 h-3.5 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        @if($blokLahan->anggota)
+            <span class="text-slate-500">{{ $blokLahan->anggota->nama }}</span>
+            <svg class="w-3.5 h-3.5 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        @endif
+        <span class="font-semibold text-slate-800">{{ $blokLahan->nama_blok }}</span>
+    </nav>
+
+    {{-- Tombol Aksi --}}
     <div class="flex gap-3">
         <a href="{{ route('blok-lahan.index') }}" class="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-sm rounded-xl transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
@@ -17,6 +30,42 @@
         </a>
     </div>
 
+    {{-- Banner Anggota + Blok Saudara Cepat --}}
+    @if($blokLahan->anggota)
+    <div class="flex flex-col gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 sm:flex-row sm:items-center">
+        <div class="flex items-center gap-3">
+            <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">
+                {{ strtoupper(substr($blokLahan->anggota->nama, 0, 1)) }}
+            </div>
+            <div class="min-w-0">
+                <p class="text-xs text-emerald-600 font-semibold">Pemilik Lahan</p>
+                <p class="font-bold text-slate-800 text-sm">{{ $blokLahan->anggota->nama }}</p>
+                @if($blokLahan->anggota->no_hp)
+                    <p class="text-xs text-slate-500">{{ $blokLahan->anggota->no_hp }}</p>
+                @endif
+            </div>
+        </div>
+        @if($siblingBloks->isNotEmpty())
+        <div class="sm:ml-auto">
+            <p class="text-[10px] text-slate-400 uppercase tracking-wide mb-1.5">Blok lain milik anggota ini</p>
+            <div class="flex flex-wrap gap-1.5">
+                @foreach($siblingBloks as $sibling)
+                    <a href="{{ route('blok-lahan.show', $sibling) }}"
+                       class="inline-flex items-center gap-1 rounded-lg border border-white bg-white px-2.5 py-1 text-[10px] font-semibold text-slate-600 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 transition-colors shadow-sm">
+                        {{ $sibling->nama_blok }}
+                        <span class="text-slate-400">· {{ number_format($sibling->luas_ha, 2) }} Ha</span>
+                    </a>
+                @endforeach
+                <a href="{{ route('blok-lahan.create', ['anggota_id' => $blokLahan->anggota_id]) }}"
+                   class="inline-flex items-center gap-1 rounded-lg border border-dashed border-emerald-300 bg-white/70 px-2.5 py-1 text-[10px] font-semibold text-emerald-600 hover:bg-emerald-50 transition-colors">
+                    + Tambah Blok
+                </a>
+            </div>
+        </div>
+        @endif
+    </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div class="bg-white border border-slate-200 shadow-sm rounded-2xl p-5">
             <h3 class="text-sm font-semibold text-emerald-600 mb-4">Info Lahan</h3>
@@ -24,7 +73,9 @@
                 <div><p class="text-xs text-slate-400">Nama Blok</p><p class="text-sm font-semibold text-slate-900">{{ $blokLahan->nama_blok }}</p></div>
                 <div><p class="text-xs text-slate-400">Nama Pemilik Lahan</p><p class="text-sm font-semibold text-slate-900">{{ $blokLahan->anggota?->nama ?? '—' }}</p></div>
                 <div><p class="text-xs text-slate-400">Luas Lahan</p><p class="text-sm font-semibold text-slate-900">{{ number_format($blokLahan->luas_ha, 2) }} Ha</p></div>
-                <div><p class="text-xs text-slate-400">SPH</p><p class="text-sm font-semibold text-slate-900">{{ number_format($blokLahan->sph) }} pohon/Ha</p></div>
+                @if(!$blokLahan->jumlah_pohon)
+                    <div><p class="text-xs text-slate-400">SPH</p><p class="text-sm font-semibold text-slate-900">{{ number_format($blokLahan->sph) }} pohon/Ha</p></div>
+                @endif
                 <div><p class="text-xs text-slate-400">Total Pohon</p>
                     <p class="text-sm font-semibold text-slate-900">
                         {{ number_format($blokLahan->jumlah_pokok_aktual) }} pohon
@@ -35,6 +86,15 @@
                         @endif
                     </p>
                 </div>
+                @if($siblingBloks->isNotEmpty())
+                <div class="pt-2 border-t border-slate-100">
+                    <p class="text-xs text-slate-400">Total luas semua blok anggota ini</p>
+                    <p class="text-sm font-semibold text-slate-900">
+                        {{ number_format($siblingBloks->sum('luas_ha') + $blokLahan->luas_ha, 2) }} Ha
+                        <span class="text-xs text-slate-400 font-normal">({{ $siblingBloks->count() + 1 }} blok)</span>
+                    </p>
+                </div>
+                @endif
             </div>
         </div>
 
@@ -45,7 +105,6 @@
                 <div><p class="text-xs text-slate-400">Tahun Tanam</p><p class="text-sm font-semibold text-slate-900">{{ $blokLahan->tahun_tanam }}</p></div>
                 <div><p class="text-xs text-slate-400">Umur Tanaman</p><p class="text-sm font-semibold text-emerald-600">{{ $blokLahan->umur_tanaman }} tahun</p></div>
                 <div><p class="text-xs text-slate-400">Kategori Umur</p><p class="text-sm font-semibold text-slate-900">{{ $blokLahan->kategori_umur }}</p></div>
-                <div><p class="text-xs text-slate-400">Jenis Tanah</p><p class="text-sm font-semibold text-slate-900">{{ $blokLahan->jenis_tanah }}</p></div>
                 <div><p class="text-xs text-slate-400">Topografi</p><p class="text-sm font-semibold text-slate-900">{{ $blokLahan->topografi }}</p></div>
             </div>
             @else

@@ -294,16 +294,19 @@
                     var otomatisWrapper = document.getElementById('populasi_otomatis_wrapper');
                     var manualWrapper = document.getElementById('populasi_manual_wrapper');
                     var inputJumlahPohon = document.getElementById('jumlah_pohon');
+                    var inputSph = document.getElementById('sph');
 
                     if (mode === 'otomatis') {
                         otomatisWrapper.style.display = 'block';
                         manualWrapper.style.display = 'none';
                         inputJumlahPohon.removeAttribute('required');
                         inputJumlahPohon.value = ''; 
+                        if (inputSph) inputSph.setAttribute('required', 'required');
                     } else {
                         otomatisWrapper.style.display = 'none';
                         manualWrapper.style.display = 'block';
                         inputJumlahPohon.setAttribute('required', 'required');
+                        if (inputSph) inputSph.removeAttribute('required');
                     }
                 }
             </script>
@@ -314,24 +317,13 @@
                     <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">🌱</span>
                     Kriteria Agronomis
                 </p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="tahun_tanam" class="block text-sm font-medium text-slate-700 mb-2">Tahun Tanam <span class="text-red-400">*</span></label>
                         <input type="number" id="tahun_tanam" name="tahun_tanam" value="{{ old('tahun_tanam', $blokLahan->tahun_tanam) }}" min="1990" max="{{ now()->year }}" required
                             class="w-full px-4 py-3 bg-white border {{ $errors->has('tahun_tanam') ? 'border-red-400' : 'border-slate-300' }} rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors">
                         @error('tahun_tanam') <p class="mt-1.5 text-xs text-red-500">{{ $message }}</p> @enderror
                         <p class="mt-1 text-xs text-emerald-600 font-semibold" id="umur-preview"></p>
-                    </div>
-                    <div>
-                        @include('components.custom-select', [
-                            'name'     => 'jenis_tanah',
-                            'label'    => 'Jenis Tanah',
-                            'required' => true,
-                            'options'  => ['Tanah Lempung','Tanah Lempung Berpasir','Tanah Berpasir','Tanah Liat','Tanah Gambut','Tanah Aluvial','Tanah Podsolik Merah Kuning (PMK)','Tanah Laterit','Tanah Berbatu','Lainnya'],
-                            'selected' => old('jenis_tanah', $blokLahan->jenis_tanah),
-                            'placeholder' => '— Pilih Jenis Tanah —',
-                            'error'    => $errors->first('jenis_tanah'),
-                        ])
                     </div>
                     <div>
                         @include('components.custom-select', [

@@ -27,13 +27,25 @@
             @if($isEdit)
                 <input type="hidden" name="jenis_rule" value="{{ $rule->jenis_rule }}">
                 <div class="flex min-h-11 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900/50 dark:text-slate-200">
-                    {{ $rule->jenis_rule === 'DIAGNOSIS_VISUAL' ? 'Diagnosis Visual' : 'Waktu pemupukan' }}
+                    @php
+                        $jenisRuleLabel = match($rule->jenis_rule) {
+                            'DIAGNOSIS_VISUAL'  => 'Diagnosis Visual',
+                            'PEMBATAS_APLIKASI' => 'Waktu pemupukan',
+                            'KONDISI_LAHAN'     => 'Kondisi Lahan (Lingkungan)',
+                            'PENENTU_DOSIS'     => 'Penentu Dosis',
+                            'PENENTU_METODE'    => 'Penentu Metode',
+                            default             => str_replace('_', ' ', $rule->jenis_rule),
+                        };
+                    @endphp
+                    {{ $jenisRuleLabel }}
                 </div>
                 <p class="mt-1 text-xs text-slate-400">Jenis rule tidak diubah agar kode dan riwayat tetap konsisten.</p>
             @else
                 <select id="jenis_rule" name="jenis_rule" class="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
                     <option value="DIAGNOSIS_VISUAL" @selected($selectedType === 'DIAGNOSIS_VISUAL')>Diagnosis Visual</option>
                     <option value="PEMBATAS_APLIKASI" @selected($selectedType === 'PEMBATAS_APLIKASI')>Waktu pemupukan</option>
+                    <option value="KONDISI_LAHAN" @selected($selectedType === 'KONDISI_LAHAN')>Kondisi Lahan (Lingkungan)</option>
+                    <option value="PENENTU_DOSIS" @selected($selectedType === 'PENENTU_DOSIS')>Penentu Dosis</option>
                 </select>
             @endif
         </div>
@@ -81,8 +93,67 @@
             </div>
             <p class="mt-1 text-xs text-slate-400">Salah satu batas boleh dikosongkan. Sistem menolak rentang yang bertumpang tindih dengan rule aktif.</p>
         </div>
+
+        <div data-rule-section="kondisi_lahan" class="hidden lg:col-span-2">
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="kondisi_kelembaban" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Kelembapan Tanah</label>
+                    <select id="kondisi_kelembaban" name="kondisi_kelembaban" class="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+                        <option value="">(Abaikan)</option>
+                        @foreach(['Sangat Kering', 'Kering', 'Normal', 'Lembab', 'Sangat Lembab'] as $option)
+                            <option value="{{ $option }}" @selected(old('kondisi_kelembaban', $rule->kondisi_kelembaban ?? '') === $option)>{{ $option }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="kondisi_drainase" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Kondisi Drainase</label>
+                    <select id="kondisi_drainase" name="kondisi_drainase" class="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+                        <option value="">(Abaikan)</option>
+                        @foreach(['Baik', 'Cukup', 'Buruk — Tergenang'] as $option)
+                            <option value="{{ $option }}" @selected(old('kondisi_drainase', $rule->kondisi_drainase ?? '') === $option)>{{ $option }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="ada_gulma_dominan" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Ada Gulma Dominan?</label>
+                    <select id="ada_gulma_dominan" name="ada_gulma_dominan" class="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+                        <option value="">(Abaikan)</option>
+                        <option value="1" @selected(old('ada_gulma_dominan', $rule->ada_gulma_dominan ?? '') === '1' || old('ada_gulma_dominan', $rule->ada_gulma_dominan ?? '') === true)>Ya</option>
+                        <option value="0" @selected(old('ada_gulma_dominan', $rule->ada_gulma_dominan ?? '') === '0' || old('ada_gulma_dominan', $rule->ada_gulma_dominan ?? '') === false)>Tidak</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="ada_serangan_hama" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Ada Serangan Hama?</label>
+                    <select id="ada_serangan_hama" name="ada_serangan_hama" class="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+                        <option value="">(Abaikan)</option>
+                        <option value="1" @selected(old('ada_serangan_hama', $rule->ada_serangan_hama ?? '') === '1' || old('ada_serangan_hama', $rule->ada_serangan_hama ?? '') === true)>Ya</option>
+                        <option value="0" @selected(old('ada_serangan_hama', $rule->ada_serangan_hama ?? '') === '0' || old('ada_serangan_hama', $rule->ada_serangan_hama ?? '') === false)>Tidak</option>
+                    </select>
+                </div>
+            </div>
+            <p class="mt-2 text-xs text-slate-400">Pilih minimal satu kondisi yang ingin dicek. Kondisi yang dipilih akan digabung (AND).</p>
+        </div>
+
+        <div data-rule-section="dosis" class="hidden lg:col-span-2">
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="kondisi_kategori_umur" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Kategori Fase Lahan <span class="text-red-500">*</span></label>
+                    <select id="kondisi_kategori_umur" name="kondisi_kategori_umur" class="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+                        <option value="">Pilih Fase</option>
+                        <option value="TBM" @selected(old('kondisi_kategori_umur', $rule->kondisi_kategori_umur ?? '') === 'TBM')>Tanaman Belum Menghasilkan (TBM)</option>
+                        <option value="TM" @selected(old('kondisi_kategori_umur', $rule->kondisi_kategori_umur ?? '') === 'TM')>Tanaman Menghasilkan (TM)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="kondisi_umur_tahun" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Umur Lahan (Tahun) <span class="text-red-500">*</span></label>
+                    <input id="kondisi_umur_tahun" type="number" min="1" max="30" name="kondisi_umur_tahun" value="{{ old('kondisi_umur_tahun', $rule->kondisi_umur_tahun ?? '') }}" placeholder="Misal: 5" class="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+                </div>
+            </div>
+            <p class="mt-2 text-xs text-slate-400">Pilih Fase TBM/TM dan tentukan Umur Spesifik (Tahun). Aturan ini akan memicu angka dosis pada umur tersebut.</p>
+        </div>
     </div>
 </section>
+
 
 <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 dark:border-slate-700 dark:bg-slate-800">
     <div class="flex items-start gap-3">
@@ -138,6 +209,20 @@
         <div class="lg:col-span-2">
             <label for="saran_tindakan" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Saran tindakan <span class="text-red-500">*</span></label>
             <textarea id="saran_tindakan" name="saran_tindakan" rows="3" maxlength="1500" placeholder="Jelaskan tindakan yang harus dilakukan pengguna" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm leading-6 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">{{ old('saran_tindakan', $rule->saran_tindakan ?? '') }}</textarea>
+        </div>
+
+        <div data-rule-section="dosis" class="hidden lg:col-span-2">
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="rekomendasi_dosis_urea" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Rekomendasi Dosis Urea (Kg/Pohon) <span class="text-red-500">*</span></label>
+                    <input id="rekomendasi_dosis_urea" type="number" step="0.01" min="0" max="10" name="rekomendasi_dosis_urea" value="{{ old('rekomendasi_dosis_urea', $rule->rekomendasi_dosis_urea ?? '') }}" placeholder="Misal: 2.50" class="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+                </div>
+                <div>
+                    <label for="rekomendasi_dosis_kcl" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Rekomendasi Dosis KCl (Kg/Pohon) <span class="text-red-500">*</span></label>
+                    <input id="rekomendasi_dosis_kcl" type="number" step="0.01" min="0" max="10" name="rekomendasi_dosis_kcl" value="{{ old('rekomendasi_dosis_kcl', $rule->rekomendasi_dosis_kcl ?? '') }}" placeholder="Misal: 2.00" class="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white">
+                </div>
+            </div>
+            <p class="mt-2 text-xs text-slate-400">Angka dosis ini akan dipakai secara utuh oleh sistem, meng-override rumus kalkulasi Pahan lama.</p>
         </div>
     </div>
 </section>
@@ -210,20 +295,42 @@ document.addEventListener('DOMContentLoaded', function () {
     var typeInput = document.getElementById('jenis_rule') || document.querySelector('input[name="jenis_rule"]');
     var visualSections = document.querySelectorAll('[data-rule-section="visual"]');
     var timingSections = document.querySelectorAll('[data-rule-section="timing"]');
+    var lahanSections = document.querySelectorAll('[data-rule-section="kondisi_lahan"]');
+    var dosisSections = document.querySelectorAll('[data-rule-section="dosis"]');
     var statusSelect = document.getElementById('status_kebutuhan');
     var severitySelect = document.getElementById('tingkat_keparahan');
 
     function updateRuleFields() {
-        var isVisual = !typeInput || typeInput.value === 'DIAGNOSIS_VISUAL';
+        var type = typeInput ? typeInput.value : 'DIAGNOSIS_VISUAL';
+        var isVisual = type === 'DIAGNOSIS_VISUAL';
+        var isLahan = type === 'KONDISI_LAHAN';
+        var isTiming = type === 'PEMBATAS_APLIKASI';
+        var isDosis = type === 'PENENTU_DOSIS';
+
         visualSections.forEach(function (section) { section.classList.toggle('hidden', !isVisual); });
-        timingSections.forEach(function (section) { section.classList.toggle('hidden', isVisual); });
+        timingSections.forEach(function (section) { section.classList.toggle('hidden', !isTiming); });
+        lahanSections.forEach(function (section) { section.classList.toggle('hidden', !isLahan); });
+        dosisSections.forEach(function (section) { section.classList.toggle('hidden', !isDosis); });
 
         if (statusSelect) {
             Array.from(statusSelect.options).forEach(function (option) {
-                option.disabled = isVisual ? option.value === 'Tunda' : option.value === 'Segera';
+                if (isVisual) {
+                    option.disabled = option.value === 'Tunda';
+                } else if (isTiming) {
+                    option.disabled = option.value === 'Segera';
+                } else if (isLahan) {
+                    option.disabled = option.value === 'Normal';
+                } else if (isDosis) {
+                    // Rule penentu dosis hanya boleh Normal
+                    option.disabled = option.value !== 'Normal';
+                } else {
+                    option.disabled = false;
+                }
             });
             if (isVisual && statusSelect.value === 'Tunda') statusSelect.value = 'Segera';
-            if (!isVisual && statusSelect.value === 'Segera') statusSelect.value = 'Tunda';
+            if (isTiming && statusSelect.value === 'Segera') statusSelect.value = 'Tunda';
+            if (isLahan && statusSelect.value === 'Normal') statusSelect.value = 'Segera';
+            if (isDosis) statusSelect.value = 'Normal';
         }
         if (severitySelect && !isVisual) severitySelect.value = 'NORMAL';
         if (severitySelect) {

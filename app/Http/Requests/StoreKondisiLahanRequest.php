@@ -18,7 +18,7 @@ class StoreKondisiLahanRequest extends FormRequest
         if (! $this->filled('metode_data_hujan')) {
             $mode = $this->filled('curah_hujan_mm_bulanan')
                 ? 'data_angka'
-                : ($this->filled('curah_hujan_kategori') ? 'perkiraan' : 'tidak_tersedia');
+                : 'perkiraan';
             $this->merge(['metode_data_hujan' => $mode]);
         }
     }
@@ -36,12 +36,12 @@ class StoreKondisiLahanRequest extends FormRequest
             'tanggal_observasi' => ['required', 'date', 'before_or_equal:today'],
             'tanggal_pemupukan_terakhir' => ['nullable', 'date', 'before_or_equal:today'],
             'kelembaban_tanah' => ['nullable', Rule::in(['Sangat Kering', 'Kering', 'Normal', 'Lembab', 'Sangat Lembab'])],
-            'metode_data_hujan' => ['nullable', Rule::in(['data_angka', 'perkiraan', 'tidak_tersedia'])],
+            'metode_data_hujan' => ['nullable', Rule::in(['data_angka', 'perkiraan'])],
             'mode_data_hujan_dikonfirmasi' => ['nullable', 'boolean'],
             'curah_hujan_kategori' => ['nullable', Rule::in(['Sangat Rendah', 'Rendah', 'Normal', 'Tinggi', 'Sangat Tinggi'])],
             'curah_hujan_mm_bulanan' => ['nullable', 'numeric', 'min:0', 'max:1000'],
             'periode_curah_hujan' => ['nullable', 'string', 'max:50'],
-            'sumber_curah_hujan' => ['nullable', 'in:manual,open-meteo,alat_ukur,lainnya'],
+            'sumber_curah_hujan' => ['nullable', 'in:manual,open-meteo,lainnya'],
             'musim_saat_ini' => ['nullable', Rule::in(['Musim Hujan', 'Musim Kemarau', 'Peralihan'])],
             'warna_daun' => ['required', Rule::in($leafValues)],
             'kondisi_drainase' => ['nullable', Rule::in(['Baik', 'Cukup', 'Buruk — Tergenang'])],

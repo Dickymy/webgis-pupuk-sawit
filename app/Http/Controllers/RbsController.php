@@ -253,6 +253,19 @@ class RbsController extends Controller
             ]);
         }
 
+        $blokLahan->load('anggota');
+
+        // Blok saudara milik anggota yang sama
+        $siblingBloks = BlokLahan::where('anggota_id', $blokLahan->anggota_id)
+            ->where('id', '!=', $blokLahan->id)
+            ->get(['id', 'nama_blok', 'luas_ha'])
+            ->map(fn ($b) => [
+                'id' => $b->id,
+                'nama_blok' => $b->nama_blok,
+                'luas_ha' => $b->luas_ha,
+                'url' => route('blok-lahan.show', $b->id),
+            ])->values()->toArray();
+
         return response()->json([
             'status' => $rbs->label_kondisi_tanaman,
             'kelayakan' => $rbs->label_kelayakan,
@@ -271,6 +284,9 @@ class RbsController extends Controller
             'kategori_keandalan' => $rbs->kategori_keandalan,
             'status_kondisi' => $rbs->label_kondisi_tanaman,
             'status_kelayakan' => $rbs->label_kelayakan,
+            // Info silang: blok lain milik anggota yang sama
+            'anggota_nama' => $blokLahan->anggota?->nama,
+            'sibling_bloks' => $siblingBloks,
         ]);
     }
 

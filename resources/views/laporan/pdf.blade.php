@@ -220,18 +220,84 @@
                 <td class="value">{{ $rekomendasiRbs->label_fase }}</td>
             </tr>
             <tr>
-                <td class="label">Jenis Tanah</td>
-                <td class="value">{{ $rekomendasiRbs->blokLahan->jenis_tanah }}</td>
                 <td class="label">Total Pohon</td>
-                <td class="value">{{ number_format($rekomendasiRbs->jumlah_pokok_snapshot ?? $rekomendasiRbs->blokLahan->jumlah_pokok_aktual) }} pohon</td>
+                <td class="value" colspan="3">{{ number_format($rekomendasiRbs->jumlah_pokok_snapshot ?? $rekomendasiRbs->blokLahan->jumlah_pokok_aktual) }} pohon</td>
             </tr>
             @endif
         </table>
     </div>
 
-    {{-- ═══ 4. KEBUTUHAN PUPUK ═══ --}}
+    {{-- ═══ 4. DATA OBSERVASI LAPANGAN ═══ --}}
+    @php
+        $kondisiPdf = $rekomendasiRbs->kondisiLahan;
+        $sumberHujanPdf = match($kondisiPdf?->sumber_curah_hujan) {
+            'alat_ukur'  => 'Alat ukur di kebun',
+            'open-meteo' => 'Open-Meteo (perkiraan lokasi)',
+            'manual'     => 'Catatan kelompok tani',
+            'lainnya'    => 'Sumber lainnya',
+            default      => null,
+        };
+    @endphp
+    @if($kondisiPdf)
     <div class="section">
-        <div class="section-title">B. KEBUTUHAN PUPUK</div>
+        <div class="section-title">B. DATA OBSERVASI LAPANGAN ({{ $kondisiPdf->tanggal_observasi?->format('d/m/Y') }})</div>
+        <table class="standard-table info-table">
+            <tr>
+                <td class="label">Kondisi Daun</td>
+                <td class="value">{{ config('observation.leaf_condition_labels.' . $kondisiPdf->warna_daun, $kondisiPdf->warna_daun ?? '-') }}</td>
+                <td class="label">Kelembapan Tanah</td>
+                <td class="value">{{ $kondisiPdf->kelembaban_tanah ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Curah Hujan</td>
+                <td class="value">
+                    @if($kondisiPdf->curah_hujan_mm_bulanan !== null)
+                        {{ number_format($kondisiPdf->curah_hujan_mm_bulanan, 1) }} mm/bulan
+                    @elseif($kondisiPdf->curah_hujan_kategori)
+                        {{ $kondisiPdf->curah_hujan_kategori }} (perkiraan)
+                    @else
+                        -
+                    @endif
+                </td>
+                <td class="label">Drainase</td>
+                <td class="value">{{ $kondisiPdf->kondisi_drainase ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Sumber Data Hujan</td>
+                <td class="value">
+                    {{ $sumberHujanPdf ?? '-' }}
+                    @if($kondisiPdf->periode_curah_hujan)
+                        ({{ $kondisiPdf->periode_curah_hujan }})
+                    @endif
+                </td>
+                <td class="label">Musim</td>
+                <td class="value">{{ $kondisiPdf->musim_saat_ini ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Gulma Dominan</td>
+                <td class="value">{{ $kondisiPdf->ada_gulma_dominan ? 'Ada' : 'Tidak ada' }}</td>
+                <td class="label">Serangan Hama</td>
+                <td class="value">{{ $kondisiPdf->ada_serangan_hama ? 'Ada' : 'Tidak ada' }}</td>
+            </tr>
+            @if($kondisiPdf->tanggal_pemupukan_terakhir)
+            <tr>
+                <td class="label">Pemupukan Terakhir</td>
+                <td class="value" colspan="3">{{ $kondisiPdf->tanggal_pemupukan_terakhir->format('d/m/Y') }}</td>
+            </tr>
+            @endif
+        </table>
+        @if($kondisiPdf->catatan_observasi)
+        <div class="text-box" style="margin-top: 0;">
+            <div class="title">Catatan Lapangan:</div>
+            <p>{{ $kondisiPdf->catatan_observasi }}</p>
+        </div>
+        @endif
+    </div>
+    @endif
+
+    {{-- ═══ 5. KEBUTUHAN PUPUK ═══ --}}
+    <div class="section">
+        <div class="section-title">C. KEBUTUHAN PUPUK</div>
 
         {{-- Rentang Referensi Pahan --}}
         @if($rekomendasiRbs->urea_min_kg_per_pokok_tahun)
@@ -331,10 +397,10 @@
         <p style="font-size: 9pt; text-align: right; margin-top: 5px;">*Keterangan: 1 karung = 50 kg (pembulatan ke atas)</p>
     </div>
 
-    {{-- ═══ 5. JADWAL PEMUPUKAN ═══ --}}
+    {{-- ═══ 6. JADWAL PEMUPUKAN ═══ --}}
     @if($rekomendasiRbs->jadwal_pemupukan && count($rekomendasiRbs->jadwal_pemupukan) > 0)
     <div class="section">
-        <div class="section-title">C. JADWAL PEMUPUKAN</div>
+        <div class="section-title">D. JADWAL PEMUPUKAN</div>
         @if($rekomendasiRbs->kondisiLahan?->ada_gulma_dominan || $rekomendasiRbs->kondisiLahan?->ada_serangan_hama)
         <div class="text-box" style="margin-bottom: 10px;">
             <div class="title">Tindakan Pendahuluan (Sebelum Pemupukan)</div>
@@ -405,10 +471,10 @@
     </div>
     @endif
 
-    {{-- ═══ 6. CATATAN DOSIS & SARAN TINDAKAN ═══ --}}
+    {{-- ═══ 7. CATATAN DOSIS & SARAN TINDAKAN ═══ --}}
     @if($rekomendasiRbs->catatan_dosis || $rekomendasiRbs->saran_tindakan_utama)
     <div class="section">
-        <div class="section-title">D. REKOMENDASI DAN CATATAN TAMBAHAN</div>
+        <div class="section-title">E. REKOMENDASI DAN CATATAN TAMBAHAN</div>
         
         @if($rekomendasiRbs->catatan_dosis)
         <div class="text-box">
@@ -426,10 +492,10 @@
     </div>
     @endif
 
-    {{-- ═══ 7. MASALAH TERIDENTIFIKASI & REKOMENDASI SPESIFIK ═══ --}}
+    {{-- ═══ 8. MASALAH TERIDENTIFIKASI & REKOMENDASI SPESIFIK ═══ --}}
     @if(($rekomendasiRbs->masalah_teridentifikasi && count($rekomendasiRbs->masalah_teridentifikasi) > 0) || ($rekomendasiRbs->rekomendasi_pupuk && count($rekomendasiRbs->rekomendasi_pupuk) > 0))
     <div class="section">
-        <div class="section-title">E. KONDISI KHUSUS LAHAN</div>
+        <div class="section-title">F. KONDISI KHUSUS LAHAN</div>
         
         @if($rekomendasiRbs->masalah_teridentifikasi && count($rekomendasiRbs->masalah_teridentifikasi) > 0)
         <p class="font-bold" style="margin-bottom: 5px;">Masalah yang Teridentifikasi:</p>
@@ -466,39 +532,57 @@
     </div>
     @endif
 
-    {{-- ═══ 8. DETAIL TEKNIS ═══ --}}
+    {{-- ═══ 9. DETAIL TEKNIS ═══ --}}
     @if($rekomendasiRbs->rules_terpicu && count($rekomendasiRbs->rules_terpicu) > 0)
     <div class="section">
-        <div class="section-title">F. LAMPIRAN TEKNIS ({{ $rekomendasiRbs->jumlah_rule_terpicu }} Aturan Terpicu)</div>
+        <div class="section-title">G. LAMPIRAN TEKNIS — JEJAK PENALARAN ({{ $rekomendasiRbs->jumlah_rule_terpicu }} Aturan Terpicu)</div>
         <table class="standard-table">
             <thead>
                 <tr>
-                    <th style="width:5%">No</th>
-                    <th style="width:45%">Indikasi</th>
-                    <th style="width:20%">Tindakan/Pupuk</th>
-                    <th style="width:15%">Status</th>
-                    <th style="width:15%">Prioritas</th>
+                    <th style="width:4%">No</th>
+                    <th style="width:14%">Kode Rule</th>
+                    <th style="width:13%">Jenis</th>
+                    <th style="width:5%">Tahap</th>
+                    <th style="width:38%">Indikasi / Kesimpulan</th>
+                    <th style="width:14%">Tindakan/Pupuk</th>
+                    <th style="width:12%">Status</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($rekomendasiRbs->rules_terpicu as $i => $rule)
+                @php
+                    $jenisLabel = match($rule['jenis_rule'] ?? '') {
+                        'DIAGNOSIS_VISUAL'  => 'Diagnosis Visual',
+                        'PEMBATAS_APLIKASI' => 'Waktu Aplikasi',
+                        'KONDISI_LAHAN'     => 'Kondisi Lahan',
+                        'PENENTU_DOSIS'     => 'Penentu Dosis',
+                        'PENENTU_METODE'    => 'Penentu Metode',
+                        default             => $rule['jenis_rule'] ?? '-',
+                    };
+                @endphp
                 <tr>
                     <td class="text-center">{{ $i + 1 }}</td>
+                    <td><span style="font-family: monospace; font-weight: bold; font-size: 8pt;">{{ $rule['kode_rule'] ?? 'N/A' }}</span></td>
+                    <td>{{ $jenisLabel }}</td>
+                    <td class="text-center">{{ $rule['tahap_eksekusi'] ?? 1 }}</td>
                     <td>{{ $rule['indikasi'] ?? '-' }}</td>
                     <td>{{ $rule['pupuk'] ?? '-' }}</td>
                     <td class="text-center">{{ \App\Models\RekomendasiRbs::labelStatus($rule['status'] ?? '') }}</td>
-                    <td class="text-center">{{ $rule['prioritas'] ?? '-' }}</td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
+        <p style="font-size: 8pt; color: #6b7280; margin-top: 6px;">
+            Tahap eksekusi: 1 = Diagnosis Kondisi, 2 = Penentuan Dosis, 3 = Penyesuaian/Pembatas.
+            Kode rule dapat ditelusuri di menu Rule Base untuk melihat sumber literatur dan kondisi IF-THEN lengkap.
+        </p>
     </div>
     @endif
 
-    {{-- ═══ 9. RIWAYAT REALISASI PEMUPUKAN ═══ --}}
+    {{-- ═══ 10. RIWAYAT REALISASI PEMUPUKAN ═══ --}}
     @if(isset($realisasis) && $realisasis->count() > 0)
     <div class="section">
-        <div class="section-title">G. RIWAYAT REALISASI PEMUPUKAN</div>
+        <div class="section-title">H. RIWAYAT REALISASI PEMUPUKAN</div>
         <table class="standard-table" style="font-size: 9pt;">
             <thead>
                 <tr>
@@ -567,7 +651,7 @@
         $currentDataReady = $observationCompleteness['can_run_diagnosis'] ?? $rekomendasiRbs->data_cukup;
         $dataPendukungKurang = collect($observationCompleteness['missing_fields'] ?? $rekomendasiRbs->data_kurang ?? [])->filter()->values();
     @endphp
-    {{-- ═══ 10. META INFO ═══ --}}
+    {{-- ═══ 11. META INFO ═══ --}}
     <div class="meta-info">
         <strong>Data Analisis:</strong> {{ $currentDataReady ? 'Tersedia' : 'Belum lengkap' }}
         @if($dataPendukungKurang->isNotEmpty())
@@ -575,7 +659,7 @@
         @endif
     </div>
 
-    {{-- ═══ 11. DISCLAIMER ═══ --}}
+    {{-- ═══ 12. DISCLAIMER ═══ --}}
     <div class="disclaimer">
         <strong>Disclaimer:</strong> Estimasi sistem merupakan nilai kerja dari acuan Iyung Pahan (2013) dan bukan pengganti analisis laboratorium atau rekomendasi agronomis lapangan. Perhitungan kuantitatif dibatasi pada Urea dan MOP/KCl. Unsur P, Mg, B, dan unsur lain tetap dapat diperlukan sesuai kondisi tanaman dan hasil evaluasi ahli.
     </div>

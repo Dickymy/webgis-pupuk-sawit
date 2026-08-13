@@ -41,7 +41,6 @@ class RealisasiPartialFlowTest extends TestCase
             'luas_ha' => 2.0,
             'sph' => 136,
             'tahun_tanam' => 2016,
-            'jenis_tanah' => 'Tanah Lempung',
             'topografi' => 'Datar 0-15°',
             'fase_tanaman' => 'TM',
             'koordinat_geojson' => json_encode(['type' => 'Polygon', 'coordinates' => [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]]),

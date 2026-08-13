@@ -135,7 +135,7 @@ class AcademicRuleEvidencePolicyTest extends TestCase
         $response = $this->actingAs($admin, 'admin')->get(route('rule-base.info'));
 
         $response->assertOk();
-        $response->assertSee('7 rule aktif: 4 gejala daun + 3 waktu');
+        $response->assertSee('10 rule aktif: 4 gejala daun + 3 waktu + 3 topografi');
         $response->assertSee('Hasil visual adalah indikasi awal, bukan diagnosis pasti');
         $response->assertSee('Iyung Pahan (2013)');
         $response->assertDontSee('Tabel 9.13');

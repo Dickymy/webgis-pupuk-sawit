@@ -20,7 +20,6 @@ class BlokLahan extends Model
         'sph',
         'koordinat_geojson',
         'tahun_tanam',
-        'jenis_tanah',
         'topografi',
         'fase_tanaman',
         'jumlah_pohon',

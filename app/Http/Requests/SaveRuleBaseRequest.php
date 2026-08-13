@@ -32,6 +32,17 @@ class SaveRuleBaseRequest extends FormRequest
             'sumber_halaman',
             'sumber_tabel',
             'catatan_validasi',
+            'kondisi_kelembaban',
+            'kondisi_drainase',
+            'ada_gulma_dominan',
+            'ada_serangan_hama',
+            'kondisi_umur_tahun',
+            'kondisi_kategori_umur',
+            'rekomendasi_dosis_urea',
+            'rekomendasi_dosis_kcl',
+            'tahap_eksekusi',
+            'fakta_yang_dihasilkan',
+            'prasyarat_fakta',
         ];
 
         $normalized = ['jenis_rule' => $jenisRule];
@@ -46,7 +57,7 @@ class SaveRuleBaseRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'jenis_rule' => ['required', Rule::in(['DIAGNOSIS_VISUAL', 'PEMBATAS_APLIKASI'])],
+            'jenis_rule' => ['required', Rule::in(['DIAGNOSIS_VISUAL', 'PEMBATAS_APLIKASI', 'KONDISI_LAHAN', 'PENENTU_DOSIS'])],
             'kondisi_warna_daun' => [
                 'nullable',
                 'string',
@@ -57,10 +68,33 @@ class SaveRuleBaseRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:100',
-                Rule::in(['Datar (0-8%)', 'Bergelombang (8-15%)', 'Curam (>15%)']),
+                Rule::in([
+                    'Datar - Landai (< 12°)',
+                    'Bergelombang - Miring (12° - 23°)',
+                    'Curam - Berbukit (> 23°)',
+                ]),
             ],
             'kondisi_curah_hujan_min_mm' => ['nullable', 'numeric', 'min:0', 'max:2000'],
             'kondisi_curah_hujan_max_mm' => ['nullable', 'numeric', 'min:0', 'max:2000'],
+            'kondisi_kelembaban' => [
+                'nullable',
+                'string',
+                Rule::in(['Sangat Kering', 'Kering', 'Normal', 'Lembab', 'Sangat Lembab']),
+            ],
+            'kondisi_drainase' => [
+                'nullable',
+                'string',
+                Rule::in(['Baik', 'Cukup', 'Buruk — Tergenang']),
+            ],
+            'ada_gulma_dominan' => ['nullable', 'boolean'],
+            'ada_serangan_hama' => ['nullable', 'boolean'],
+            'kondisi_umur_tahun' => ['nullable', 'integer', 'min:1', 'max:30'],
+            'kondisi_kategori_umur' => ['nullable', 'string', Rule::in(['TBM', 'TM'])],
+            'rekomendasi_dosis_urea' => ['nullable', 'numeric', 'min:0', 'max:10'],
+            'rekomendasi_dosis_kcl' => ['nullable', 'numeric', 'min:0', 'max:10'],
+            'tahap_eksekusi' => ['nullable', 'integer', 'min:1', 'max:3'],
+            'fakta_yang_dihasilkan' => ['nullable', 'string'],
+            'prasyarat_fakta' => ['nullable', 'string'],
             'indikasi_masalah' => ['required', 'string', 'max:255'],
             'jenis_pupuk_utama' => [
                 'nullable',
@@ -112,6 +146,18 @@ class SaveRuleBaseRequest extends FormRequest
                     }
                     if (! in_array($this->input('status_kebutuhan'), ['Normal', 'Tunda'], true)) {
                         $validator->errors()->add('status_kebutuhan', 'Rule waktu hanya menggunakan status dapat dijadwalkan atau ditunda.');
+                    }
+                }
+
+                if ($jenisRule === 'KONDISI_LAHAN') {
+                    if ($this->input('kondisi_kelembaban') === null && 
+                        $this->input('kondisi_drainase') === null && 
+                        $this->input('ada_gulma_dominan') === null && 
+                        $this->input('ada_serangan_hama') === null) {
+                        $validator->errors()->add('kondisi_kelembaban', 'Pilih minimal satu kondisi lahan yang akan diperiksa.');
+                    }
+                    if (! in_array($this->input('status_kebutuhan'), ['Segera', 'Tunda'], true)) {
+                        $validator->errors()->add('status_kebutuhan', 'Tindakan untuk kondisi lahan hanya boleh Tunda atau Segera.');
                     }
                 }
             },

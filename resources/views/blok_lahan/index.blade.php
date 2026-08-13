@@ -58,10 +58,16 @@
             <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
                 {{ strtoupper(substr($anggota->nama ?? '?', 0, 1)) }}
             </div>
-            <div>
+            <div class="min-w-0 flex-1">
                 <p class="font-bold text-slate-800 text-sm">{{ $anggota->nama ?? 'Tidak Diketahui' }}</p>
-                <p class="text-[10px] text-slate-500">{{ $bloks->count() }} blok · {{ number_format($bloks->sum('luas_ha'), 2) }} Ha</p>
+                <p class="text-[10px] text-slate-500">{{ $bloks->count() }} blok · {{ number_format($bloks->sum('luas_ha'), 2) }} Ha total</p>
             </div>
+            <a href="{{ route('blok-lahan.create', ['anggota_id' => $anggota->id]) }}"
+               class="flex-shrink-0 inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-white px-2.5 py-1.5 text-[10px] font-semibold text-emerald-700 transition hover:bg-emerald-50"
+               title="Tambah blok baru untuk {{ $anggota->nama }}">
+                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Tambah Blok
+            </a>
         </div>
 
         {{-- Desktop Table --}}
@@ -72,7 +78,7 @@
                         <th class="px-4 py-2.5 text-left text-[10px] font-semibold text-slate-400 uppercase">Nama Blok</th>
                         <th class="px-4 py-2.5 text-left text-[10px] font-semibold text-slate-400 uppercase">Luas</th>
                         <th class="px-4 py-2.5 text-left text-[10px] font-semibold text-slate-400 uppercase">Umur</th>
-                        <th class="px-4 py-2.5 text-left text-[10px] font-semibold text-slate-400 uppercase">Tanah / Topografi</th>
+                        <th class="px-4 py-2.5 text-left text-[10px] font-semibold text-slate-400 uppercase">Topografi</th>
                         <th class="px-4 py-2.5 text-left text-[10px] font-semibold text-slate-400 uppercase">Status</th>
                         <th class="px-4 py-2.5 text-right text-[10px] font-semibold text-slate-400 uppercase">Aksi</th>
                     </tr>
@@ -89,8 +95,7 @@
                             @else <span class="text-slate-300">—</span> @endif
                         </td>
                         <td class="px-4 py-2.5 text-xs text-slate-600">
-                            {{ $blok->jenis_tanah ? \Illuminate\Support\Str::limit($blok->jenis_tanah, 15) : '—' }}
-                            @if($blok->topografi) <span class="text-[10px] text-slate-400">· {{ $blok->topografi }}</span> @endif
+                            {{ $blok->topografi ? $blok->topografi : '—' }}
                         </td>
                         <td class="px-4 py-2.5">
                             <x-recommendation-status :recommendation="$rbs" :show-stage="false" compact />
@@ -129,7 +134,6 @@
                 <div class="flex items-center justify-between gap-2">
                     <p class="text-[10px] text-slate-500">
                         {{ $blok->umur_tanaman !== null ? $blok->umur_tanaman.' thn' : '' }}
-                        {{ $blok->jenis_tanah ? '· '.\Illuminate\Support\Str::limit($blok->jenis_tanah, 12) : '' }}
                     </p>
                     <div class="flex items-center gap-1 flex-shrink-0">
                         <a href="{{ route('blok-lahan.show', $blok) }}" class="px-2 py-1 bg-slate-50 border border-slate-200 text-slate-600 text-[9px] font-medium rounded-md">Lihat</a>

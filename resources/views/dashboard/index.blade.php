@@ -323,6 +323,16 @@ function buildPopupContent(blok){
     }else if(['MENUNGGU_INTERVAL','MENUNGGU_KELAYAKAN'].includes(blok.status_stage)){
         actionLabel='Lihat Detail';
     }
+    // Blok lain milik anggota yang sama (sibling)
+    var siblingHtml = '';
+    if (blok.sibling_bloks && blok.sibling_bloks.length > 0) {
+        siblingHtml = '<div style="margin-top:5px;padding-top:4px;border-top:1px solid #f1f5f9;">'
+            + '<span style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;display:block;margin-bottom:3px;">Blok lain milik '+blok.nama_pemilik+'</span>'
+            + blok.sibling_bloks.slice(0,3).map(function(s){
+                return '<a href="/blok-lahan/'+s.id+'" style="font-size:10px;color:#059669;text-decoration:none;display:inline-block;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:1px 6px;margin:1px 2px 1px 0;">'+s.nama_blok+' ('+parseFloat(s.luas_ha).toFixed(2)+' Ha)</a>';
+              }).join('')
+            + '</div>';
+    }
     return'<div style="min-width:170px;max-width:240px;font-family:system-ui,sans-serif;">'
         +'<div style="font-weight:700;font-size:12px;color:#0f172a;padding-bottom:4px;border-bottom:1px solid #f1f5f9;margin-bottom:4px;">'+blok.nama_blok+'</div>'
         +'<div style="font-size:10px;color:#64748b;margin-bottom:3px;">'+(blok.nama_pemilik||'-')+' · '+blok.luas_ha+' Ha'+(blok.umur_tanaman!==null?' · '+blok.umur_tanaman+' thn':'')+'</div>'
@@ -330,6 +340,7 @@ function buildPopupContent(blok){
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;"><span style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;">Kondisi Tanaman</span><span style="font-size:9px;color:#475569;text-align:right;">'+kondisiLabel+'</span></div>'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;"><span style="font-size:9px;font-weight:700;color:#6b7280;text-transform:uppercase;">Kesiapan Pupuk</span><span style="font-size:9px;color:#475569;text-align:right;">'+kelayakanLabel+'</span></div>'
         +'<div style="margin-bottom:3px;">'+mh+'</div>'+ph+sh
+        +siblingHtml
         +'<div style="display:flex;gap:6px;align-items:center;padding-top:4px;margin-top:3px;border-top:1px solid #f1f5f9;flex-wrap:wrap;">'
         +'<a href="'+actionUrl+'" style="font-size:10px;color:#059669;font-weight:700;text-decoration:none;">'+actionLabel+' →</a>'
         +'<a href="/blok-lahan/'+blok.id+'/edit#koordinat" style="font-size:10px;color:#2563eb;font-weight:600;text-decoration:none;">Edit Peta</a>'

@@ -11,13 +11,13 @@
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
             Kembali
         </a>
-        <span class="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:ring-emerald-800">7 rule aktif: 4 gejala daun + 3 waktu</span>
+        <span class="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:ring-emerald-800">10 rule aktif: 4 gejala daun + 3 waktu + 3 topografi</span>
     </div>
 
     <section class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-800 dark:bg-emerald-900/20">
         <h2 class="text-lg font-bold text-slate-900 dark:text-white">Cara kerja sistem</h2>
         <p class="mt-1 max-w-5xl text-sm leading-6 text-slate-700 dark:text-slate-200">
-            Sistem mencocokkan data observasi dengan rule berbentuk IF–THEN menggunakan metode forward chaining. Rule yang syaratnya terpenuhi akan menghasilkan keterangan kondisi lahan dan saran tindakan. Admin dapat menambah atau memperbarui rule, lalu menggunakannya setelah kondisi, hasil, dan sumber acuannya diperiksa.
+            Sistem mencocokkan data observasi dengan rule berbentuk IF–THEN menggunakan metode <strong>forward chaining</strong> tiga tahap: (1) diagnosis kondisi visual tanaman, (2) penentuan dosis, (3) penyesuaian waktu dan metode aplikasi. Rule yang syaratnya terpenuhi akan menghasilkan indikasi kondisi, saran tindakan, dan jadwal pemupukan. Admin dapat menambah atau memperbarui rule, lalu menggunakannya setelah kondisi, hasil, dan sumber acuannya diperiksa.
         </p>
         <div class="mt-4 grid gap-2 sm:grid-cols-3">
             @foreach([
@@ -77,6 +77,30 @@
                 @endforeach
             </div>
             <p class="mt-4 text-xs leading-5 text-slate-500 dark:text-slate-400">Curah hujan digunakan untuk menentukan waktu pelaksanaan, bukan untuk mengubah dosis pupuk.</p>
+        </article>
+    </section>
+
+    <section class="grid gap-4 xl:grid-cols-1">
+        <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <p class="text-xs font-bold uppercase tracking-wide text-purple-600">Tiga rule topografi / penentu metode</p>
+            <h2 class="mt-1 text-base font-bold text-slate-900 dark:text-white">Metode aplikasi berdasarkan kelerengan lahan</h2>
+            <p class="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">Rule ini tidak memengaruhi dosis pupuk. Rule hanya menentukan cara/teknik penabura pupuk yang tepat sesuai kondisi topografi untuk meminimalkan risiko pencucian hara.</p>
+            <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                @foreach([
+                    ['TOPO-01', 'Datar - Landai (< 12°)', 'Taburkan merata pada piringan (broadcasting). Risiko aliran pupuk rendah.', 'Pahan (2013) Hal. 82 Tabel 4.5 — lereng < 12° kriteria Baik.'],
+                    ['TOPO-02', 'Bergelombang - Miring (12°–23°)', 'Gunakan metode terasan individu (tapak kuda) atau pocketing. Pupuk di piringan atas lereng.', 'Pahan (2013) Hal. 82 Tabel 4.5 — lereng 12°–23° kriteria Kurang Baik, rawan erosi.'],
+                    ['TOPO-03', 'Curam - Berbukit (> 23°)', 'Wajib sistem benam (pocket placement) dalam rorak. Taburan bebas dilarang.', 'Pahan (2013) Hal. 82 Tabel 4.5 — lereng > 23° kriteria Tidak Baik, mewajibkan konservasi.'],
+                ] as [$code, $condition, $method, $source])
+                    <div class="rounded-xl border border-purple-100 bg-purple-50/50 p-3.5 dark:border-purple-900/50 dark:bg-purple-950/20">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="rounded-md bg-purple-100 px-2 py-1 text-[10px] font-bold text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">{{ $code }}</span>
+                        </div>
+                        <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ $condition }}</p>
+                        <p class="mt-1.5 text-xs leading-5 text-slate-600 dark:text-slate-300">{{ $method }}</p>
+                        <p class="mt-2 text-[10px] text-slate-400 dark:text-slate-500 italic">{{ $source }}</p>
+                    </div>
+                @endforeach
+            </div>
         </article>
     </section>
 

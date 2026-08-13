@@ -30,7 +30,7 @@ class DashboardController extends Controller
             $this->operationalEligibility($blok)
         ));
 
-        $mapData = $blokLahans->map(function ($blok) {
+        $mapData = $blokLahans->map(function ($blok) use ($blokLahans) {
             $rbs = $blok->rekomendasiRbsTerbaru;
             $eligibility = $blok->operational_eligibility;
 
@@ -87,6 +87,14 @@ class DashboardController extends Controller
                 'kategori_keandalan' => $rbs?->kategori_keandalan,
                 'versi_mesin' => $rbs?->versi_mesin_rekomendasi,
                 'belum_ada_kondisi' => ! $blok->kondisiTerbaru,
+                'sibling_bloks' => $blokLahans
+                    ->where('anggota_id', $blok->anggota_id)
+                    ->where('id', '!=', $blok->id)
+                    ->map(fn ($b) => [
+                        'id' => $b->id,
+                        'nama_blok' => $b->nama_blok,
+                        'luas_ha' => $b->luas_ha,
+                    ])->values()->toArray(),
             ];
         });
 

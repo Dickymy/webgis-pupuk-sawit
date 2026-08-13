@@ -16,6 +16,7 @@ enum ApplicationFeasibilityStatus: string
     case TUNDA_TANAH_KERING = 'TUNDA_TANAH_KERING';
     case TUNDA_INTERVAL = 'TUNDA_INTERVAL';
     case PERLU_PERBAIKAN_DRAINASE = 'PERLU_PERBAIKAN_DRAINASE';
+    case TUNDA_KONDISI_LAHAN = 'TUNDA_KONDISI_LAHAN';
     case PERLU_VERIFIKASI_DATA = 'PERLU_VERIFIKASI_DATA';
     case TERLAMBAT_PERLU_DIJADWALKAN = 'TERLAMBAT_PERLU_DIJADWALKAN';
 
@@ -28,6 +29,7 @@ enum ApplicationFeasibilityStatus: string
             self::TUNDA_TANAH_KERING => 'Belum Dipupuk — Tanah Sangat Kering',
             self::TUNDA_INTERVAL => 'Belum Dipupuk — Jarak Waktu Belum Cukup',
             self::PERLU_PERBAIKAN_DRAINASE => 'Belum Dipupuk — Perbaiki Saluran Air',
+            self::TUNDA_KONDISI_LAHAN => 'Belum Dipupuk — Kondisi Lahan Tidak Memenuhi',
             self::PERLU_VERIFIKASI_DATA => 'Data Pemeriksaan Belum Lengkap',
             self::TERLAMBAT_PERLU_DIJADWALKAN => 'Segera Dijadwalkan',
         };

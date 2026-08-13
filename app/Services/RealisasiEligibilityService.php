@@ -123,6 +123,15 @@ class RealisasiEligibilityService
         if ($kondisi) {
             $windowResult = $this->windowService->evaluate($kondisi);
         }
+        
+        // PENTING: Jika hasil analisis RBS sebelumnya memutuskan TUNDA (karena hama/gulma),
+        // maka status kelayakan aplikasi harus dipaksa tidak layak di sini, 
+        // terlepas dari kondisi cuaca/window.
+        if ($rekomendasi->status_kelayakan_aplikasi === \App\Enums\ApplicationFeasibilityStatus::TUNDA_KONDISI_LAHAN->value) {
+            $windowResult['layak'] = false;
+            $windowResult['status'] = $rekomendasi->status_kelayakan_aplikasi;
+            $windowResult['alasan'] = [$rekomendasi->alasan_kelayakan ?? 'Ditunda berdasarkan evaluasi kondisi lahan (hama/gulma).'];
+        }
 
         // Hitung current application
         $annualSnapshot = [

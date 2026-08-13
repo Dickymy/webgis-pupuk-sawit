@@ -30,6 +30,8 @@ class FertilizationWindowService
 
     public const PERLU_PERBAIKAN_DRAINASE = 'PERLU_PERBAIKAN_DRAINASE';
 
+    public const TUNDA_KONDISI_LAHAN = 'TUNDA_KONDISI_LAHAN';
+
     public const PERLU_VERIFIKASI_DATA = 'PERLU_VERIFIKASI_DATA';
 
     public const TERLAMBAT = 'TERLAMBAT_PERLU_DIJADWALKAN';
@@ -169,6 +171,7 @@ class FertilizationWindowService
             self::TUNDA_TANAH_KERING => 'Belum Dipupuk — Tanah Sangat Kering',
             self::TUNDA_INTERVAL => 'Belum Dipupuk — Jarak Waktu Belum Cukup',
             self::PERLU_PERBAIKAN_DRAINASE => 'Belum Dipupuk — Perbaiki Saluran Air',
+            self::TUNDA_KONDISI_LAHAN => 'Belum Dipupuk — Kondisi Lahan Tidak Memenuhi',
             self::PERLU_VERIFIKASI_DATA => 'Data Pemeriksaan Belum Lengkap',
             self::TERLAMBAT => 'Segera Dijadwalkan',
             default => $status,

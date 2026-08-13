@@ -243,63 +243,220 @@
 
     <div class="grid gap-4 lg:grid-cols-5">
         <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:col-span-2 dark:border-slate-700 dark:bg-slate-900" aria-labelledby="reason-title">
-            <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between mb-4">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">Analisis Sistem Pakar</p>
-                    <h2 id="reason-title" class="text-base font-bold text-slate-900 dark:text-white">Temuan & Rekomendasi</h2>
-                </div>
+            <div class="mb-4">
+                <p class="text-xs font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">Analisis Sistem Pakar</p>
+                <h2 id="reason-title" class="text-base font-bold text-slate-900 dark:text-white">Jejak Penalaran (Forward Chaining)</h2>
+                <p class="mt-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">Berikut adalah fakta-fakta yang diperiksa sistem secara berurutan hingga menghasilkan rekomendasi.</p>
             </div>
-            
-            <div class="space-y-4">
-                <div>
-                    <h4 class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Kesimpulan dan saran</h4>
+
+            @if($kondisi)
+            @php
+                // Kumpulkan semua fakta kondisi lapangan
+                $faktaKondisi = [];
+
+                // 1. Kondisi daun
+                if ($kondisi->warna_daun) {
+                    $isNormal = in_array($kondisi->warna_daun, ['Hijau Normal', 'Normal']);
+                    $faktaKondisi[] = [
+                        'label' => 'Kondisi Daun',
+                        'nilai' => $kondisi->warna_daun,
+                        'status' => $isNormal ? 'ok' : 'masalah',
+                        'icon' => $isNormal ? '✅' : '⚠️',
+                    ];
+                }
+
+                // 2. Curah hujan (gunakan nilai numerik jika ada, fallback ke kategori)
+                $curahHujanNilai = $kondisi->curah_hujan_mm_bulanan;
+                $curahHujanKategori = $kondisi->curah_hujan_kategori;
+                if ($curahHujanNilai !== null) {
+                    $ch = (float) $curahHujanNilai;
+                    $chOk = $ch >= 100 && $ch <= 300;
+                    $faktaKondisi[] = [
+                        'label' => 'Curah Hujan',
+                        'nilai' => number_format($ch, 0, ',', '.') . ' mm/bulan',
+                        'status' => $chOk ? 'ok' : 'peringatan',
+                        'icon' => $chOk ? '✅' : '⚠️',
+                        'keterangan' => $ch < 100 ? 'Terlalu kering untuk pemupukan kimia' : ($ch > 300 ? 'Terlalu lebat, pupuk dapat hanyut' : 'Mendukung penyerapan pupuk'),
+                    ];
+                } elseif ($curahHujanKategori !== null) {
+                    $kategoriOk = in_array($curahHujanKategori, ['Sedang', 'Normal', 'Cukup']);
+                    $faktaKondisi[] = [
+                        'label' => 'Curah Hujan',
+                        'nilai' => $curahHujanKategori,
+                        'status' => $kategoriOk ? 'ok' : 'peringatan',
+                        'icon' => $kategoriOk ? '✅' : '⚠️',
+                        'keterangan' => $kategoriOk ? 'Mendukung penyerapan pupuk' : 'Perhatikan kondisi curah hujan sebelum pemupukan',
+                    ];
+                }
+
+                // 3. Topografi (dibaca dari BlokLahan, bukan KondisiLahan)
+                $topoBlok = $blokLahan->topografi ?? null;
+                if ($topoBlok) {
+                    $topoOk = str_contains($topoBlok, 'Datar') || str_contains($topoBlok, 'Landai');
+                    $faktaKondisi[] = [
+                        'label' => 'Topografi Lahan',
+                        'nilai' => $topoBlok,
+                        'status' => $topoOk ? 'ok' : 'peringatan',
+                        'icon' => $topoOk ? '✅' : '⚠️',
+                        'keterangan' => $topoOk ? 'Risiko aliran pupuk rendah' : 'Perhatikan metode aplikasi agar pupuk tidak terbawa lereng',
+                    ];
+                }
+
+                // 4. Kelembaban tanah
+                if ($kondisi->kelembaban_tanah) {
+                    $kelOk = in_array($kondisi->kelembaban_tanah, ['Normal', 'Lembab', 'Sangat Lembab', 'Sedang']);
+                    $faktaKondisi[] = [
+                        'label' => 'Kelembaban Tanah',
+                        'nilai' => $kondisi->kelembaban_tanah,
+                        'status' => $kelOk ? 'ok' : 'tunda',
+                        'icon' => $kelOk ? '✅' : '❌',
+                        'keterangan' => !$kelOk ? 'Tanah terlalu kering, pupuk tidak dapat terserap optimal — TUNDA' : 'Kelembaban mendukung penyerapan pupuk',
+                    ];
+                }
+
+                // 5. Drainase
+                $valDrainase = $kondisi->drainase ?? $kondisi->kondisi_drainase;
+                if ($valDrainase) {
+                    $drainOk = in_array($valDrainase, ['Baik', 'Sedang', 'Cukup']);
+                    $faktaKondisi[] = [
+                        'label' => 'Drainase Lahan',
+                        'nilai' => $valDrainase,
+                        'status' => $drainOk ? 'ok' : 'tunda',
+                        'icon' => $drainOk ? '✅' : '❌',
+                        'keterangan' => !$drainOk ? 'Air tergenang menyebabkan pupuk hanyut — TUNDA' : 'Drainase mendukung pemupukan',
+                    ];
+                }
+
+                // 6. Hama
+                if ($kondisi->ada_serangan_hama !== null) {
+                    $hamaAda = (bool) $kondisi->ada_serangan_hama;
+                    $faktaKondisi[] = [
+                        'label' => 'Serangan Hama',
+                        'nilai' => $hamaAda ? 'Ada serangan hama aktif' : 'Tidak ada serangan hama',
+                        'status' => $hamaAda ? 'tunda' : 'ok',
+                        'icon' => $hamaAda ? '❌' : '✅',
+                        'keterangan' => $hamaAda ? 'Tangani hama terlebih dahulu sebelum pemupukan — TUNDA' : 'Tanaman aman dari hama',
+                    ];
+                }
+
+                // 7. Gulma
+                if ($kondisi->ada_gulma_dominan !== null) {
+                    $gulmaAda = (bool) $kondisi->ada_gulma_dominan;
+                    $faktaKondisi[] = [
+                        'label' => 'Gulma Dominan',
+                        'nilai' => $gulmaAda ? 'Ada gulma dominan di piringan' : 'Tidak ada gulma dominan',
+                        'status' => $gulmaAda ? 'tunda' : 'ok',
+                        'icon' => $gulmaAda ? '❌' : '✅',
+                        'keterangan' => $gulmaAda ? 'Bersihkan gulma terlebih dahulu agar pupuk tidak diserap gulma — TUNDA' : 'Piringan bersih, pupuk dapat diserap tanaman',
+                    ];
+                }
+
+                $adaPenghambat = collect($faktaKondisi)->contains(fn($f) => $f['status'] === 'tunda');
+            @endphp
+
+            {{-- Blok IF kondisi --}}
+            <div class="space-y-1.5">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-2">IF (FAKTA DARI OBSERVASI LAPANGAN)</p>
+
+                @foreach($faktaKondisi as $i => $fakta)
+                <div class="flex items-start gap-2 rounded-lg px-3 py-2
+                    {{ $fakta['status'] === 'ok' ? 'bg-emerald-50 border border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900/50' : '' }}
+                    {{ $fakta['status'] === 'peringatan' ? 'bg-amber-50 border border-amber-100 dark:bg-amber-950/30 dark:border-amber-900/50' : '' }}
+                    {{ $fakta['status'] === 'tunda' ? 'bg-red-50 border border-red-100 dark:bg-red-950/30 dark:border-red-900/50' : '' }}
+                    {{ $fakta['status'] === 'masalah' ? 'bg-orange-50 border border-orange-100 dark:bg-orange-950/30 dark:border-orange-900/50' : '' }}">
+                    <span class="text-sm mt-0.5">{{ $fakta['icon'] }}</span>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-1.5">
+                            @if($i > 0)<span class="text-[9px] font-bold text-slate-400 uppercase">AND</span>@endif
+                            <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">{{ $fakta['label'] }}</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-100">= {{ $fakta['nilai'] }}</p>
+                        @if(!empty($fakta['keterangan']))
+                            <p class="text-[10px] mt-0.5 {{ $fakta['status'] === 'tunda' ? 'text-red-600 dark:text-red-400' : 'text-slate-500 dark:text-slate-400' }}">{{ $fakta['keterangan'] }}</p>
+                        @endif
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            {{-- THEN Kesimpulan --}}
+            <div class="mt-4 rounded-xl border-2 p-3
+                {{ $adaPenghambat ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/40' : 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/40' }}">
+                <p class="text-[10px] font-bold uppercase tracking-widest
+                    {{ $adaPenghambat ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400' }}">THEN (KESIMPULAN SISTEM)</p>
+                @if($adaPenghambat)
+                    <p class="mt-1 text-sm font-bold text-red-800 dark:text-red-200">❌ Pemupukan DITUNDA</p>
+                    <p class="mt-0.5 text-xs text-red-700 dark:text-red-300">Terdapat kondisi penghambat yang harus diselesaikan terlebih dahulu sebelum pemupukan dapat dilakukan.</p>
+                    {{-- Tampilkan rule penghambat yang terpicu --}}
+                    @if($rules->isNotEmpty())
+                        <div class="mt-2 space-y-1">
+                            @foreach($rules as $r)
+                                @if(($r['status'] ?? '') === 'Tunda')
+                                    <p class="text-[10px] text-red-600 dark:text-red-400">→ {{ $r['indikasi'] ?? $r['kode_rule'] ?? '' }}</p>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endif
+                @elseif($rbs)
+                    <p class="mt-1 text-sm font-bold text-emerald-800 dark:text-emerald-200">✅ Pemupukan dapat dilaksanakan</p>
+                    {{-- Tampilkan masalah teridentifikasi dari rule (mis. defisiensi hara) --}}
+                    @if($problems->isNotEmpty())
+                        <div class="mt-2 space-y-1">
+                            @foreach($problems as $problem)
+                                <p class="text-xs font-semibold text-orange-700 dark:text-orange-300">⚠ {{ $problem }}</p>
+                            @endforeach
+                        </div>
+                    @endif
+                    {{-- Tampilkan rekomendasi pupuk utama dari rule --}}
+                    @if($recommendations->isNotEmpty())
+                        <div class="mt-2 flex flex-wrap gap-1.5">
+                            @foreach($recommendations as $rec)
+                                @if(($rec['jenis_utama'] ?? '') && ($rec['jenis_utama'] ?? '') !== 'Tidak ditentukan otomatis')
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                                        💊 {{ $rec['jenis_utama'] }}
+                                    </span>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endif
                     @if($saranItems->isNotEmpty())
-                        <ul class="mt-2 space-y-2">
+                        <ul class="mt-2 space-y-1">
                             @foreach($saranItems as $item)
-                                <li class="flex gap-2 text-sm leading-5 text-slate-700 dark:text-slate-300"><span class="mt-1 h-1.5 w-1.5 flex-none rounded-full bg-emerald-500"></span><span>{{ $item }}</span></li>
+                                <li class="text-xs text-emerald-700 dark:text-emerald-300">→ {{ $item }}</li>
                             @endforeach
                         </ul>
-                    @else
-                        <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Tidak ada saran tambahan khusus.</p>
                     @endif
-                </div>
-
-                @if($recommendations->isNotEmpty())
-                    <div>
-                        <h4 class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Saran pupuk tambahan</h4>
-                        <div class="mt-2 grid gap-2">
-                            @foreach($recommendations as $item)
-                                <article class="rounded-xl border border-amber-200 p-3 bg-amber-50/50 dark:bg-amber-900/20 dark:border-amber-800/50">
-                                    <p class="text-sm font-bold text-amber-900 dark:text-amber-100">{{ $item['jenis_utama'] ?? 'Pupuk pendukung' }}</p>
-                                    @if(!empty($item['dosis']))<p class="mt-1 text-xs leading-5 text-slate-700 dark:text-slate-300">{{ $item['dosis'] }}</p>@endif
-                                    @if(!empty($item['metode']) || !empty($item['waktu']))
-                                        <p class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">{{ $item['metode'] ?? '' }}{{ !empty($item['metode']) && !empty($item['waktu']) ? ' - ' : '' }}{{ $item['waktu'] ?? '' }}</p>
-                                    @endif
-                                </article>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-                
-                @if($problems->isNotEmpty())
-                    <div>
-                        <h4 class="text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Dasar Keputusan</h4>
-                        <div class="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/70">
-                            <p class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase">Temuan Lapangan</p>
-                            @if($problems->count() > 1)
-                                <ul class="mt-1.5 list-inside list-disc space-y-1 text-sm font-medium leading-5 text-slate-800 dark:text-slate-200">
-                                    @foreach($problems as $problem)
-                                        <li>{{ $problem }}</li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                <p class="mt-1 text-sm font-medium leading-5 text-slate-800 dark:text-slate-200">{{ $problems->first() }}</p>
-                            @endif
-                        </div>
-                    </div>
+                @else
+                    <p class="mt-1 text-sm font-bold text-slate-600 dark:text-slate-300">— Belum ada kesimpulan</p>
                 @endif
             </div>
+
+            {{-- Rules yang aktif (lebih ringkas) --}}
+            @if($rules->isNotEmpty())
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 mb-2">Rule yang Terpicu</p>
+                <div class="space-y-1.5">
+                    @foreach($rules as $r)
+                    <div class="flex items-center justify-between rounded-lg border border-indigo-100 bg-indigo-50/50 px-2.5 py-1.5 dark:border-indigo-900/50 dark:bg-indigo-900/20">
+                        <div>
+                            <span class="font-mono text-[9px] font-bold text-indigo-600 dark:text-indigo-400">{{ $r['kode_rule'] ?? 'N/A' }}</span>
+                            <p class="text-[10px] text-slate-600 dark:text-slate-300">{{ $r['indikasi'] ?? '' }}</p>
+                        </div>
+                        <span class="ml-2 flex-none rounded bg-indigo-100 px-1.5 py-0.5 text-[8px] font-bold text-indigo-700 dark:bg-indigo-800 dark:text-indigo-200">Tahap {{ $r['tahap_eksekusi'] ?? 1 }}</span>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            @else
+            <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center dark:border-slate-700 dark:bg-slate-800/60">
+                <p class="text-sm text-slate-500 dark:text-slate-400">Belum ada data observasi lapangan.</p>
+                <p class="mt-1 text-xs text-slate-400">Isi observasi terlebih dahulu agar sistem dapat memeriksa fakta-fakta kondisi lahan.</p>
+            </div>
+            @endif
         </section>
+
 
         <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:col-span-3 dark:border-slate-700 dark:bg-slate-900" aria-labelledby="dose-title">
             <div class="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">

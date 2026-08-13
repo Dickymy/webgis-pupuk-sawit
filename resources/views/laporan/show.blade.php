@@ -115,10 +115,7 @@
                     <span class="text-slate-500 dark:text-slate-400">Fase</span>
                     <span class="text-slate-800 dark:text-slate-200 font-semibold">{{ $faseDisplay }}</span>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-slate-500 dark:text-slate-400">Jenis Tanah</span>
-                    <span class="text-slate-800 dark:text-slate-200 font-medium text-xs">{{ $rekomendasiRbs->blokLahan->jenis_tanah }}</span>
-                </div>
+
                 <div class="flex justify-between items-center">
                     <span class="text-slate-500 dark:text-slate-400">Topografi</span>
                     <span class="text-slate-800 dark:text-slate-200 font-medium">{{ $rekomendasiRbs->blokLahan->topografi }}</span>
@@ -357,6 +354,200 @@
 
         </div>
 
+    </div>
+    @endif
+
+    {{-- Aturan RBS yang Terpicu --}}
+    @if($rekomendasiRbs->rules_terpicu && count($rekomendasiRbs->rules_terpicu) > 0)
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-slate-700">
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Jejak Penalaran Forward Chaining</p>
+                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5">
+                    Aturan yang Terpicu
+                    <span class="ml-2 rounded-full bg-indigo-100 dark:bg-indigo-900/50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">
+                        {{ $rekomendasiRbs->jumlah_rule_terpicu }} aturan
+                    </span>
+                </h3>
+            </div>
+            <span class="text-[10px] text-slate-400 dark:text-slate-500">Versi mesin: {{ $rekomendasiRbs->versi_mesin_rekomendasi ?? '-' }}</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead class="bg-slate-50 dark:bg-slate-700/60">
+                    <tr>
+                        <th class="px-4 py-2.5 text-left font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">Kode Rule</th>
+                        <th class="px-4 py-2.5 text-left font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">Jenis</th>
+                        <th class="px-3 py-2.5 text-center font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">Tahap</th>
+                        <th class="px-4 py-2.5 text-left font-semibold text-slate-500 dark:text-slate-400">Indikasi / Kesimpulan</th>
+                        <th class="px-4 py-2.5 text-left font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">Pupuk Terkait</th>
+                        <th class="px-4 py-2.5 text-center font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60">
+                    @foreach($rekomendasiRbs->rules_terpicu as $r)
+                    @php
+                        $jenisColor = match($r['jenis_rule'] ?? '') {
+                            'DIAGNOSIS_VISUAL'  => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
+                            'PEMBATAS_APLIKASI' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+                            'KONDISI_LAHAN'     => 'bg-rose-100 text-rose-700 dark:bg-rose-900/50 dark:text-rose-300',
+                            'PENENTU_DOSIS'     => 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300',
+                            'PENENTU_METODE'    => 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
+                            default             => 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
+                        };
+                        $jenisLabel = match($r['jenis_rule'] ?? '') {
+                            'DIAGNOSIS_VISUAL'  => 'Visual',
+                            'PEMBATAS_APLIKASI' => 'Waktu',
+                            'KONDISI_LAHAN'     => 'Lahan',
+                            'PENENTU_DOSIS'     => 'Dosis',
+                            'PENENTU_METODE'    => 'Metode',
+                            default             => $r['jenis_rule'] ?? '-',
+                        };
+                        $statusColor = match($r['status'] ?? '') {
+                            'Darurat' => 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
+                            'Segera'  => 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300',
+                            'Tunda'   => 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
+                            default   => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',
+                        };
+                    @endphp
+                    <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition-colors">
+                        <td class="px-4 py-2.5 whitespace-nowrap">
+                            <span class="font-mono text-[11px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/40 px-2 py-0.5 rounded">
+                                {{ $r['kode_rule'] ?? 'N/A' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-2.5 whitespace-nowrap">
+                            <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold {{ $jenisColor }}">
+                                {{ $jenisLabel }}
+                            </span>
+                        </td>
+                        <td class="px-3 py-2.5 text-center text-slate-500 dark:text-slate-400 font-medium">
+                            {{ $r['tahap_eksekusi'] ?? 1 }}
+                        </td>
+                        <td class="px-4 py-2.5 text-slate-700 dark:text-slate-300 leading-relaxed">
+                            {{ $r['indikasi'] ?? '-' }}
+                        </td>
+                        <td class="px-4 py-2.5 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                            {{ $r['pupuk'] ?? '-' }}
+                        </td>
+                        <td class="px-4 py-2.5 text-center whitespace-nowrap">
+                            <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold {{ $statusColor }}">
+                                {{ \App\Models\RekomendasiRbs::labelStatus($r['status'] ?? '') }}
+                            </span>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        <p class="px-5 py-2.5 text-[10px] text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-700">
+            Tahap: 1 = Diagnosis Kondisi · 2 = Penentuan Dosis · 3 = Penyesuaian/Pembatas.
+            Kode rule dapat ditelusuri di <a href="{{ route('rule-base.index') }}" class="text-indigo-500 hover:underline">menu Rule Base</a> untuk melihat sumber literatur dan kondisi IF-THEN lengkap.
+        </p>
+    </div>
+    @endif
+
+    {{-- Data Observasi Lapangan --}}
+    @php
+        $kondisi = $rekomendasiRbs->kondisiLahan;
+        $sumberHujanLabel = match($kondisi?->sumber_curah_hujan) {
+            'alat_ukur'  => 'Alat ukur di kebun',
+            'open-meteo' => 'Open-Meteo (perkiraan lokasi)',
+            'manual'     => 'Catatan kelompok tani',
+            'lainnya'    => 'Sumber lainnya',
+            default      => null,
+        };
+    @endphp
+    @if($kondisi)
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
+        <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100 dark:border-slate-700 flex items-center gap-2">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Data Observasi Lapangan
+            <span class="font-normal normal-case text-[9px]">{{ $kondisi->tanggal_observasi?->format('d M Y') }}</span>
+        </h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-3 text-sm">
+
+            {{-- Kondisi daun --}}
+            <div>
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Kondisi Daun</p>
+                <p class="text-slate-800 dark:text-slate-200 font-medium text-xs">
+                    {{ config('observation.leaf_condition_labels.' . $kondisi->warna_daun, $kondisi->warna_daun ?? '-') }}
+                </p>
+            </div>
+
+            {{-- Curah hujan --}}
+            <div>
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Curah Hujan</p>
+                <p class="text-slate-800 dark:text-slate-200 font-medium text-xs">
+                    @if($kondisi->curah_hujan_mm_bulanan !== null)
+                        {{ number_format($kondisi->curah_hujan_mm_bulanan, 1) }} mm/bulan
+                    @elseif($kondisi->curah_hujan_kategori)
+                        {{ $kondisi->curah_hujan_kategori }} (perkiraan)
+                    @else
+                        <span class="text-slate-400 dark:text-slate-500">Tidak tersedia</span>
+                    @endif
+                </p>
+            </div>
+
+            {{-- Sumber curah hujan (baru) --}}
+            @if($sumberHujanLabel || $kondisi->periode_curah_hujan)
+            <div>
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Sumber Data Hujan</p>
+                <p class="text-slate-800 dark:text-slate-200 font-medium text-xs">
+                    {{ $sumberHujanLabel ?? '-' }}
+                    @if($kondisi->periode_curah_hujan)
+                        <span class="text-slate-400 dark:text-slate-500"> · {{ $kondisi->periode_curah_hujan }}</span>
+                    @endif
+                </p>
+            </div>
+            @endif
+
+            {{-- Musim --}}
+            @if($kondisi->musim_saat_ini)
+            <div>
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Musim</p>
+                <p class="text-slate-800 dark:text-slate-200 font-medium text-xs">{{ $kondisi->musim_saat_ini }}</p>
+            </div>
+            @endif
+
+            {{-- Kelembaban --}}
+            <div>
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Kelembapan Tanah</p>
+                <p class="text-slate-800 dark:text-slate-200 font-medium text-xs">{{ $kondisi->kelembaban_tanah ?? '-' }}</p>
+            </div>
+
+            {{-- Drainase --}}
+            <div>
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Drainase</p>
+                <p class="text-slate-800 dark:text-slate-200 font-medium text-xs">{{ $kondisi->kondisi_drainase ?? '-' }}</p>
+            </div>
+
+            {{-- Gulma & hama --}}
+            <div>
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Gulma / Hama</p>
+                <p class="text-slate-800 dark:text-slate-200 font-medium text-xs">
+                    {{ $kondisi->ada_gulma_dominan ? 'Ada gulma' : 'Tidak ada gulma' }}
+                    · {{ $kondisi->ada_serangan_hama ? 'Ada hama' : 'Tidak ada hama' }}
+                </p>
+            </div>
+
+            {{-- Tanggal pemupukan terakhir --}}
+            @if($kondisi->tanggal_pemupukan_terakhir)
+            <div>
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Pemupukan Terakhir</p>
+                <p class="text-slate-800 dark:text-slate-200 font-medium text-xs">{{ $kondisi->tanggal_pemupukan_terakhir->format('d M Y') }}</p>
+            </div>
+            @endif
+
+        </div>
+
+        {{-- Catatan observasi (baru) --}}
+        @if($kondisi->catatan_observasi)
+        <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">Catatan Lapangan</p>
+            <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/40 rounded-lg px-3 py-2.5 border border-slate-200 dark:border-slate-700">{{ $kondisi->catatan_observasi }}</p>
+        </div>
+        @endif
     </div>
     @endif
 

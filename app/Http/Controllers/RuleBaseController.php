@@ -16,6 +16,8 @@ class RuleBaseController extends Controller
 
     private const JENIS_WAKTU = 'PEMBATAS_APLIKASI';
 
+    private const JENIS_KONDISI_LAHAN = 'KONDISI_LAHAN';
+
     public function index(): View
     {
         $rules = RuleBaseLanjutan::query()
@@ -138,26 +140,33 @@ class RuleBaseController extends Controller
         $fertilizer = $isVisual ? $data['jenis_pupuk_utama'] : 'Tidak ditentukan otomatis';
         $status = $data['status_kebutuhan'];
 
+        $tahap = 1;
+        if ($data['jenis_rule'] === 'PENENTU_DOSIS') $tahap = 2;
+        if (in_array($data['jenis_rule'], ['PEMBATAS_APLIKASI', 'KONDISI_LAHAN'])) $tahap = 3;
+
         return [
             'jenis_rule' => $data['jenis_rule'],
+            'tahap_eksekusi' => $tahap,
             'kondisi_warna_daun' => $isVisual ? $data['kondisi_warna_daun'] : null,
             'kondisi_topografi' => $isVisual ? $data['kondisi_topografi'] : null,
             'kondisi_curah_hujan_min_mm' => $isVisual ? null : ($data['kondisi_curah_hujan_min_mm'] ?? null),
             'kondisi_curah_hujan_max_mm' => $isVisual ? null : ($data['kondisi_curah_hujan_max_mm'] ?? null),
             'kondisi_ph_min' => null,
             'kondisi_ph_max' => null,
-            'kondisi_kelembaban' => null,
+            'kondisi_kelembaban' => $data['jenis_rule'] === self::JENIS_KONDISI_LAHAN ? ($data['kondisi_kelembaban'] ?? null) : null,
             'kondisi_curah_hujan_kategori' => null,
             'kondisi_musim' => null,
-            'kondisi_drainase' => null,
+            'kondisi_drainase' => $data['jenis_rule'] === self::JENIS_KONDISI_LAHAN ? ($data['kondisi_drainase'] ?? null) : null,
             'kondisi_defisiensi' => null,
             'kondisi_kategori_umur' => null,
             'kondisi_pelepah' => null,
             'kondisi_tandan' => null,
-            'ada_serangan_hama' => null,
-            'ada_gulma_dominan' => null,
-            'kondisi_intermediate' => null,
-            'prasyarat_intermediate' => null,
+            'ada_serangan_hama' => $data['jenis_rule'] === self::JENIS_KONDISI_LAHAN ? ($data['ada_serangan_hama'] ?? null) : null,
+            'ada_gulma_dominan' => $data['jenis_rule'] === self::JENIS_KONDISI_LAHAN ? ($data['ada_gulma_dominan'] ?? null) : null,
+            'kondisi_umur_tahun' => $data['jenis_rule'] === 'PENENTU_DOSIS' ? ($data['kondisi_umur_tahun'] ?? null) : null,
+            'kondisi_kategori_umur' => $data['jenis_rule'] === 'PENENTU_DOSIS' ? ($data['kondisi_kategori_umur'] ?? null) : null,
+            'rekomendasi_dosis_urea' => $data['jenis_rule'] === 'PENENTU_DOSIS' ? ($data['rekomendasi_dosis_urea'] ?? null) : null,
+            'rekomendasi_dosis_kcl' => $data['jenis_rule'] === 'PENENTU_DOSIS' ? ($data['rekomendasi_dosis_kcl'] ?? null) : null,
             'indikasi_masalah' => $data['indikasi_masalah'],
             'jenis_pupuk_utama' => $fertilizer,
             'jenis_pupuk_pendukung' => null,
@@ -178,15 +187,18 @@ class RuleBaseController extends Controller
             'tingkat_bukti' => $data['tingkat_bukti'],
             'catatan_validasi' => $data['catatan_validasi'] ?? null,
             'tingkat_keparahan' => $isVisual ? $data['tingkat_keparahan'] : 'NORMAL',
-            'kategori_kesimpulan' => $isVisual
-                ? ($fertilizer === 'Tidak ditentukan otomatis' ? 'PERLU_PEMERIKSAAN' : 'GEJALA_DAUN')
-                : ($status === 'Tunda' ? 'PEMUPUKAN_DITUNDA' : 'WAKTU_MENDUKUNG'),
+            'kategori_kesimpulan' => match ($data['jenis_rule']) {
+                self::JENIS_VISUAL => $fertilizer === 'Tidak ditentukan otomatis' ? 'PERLU_PEMERIKSAAN' : 'GEJALA_DAUN',
+                self::JENIS_WAKTU => $status === 'Tunda' ? 'PEMUPUKAN_DITUNDA' : 'WAKTU_MENDUKUNG',
+                self::JENIS_KONDISI_LAHAN => $status === 'Tunda' ? 'PEMUPUKAN_DITUNDA' : 'KONDISI_LAHAN',
+                default => 'UMUM'
+            },
         ];
     }
 
     private function doseExplanation(string $jenisRule, string $fertilizer, string $status): string
     {
-        if ($jenisRule === self::JENIS_WAKTU) {
+        if ($jenisRule === self::JENIS_WAKTU || $jenisRule === self::JENIS_KONDISI_LAHAN) {
             return $status === 'Tunda'
                 ? 'Dosis tidak diubah; waktu aplikasi ditunda.'
                 : 'Dosis tetap mengikuti acuan Iyung Pahan (2013).';
@@ -226,6 +238,26 @@ class RuleBaseController extends Controller
             return 'IF '.$conditionText.' THEN '.$data['indikasi_masalah'].'.';
         }
 
+        if ($data['jenis_rule'] === self::JENIS_KONDISI_LAHAN) {
+            $parts = [];
+            if (! empty($data['kondisi_kelembaban'])) {
+                $parts[] = 'kelembapan '.$data['kondisi_kelembaban'];
+            }
+            if (! empty($data['kondisi_drainase'])) {
+                $parts[] = 'drainase '.$data['kondisi_drainase'];
+            }
+            if (isset($data['ada_gulma_dominan'])) {
+                $parts[] = $data['ada_gulma_dominan'] ? 'ada gulma' : 'tidak ada gulma';
+            }
+            if (isset($data['ada_serangan_hama'])) {
+                $parts[] = $data['ada_serangan_hama'] ? 'ada hama' : 'tidak ada hama';
+            }
+
+            $conditionText = empty($parts) ? 'kondisi lingkungan sesuai' : implode(' AND ', $parts);
+
+            return 'IF '.$conditionText.' THEN '.$data['indikasi_masalah'].'.';
+        }
+
         $min = $data['kondisi_curah_hujan_min_mm'] ?? null;
         $max = $data['kondisi_curah_hujan_max_mm'] ?? null;
         $range = match (true) {
@@ -239,7 +271,11 @@ class RuleBaseController extends Controller
 
     private function generateUniqueCode(string $jenisRule): string
     {
-        $prefix = $jenisRule === self::JENIS_VISUAL ? 'VIS-CUSTOM-' : 'WAKTU-CUSTOM-';
+        $prefix = match ($jenisRule) {
+            self::JENIS_VISUAL => 'VIS-CUSTOM-',
+            self::JENIS_KONDISI_LAHAN => 'LAHAN-CUSTOM-',
+            default => 'WAKTU-CUSTOM-'
+        };
         $numbers = RuleBaseLanjutan::query()
             ->where('kode_rule', 'like', $prefix.'%')
             ->pluck('kode_rule')
@@ -274,11 +310,41 @@ class RuleBaseController extends Controller
             ->get();
 
         if ($rule->jenis_rule === self::JENIS_VISUAL) {
-            $conflict = $activeRules->firstWhere('kondisi_warna_daun', $rule->kondisi_warna_daun);
+            // Konflik hanya terjadi jika kondisi daun DAN topografi keduanya sama.
+            // Rule dengan kondisi daun sama tapi topografi berbeda boleh berdampingan
+            // karena masing-masing punya kondisi IF yang tidak saling tumpang tindih.
+            $conflict = $activeRules->first(function ($activeRule) use ($rule) {
+                $sameDaun = $activeRule->kondisi_warna_daun === $rule->kondisi_warna_daun;
+                $sameTopo = $activeRule->kondisi_topografi === $rule->kondisi_topografi;
 
-            return $conflict
-                ? 'Kondisi daun tersebut sudah digunakan oleh '.$conflict->kode_rule.'. Edit rule yang ada agar hasil tidak bertentangan.'
-                : null;
+                // Jika salah satu atau keduanya tidak punya kondisi daun, tidak konflik
+                if ($rule->kondisi_warna_daun === null || $activeRule->kondisi_warna_daun === null) {
+                    return false;
+                }
+
+                return $sameDaun && $sameTopo;
+            });
+
+            if ($conflict) {
+                $detail = $rule->kondisi_topografi
+                    ? " (kondisi daun: {$rule->kondisi_warna_daun}, topografi: {$rule->kondisi_topografi})"
+                    : " (kondisi daun: {$rule->kondisi_warna_daun})";
+                return 'Kombinasi kondisi'.$detail.' sudah digunakan oleh '.$conflict->kode_rule.'. Edit rule yang ada agar hasil tidak bertentangan.';
+            }
+
+            return null;
+        }
+
+        if ($rule->jenis_rule === self::JENIS_KONDISI_LAHAN) {
+            foreach ($activeRules as $activeRule) {
+                if ($activeRule->kondisi_kelembaban === $rule->kondisi_kelembaban &&
+                    $activeRule->kondisi_drainase === $rule->kondisi_drainase &&
+                    $activeRule->ada_gulma_dominan === $rule->ada_gulma_dominan &&
+                    $activeRule->ada_serangan_hama === $rule->ada_serangan_hama) {
+                    return 'Kondisi lahan persis sama dengan '.$activeRule->kode_rule.'. Edit rule yang ada agar tidak bertentangan.';
+                }
+            }
+            return null;
         }
 
         $newMin = $rule->kondisi_curah_hujan_min_mm === null ? -INF : (float) $rule->kondisi_curah_hujan_min_mm;
